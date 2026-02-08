@@ -1,0 +1,41 @@
+{
+  "profile": {
+    "username": "synced",
+    "tagline": "synced.lat",
+    "bio": "full-stack developer / visual designer / visionary",
+    "avatar": "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop",
+    "audioUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "location": "Cyberspace",
+    "accentColor": "#ffffff"
+  },
+  "socials": [
+    {
+      "label": "Discord",
+      "url": "https://discord.com",
+      "icon": "MessageSquare",
+      "color": "#5865F2"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com",
+      "icon": "Github",
+      "color": "#ffffff"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com",
+      "icon": "Instagram",
+      "color": "#E4405F"
+    },
+    {
+      "label": "Twitter",
+      "url": "https://twitter.com",
+      "icon": "Twitter",
+      "color": "#1DA1F2"
+    }
+  ],
+  "theme": {
+    "backgroundGradient": "radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%)",
+    "glowColor": "rgba(255, 255, 255, 0.05)"
+  }
+}

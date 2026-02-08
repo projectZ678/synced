@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #050505;
+  color: white;
+  overflow: hidden;
+  cursor: none;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(15, 15, 15, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+.glass-hover:hover {
+  background: rgba(25, 25, 25, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Hide cursor on mobile */
+@media (max-width: 768px) {
+  body {
+    cursor: auto;
+  }
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
