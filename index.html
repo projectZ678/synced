@@ -4,77 +4,61 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>synced.lat</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       min-height: 100vh;
       background: #0d0015;
       color: #f5e9ff;
-      font-family: 'Geist', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       overflow: hidden;
       cursor: none;
     }
 
-    /* Pink dot + crosshair cursor */
+    /* Simple glowing pink dot cursor */
     .custom-cursor {
       position: fixed;
-      width: 24px;
-      height: 24px;
-      border: 2px solid #ff79c6;
+      width: 20px;
+      height: 20px;
+      background: #ff79c6;
       border-radius: 50%;
       pointer-events: none;
       transform: translate(-50%, -50%);
       z-index: 9999;
+      box-shadow: 0 0 18px #ff79c6, 0 0 36px #ff9ec1;
+      transition: width 0.16s, height 0.16s;
       mix-blend-mode: difference;
-      transition: width 0.18s, height 0.18s;
     }
-
-    .custom-cursor::before,
-    .custom-cursor::after {
-      content: '';
-      position: absolute;
-      background: #ff79c6;
-      opacity: 0.75;
-    }
-
-    .custom-cursor::before { width: 2px; height: 44px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .custom-cursor::after  { width: 44px; height: 2px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
     .custom-cursor.active {
-      width: 44px;
-      height: 44px;
-      border-color: #ff9ec1;
+      width: 36px;
+      height: 36px;
+      box-shadow: 0 0 28px #ff79c6, 0 0 56px #ff9ec1;
     }
 
-    /* Pink animated stars – dense field */
+    /* Subtle stars */
     .stars {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: -1;
     }
-
     .star {
       position: absolute;
       background: #ff79c6;
       border-radius: 50%;
-      box-shadow: 0 0 10px #ff79c6, 0 0 20px #ff9ec1;
+      box-shadow: 0 0 12px #ff79c6;
       opacity: 0;
-      animation: twinkle linear infinite, drift linear infinite;
+      animation: twinkle 3.5s linear infinite, drift 18s linear infinite;
     }
-
-    @keyframes twinkle { 0%,100% { opacity: 0; } 35%,65% { opacity: 0.9; } }
-    @keyframes drift { 0% { transform: translateY(0) translateX(0); } 100% { transform: translateY(-150vh) translateX(calc(15vw * var(--drift, 1))); } }
+    @keyframes twinkle { 0%,100% { opacity: 0; } 40%,60% { opacity: 0.7; } }
+    @keyframes drift { 0% { transform: translateY(0) translateX(0); } 100% { transform: translateY(-140vh) translateX(calc(10vw * var(--drift, 1))); } }
 
     .container {
       position: relative;
@@ -83,117 +67,76 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      padding: 1.5rem;
-      overflow: hidden; /* Prevent horizontal scroll */
+      padding: 1rem;
     }
-
     .glass {
-      background: rgba(20, 10, 35, 0.38);
-      backdrop-filter: blur(32px) saturate(170%);
-      -webkit-backdrop-filter: blur(32px) saturate(170%);
-      border: 1px solid rgba(255, 105, 180, 0.16);
-      border-radius: 28px;
-      padding: 3.6rem clamp(1.5rem, 4vw, 2.8rem) 3.2rem;
-      max-width: 720px; /* Increased from 640px */
-      width: 96%; /* Increased from 92% */
+      background: rgba(20, 10, 35, 0.45);
+      backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255, 105, 180, 0.18);
+      border-radius: 24px;
+      padding: 2.8rem 2rem;
+      max-width: 640px;
+      width: 92%;
       text-align: center;
-      box-shadow: 0 20px 80px rgba(0,0,0,0.75), inset 0 0 80px rgba(255,105,180,0.05);
-      animation: float 13s ease-in-out infinite;
-      transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
-      margin: 0 auto;
-      overflow: hidden; /* Ensure content stays inside */
+      box-shadow: 0 16px 60px rgba(0,0,0,0.7), inset 0 0 60px rgba(255,105,180,0.04);
+      animation: float 10s ease-in-out infinite;
+      transition: transform 0.4s ease;
     }
-
     .glass:hover {
-      transform: translateY(-10px) scale(1.015);
+      transform: translateY(-8px);
     }
-
     @keyframes float {
       0%,100% { transform: translateY(0); }
-      50%     { transform: translateY(-16px); }
+      50% { transform: translateY(-12px); }
     }
 
     h1 {
-      font-size: clamp(4rem, 12vw, 8rem); /* Adjusted sizes */
+      font-size: clamp(4.2rem, 11vw, 7.2rem);
       font-weight: 700;
-      letter-spacing: -0.04em;
-      background: linear-gradient(90deg, #ff9ec1, #ff79c6, #e066ff, #ff9ec1);
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, #ff9ec1, #ff79c6, #e066ff);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      margin-bottom: 1.1rem;
-      line-height: 0.9;
-      animation: glowPulse 7s ease-in-out infinite;
-      word-break: break-word; /* Allow breaking if needed */
-      overflow-wrap: break-word; /* Handle long words */
+      margin-bottom: 0.9rem;
+      line-height: 0.92;
+      animation: glow 6s ease-in-out infinite;
     }
-
-    @keyframes glowPulse {
-      0%,100% { text-shadow: 0 0 30px rgba(255,105,180,0.45); }
-      50%     { text-shadow: 0 0 80px rgba(255,105,180,0.75), 0 0 110px rgba(224,102,255,0.45); }
+    @keyframes glow {
+      0%,100% { text-shadow: 0 0 24px rgba(255,105,180,0.4); }
+      50% { text-shadow: 0 0 60px rgba(255,105,180,0.7), 0 0 90px rgba(224,102,255,0.4); }
     }
 
     .subtitle {
-      font-size: clamp(1.1rem, 3.6vw, 1.28rem);
+      font-size: clamp(1.05rem, 3.2vw, 1.18rem);
       color: #e0c3ff;
-      line-height: 1.58;
-      opacity: 0.94;
-      animation: fadeIn 2s ease-out forwards;
-      white-space: pre-line; /* respects \n but allows wrapping */
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      padding: 0 0.5rem; /* Added small padding for very small screens */
+      line-height: 1.55;
+      opacity: 0.92;
+      animation: fadeIn 1.8s ease-out;
     }
-
-    .highlight { color: #ff79c6; font-weight: 600; }
-
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 0.94; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 0.92; transform: translateY(0); }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 640px) {
       .glass {
-        padding: 3rem clamp(1.2rem, 3vw, 2rem) 2.6rem;
-        width: 98%; /* Even wider on mobile */
+        padding: 2.2rem 1.6rem;
+        width: 96%;
       }
       h1 {
-        font-size: clamp(3.5rem, 10vw, 5.5rem); /* Smaller on mobile */
-        margin-bottom: 1rem;
-      }
-      .subtitle {
-        font-size: 1.05rem;
-        line-height: 1.52;
+        font-size: clamp(3.4rem, 10vw, 5.2rem);
       }
     }
-
-    @media (max-width: 480px) {
+    @media (max-width: 400px) {
       .glass {
-        padding: 2.5rem 1.5rem 2.2rem;
-        border-radius: 24px;
-      }
-      h1 {
-        font-size: clamp(3rem, 9vw, 4.5rem);
-        letter-spacing: -0.03em; /* Slightly tighter on very small screens */
-      }
-      .container {
-        padding: 1rem; /* Reduced container padding */
-      }
-    }
-
-    /* Extra small devices */
-    @media (max-width: 360px) {
-      h1 {
-        font-size: clamp(2.8rem, 8vw, 4rem);
-      }
-      .glass {
-        padding: 2.2rem 1.2rem 2rem;
+        padding: 2rem 1.4rem;
+        border-radius: 20px;
       }
     }
   </style>
 </head>
 <body>
-
   <div class="stars" id="stars"></div>
   <div class="custom-cursor" id="cursor"></div>
 
@@ -201,42 +144,41 @@
     <div class="glass">
       <h1>synced.lat</h1>
       <div class="subtitle">
-This site is for hosting social trees and others.
-DM @59ps on Discord if you want to be added.
+This site hosts social trees and similar projects.
+
+DM @59ps on Discord if you'd like to be added.
       </div>
     </div>
   </div>
 
   <script>
-    // Dense pink stars
+    // Stars
     const stars = document.getElementById('stars');
     function createStar() {
       const s = document.createElement('div');
       s.className = 'star';
-      const size = Math.random() * 3.5 + 0.7;
+      const size = Math.random() * 2.8 + 0.6;
       s.style.width = s.style.height = size + 'px';
       s.style.left = Math.random() * 100 + 'vw';
-      s.style.top = '-20vh';
-      const dur = Math.random() * 20 + 14;
-      s.style.animationDuration = dur + 's';
-      s.style.animationDelay = Math.random() * 10 + 's';
+      s.style.top = '-15vh';
+      const dur = Math.random() * 16 + 12;
+      s.style.animationDuration = dur + 's, ' + dur + 's';
+      s.style.animationDelay = Math.random() * 8 + 's';
       s.style.setProperty('--drift', Math.random() > 0.5 ? '1' : '-1');
       stars.appendChild(s);
-      setTimeout(() => s.remove(), dur * 1000 + 3000);
+      setTimeout(() => s.remove(), dur * 1000 + 2000);
     }
-
-    setInterval(createStar, 80);
-    for(let i = 0; i < 160; i++) createStar(); // dense initial field
+    setInterval(createStar, 120);
+    for(let i = 0; i < 100; i++) createStar(); // lighter initial batch
 
     // Cursor
     const cursor = document.getElementById('cursor');
     document.addEventListener('mousemove', e => {
       cursor.style.left = e.clientX + 'px';
-      cursor.style.top  = e.clientY + 'px';
+      cursor.style.top = e.clientY + 'px';
     });
     document.addEventListener('mousedown', () => cursor.classList.add('active'));
-    document.addEventListener('mouseup',   () => cursor.classList.remove('active'));
+    document.addEventListener('mouseup', () => cursor.classList.remove('active'));
   </script>
-
 </body>
 </html>
