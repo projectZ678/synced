@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coldz Official E-Kitten List</title>
+
+  <!-- Open Graph / Discord Embed Tags -->
+  <meta property="og:title" content="Coldz Official E-Kitten List" />
+  <meta property="og:description" content="The cutest collection of elite digital companions ♡ Curated by Coldz • syo is the favorite ★ Join the vibe!" />
+  <meta property="og:image" content="https://i.imgur.com/EXAMPLE_PINK_BUBBLY_IMAGE.jpg" /> <!-- REPLACE THIS with your actual image URL (1200x630 recommended) -->
+  <meta property="og:url" content="https://yourdomain.com/ekitten-list.html" /> <!-- REPLACE with your real page URL -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Coldz E-Kittens" />
+
+  <!-- Twitter/X Card fallback (helps on some platforms) -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Coldz Official E-Kitten List" />
+  <meta name="twitter:description" content="Elite digital companions • syo ★ made with ♡ by Coldz" />
+  <meta name="twitter:image" content="https://i.imgur.com/EXAMPLE_PINK_BUBBLY_IMAGE.jpg" /> <!-- Same image as og:image -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      background: #0d0015;
+      color: #f5e9ff;
+      font-family: 'Fuzzy Bubbles', 'Inter', system-ui, sans-serif;
+      cursor: none;
+    }
+    /* Glowing pink dot cursor */
+    .custom-cursor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      background: #ff79c6;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      box-shadow: 0 0 16px #ff79c6, 0 0 32px #ff9ec1;
+      transition: transform 0.14s ease;
+      mix-blend-mode: difference;
+    }
+    .custom-cursor.active {
+      transform: translate(-50%, -50%) scale(1.6);
+      box-shadow: 0 0 28px #ff79c6, 0 0 56px #ff9ec1;
+    }
+    /* Subtle stars */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .star {
+      position: absolute;
+      background: #ff79c6;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #ff79c6;
+      opacity: 0;
+      animation: twinkle 4s linear infinite, drift 20s linear infinite;
+    }
+    @keyframes twinkle { 0%,100% { opacity: 0; } 45%,55% { opacity: 0.6; } }
+    @keyframes drift { 0% { transform: translateY(0); } 100% { transform: translateY(-120vh) translateX(calc(8vw * var(--drift, 1))); } }
+    .container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 1.5rem 1rem;
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 1.2rem;
+    }
+    .title {
+      font-family: 'Fuzzy Bubbles', cursive;
+      font-weight: 700;
+      font-size: clamp(2.4rem, 10vw, 3.8rem);
+      background: linear-gradient(90deg, #ff9ec1, #ff79c6, #e066ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.01em;
+      line-height: 0.95;
+    }
+    .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+      color: #e0c3ff;
+      opacity: 0.9;
+      margin-top: 0.3rem;
+    }
+    /* Compact vertical list */
+    .kittens-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      padding: 0.5rem 0;
+    }
+    .kitten-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.3rem;
+      background: rgba(40, 20, 60, 0.3);
+      border: 1px solid rgba(255, 105, 180, 0.2);
+      border-radius: 16px;
+      transition: all 0.25s ease;
+      font-family: 'Fuzzy Bubbles', cursive;
+      font-weight: 700;
+    }
+    .kitten-item:hover {
+      transform: translateX(6px) scale(1.02);
+      background: rgba(60, 30, 80, 0.45);
+      border-color: #ff79c6;
+      box-shadow: 0 6px 20px rgba(255, 105, 180, 0.2);
+    }
+    .kitten-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .kitten-name {
+      font-size: clamp(1.15rem, 4.5vw, 1.4rem);
+      color: #f5e9ff;
+      line-height: 1.1;
+    }
+    .kitten-number {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: #ff9ec1;
+      opacity: 0.85;
+      margin-top: 0.1rem;
+    }
+    .favorite .kitten-name {
+      color: #ff79c6;
+      text-shadow: 0 0 10px rgba(255,121,198,0.6);
+    }
+    .footer {
+      margin-top: auto;
+      padding: 2rem 1rem 1rem;
+      color: #b399d4;
+      font-size: 0.85rem;
+      opacity: 0.75;
+      text-align: center;
+    }
+    @media (max-width: 480px) {
+      .container { padding: 1.2rem 0.8rem; }
+      .kitten-item { padding: 0.8rem 1.1rem; }
+      .kitten-name { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="custom-cursor" id="cursor"></div>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Coldz Official E-Kitten List</h1>
+      <p class="subtitle"></p>
+    </header>
+    <div class="kittens-list" id="kittensList">
+      <!-- Filled by JS -->
+    </div>
+    <footer class="footer">
+      made with ♡ by Coldz • dm to join
+    </footer>
+  </div>
+  <script>
+    // Stars
+    const stars = document.getElementById('stars');
+    function createStar() {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.8 + 0.6;
+      s.style.width = s.style.height = size + 'px';
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.top = '-10vh';
+      const dur = Math.random() * 18 + 12;
+      s.style.animationDuration = dur + 's, ' + dur + 's';
+      s.style.animationDelay = Math.random() * 6 + 's';
+      s.style.setProperty('--drift', Math.random() > 0.5 ? '1' : '-1');
+      stars.appendChild(s);
+      setTimeout(() => s.remove(), dur * 1000 + 2000);
+    }
+    setInterval(createStar, 160);
+    for(let i = 0; i < 80; i++) createStar();
+
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+    document.addEventListener('mousedown', () => cursor.classList.add('active'));
+    document.addEventListener('mouseup', () => cursor.classList.remove('active'));
+
+    // Kittens
+    const kittens = [
+      "manic", "saint", "dakoda", "soul", "cora", "bree",
+      "ellie", "disaster", "axi", "draco", "syo"
+    ];
+    const favorite = "syo";
+
+    const list = document.getElementById('kittensList');
+    kittens.forEach((name, i) => {
+      const item = document.createElement('div');
+      item.className = `kitten-item ${name.toLowerCase() === favorite.toLowerCase() ? 'favorite' : ''}`;
+      item.innerHTML = `
+        <div class="kitten-info">
+          <div class="kitten-name">${name.charAt(0).toUpperCase() + name.slice(1)}</div>
+          <div class="kitten-number">#${(i + 1).toString().padStart(2, '0')}</div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  </script>
+</body>
+</html>
