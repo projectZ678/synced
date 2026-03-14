@@ -1,9 +1,3 @@
---[[
-    Auto-exported animation: aa
-    Keyframes: 4
-    Export Date: 2026-03-14 13:10:13
---]]
-
 local AnimationData = {
     ["aa"] = {
         {Time = 0.000, Data = {
