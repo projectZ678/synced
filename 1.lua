@@ -1,28 +1,24 @@
-return {
-	["idkman"] = {
-		{Time = 0, Data = {
-			["LeftHip"] = CFrame.new(0.182, 0, 0) * CFrame.Angles(math.rad(80.735), 0, 0),
-			["RightHip"] = CFrame.new(-0.296, 0, 0) * CFrame.Angles(math.rad(81.093), 0, 0),
-			["RightShoulder"] = CFrame.Angles(math.rad(31.387), 0, math.rad(-19.899)),
-			["LeftShoulder"] = CFrame.Angles(math.rad(27.474), 0, math.rad(12.54)),
-			["LeftElbow"] = CFrame.Angles(0, 0, math.rad(1.379)),
-		}},
-		{Time = 0.699, Data = {
-			["LeftHip"] = CFrame.new(0.182, -0.037, -0.228) * CFrame.Angles(math.rad(80.735), 0, 0),
-			["RightHip"] = CFrame.new(-0.296, -0.033, -0.214) * CFrame.Angles(math.rad(81.093), 0, 0),
-			["RightShoulder"] = CFrame.new(-0.034, 0.007, -0.164) * CFrame.Angles(math.rad(41.194), math.rad(-3.55), math.rad(-19.71)),
-			["LeftShoulder"] = CFrame.new(0.014, -0.014, -0.166) * CFrame.Angles(math.rad(35.887), math.rad(1.864), math.rad(12.403)),
-			["LeftElbow"] = CFrame.Angles(0, 0, math.rad(1.379)),
-		}},
-		{Time = 0.616, Data = {
-			["RightHip"] = CFrame.new(-0.296, -0.033, -0.214) * CFrame.Angles(math.rad(81.093), 0, 0),
-			["LeftHip"] = CFrame.new(0.182, -0.037, -0.228) * CFrame.Angles(math.rad(80.735), 0, 0),
-			["RightShoulder"] = CFrame.new(0.002, 0.084, -0.093) * CFrame.Angles(math.rad(41.194), math.rad(-3.55), math.rad(-19.71)),
-			["LeftShoulder"] = CFrame.new(-0.009, 0.072, -0.102) * CFrame.Angles(math.rad(35.887), math.rad(1.864), math.rad(12.403)),
-		}},
-		{Time = 0.799, Data = {
-			["RightShoulder"] = CFrame.new(-0.079, -0.084, -0.248) * CFrame.Angles(math.rad(41.194), math.rad(-3.55), math.rad(-19.71)),
-			["LeftShoulder"] = CFrame.new(0.042, -0.118, -0.243) * CFrame.Angles(math.rad(35.887), math.rad(1.864), math.rad(12.403)),
-		}},
-	}
+local AnimationData = {
+    ["idk"] = {
+        {Time = 0.000, Data = {
+            ["Head"] = CFrame.new(-0, -30.7161865234375, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["HumanoidRootPart"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftFoot"] = CFrame.new(-3395.17163085938, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftHand"] = CFrame.new(-1095.61437988281, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftLowerArm"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftLowerLeg"] = CFrame.new(0, 0, -651.399047851562, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftUpperArm"] = CFrame.new(-5.2039737701416, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LeftUpperLeg"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["LowerTorso"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["RightHand"] = CFrame.new(737.407592773438, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["RightLowerArm"] = CFrame.new(-733.300598144531, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["RightLowerLeg"] = CFrame.new(698.431884765625, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["RightUpperArm"] = CFrame.new(0, 5.60981178283691, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["RightUpperLeg"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+            ["UpperTorso"] = CFrame.new(-0.0219459533691406, -0.802315771579742, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+        },},
+    },
 }
+
+-- Return the animation data
+return AnimationData
