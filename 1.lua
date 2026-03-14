@@ -1,4 +1,10 @@
-return = {
+--[[
+    Auto-exported animation: aa
+    Keyframes: 4
+    Export Date: 2026-03-14 13:10:13
+--]]
+
+local AnimationData = {
     ["aa"] = {
         {Time = 0.000, Data = {
             ["HumanoidRootPart"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
@@ -46,3 +52,6 @@ return = {
         },},
     },
 }
+
+-- Return the animation data
+return AnimationData
