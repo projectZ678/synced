@@ -1,4 +1,4 @@
-local AnimationData = {
+return = {
     ["aa"] = {
         {Time = 0.000, Data = {
             ["HumanoidRootPart"] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1),
@@ -46,6 +46,3 @@ local AnimationData = {
         },},
     },
 }
-
--- Return the animation data
-return AnimationData
