@@ -1,50 +1,74 @@
---These locals are made to shorten the script, use replace (ctrl+h) if you don't want to use them
-local cn = CFrame.new
-local ca = function(x,y,z) return CFrame.Angles(math.rad(x),math.rad(y),math.rad(z)) end
-
-CFrames= {
-	[1] = {
-		["LeftKnee"]={
-			["CFrame"]=cn(0,0,-651.399),
+return {
+	["idkman"] = {
+		["LeftHip"]={
+			["CFrame"]=cn(0.182,0,0)*ca(80.735,0,-0),
 			["TimeLength"]=0,
 		},
-		["LeftAnkle"]={
-			["CFrame"]=cn(-3395.171,0,0),
-			["TimeLength"]=0,
-		},
-		["Waist"]={
-			["CFrame"]=cn(-0.021,-0.802,0),
+		["RightHip"]={
+			["CFrame"]=cn(-0.296,0,0)*ca(81.093,0,-0),
 			["TimeLength"]=0,
 		},
 		["RightShoulder"]={
-			["CFrame"]=cn(0,5.609,0),
-			["TimeLength"]=0,
-		},
-		["RightElbow"]={
-			["CFrame"]=cn(-733.3,0,0),
-			["TimeLength"]=0,
-		},
-		["RightWrist"]={
-			["CFrame"]=cn(737.407,0,0),
-			["TimeLength"]=0,
-		},
-		["Neck"]={
-			["CFrame"]=cn(-0,-30.716,0),
+			["CFrame"]=ca(31.387,0,-19.899),
 			["TimeLength"]=0,
 		},
 		["LeftShoulder"]={
-			["CFrame"]=cn(-5.203,0,0),
+			["CFrame"]=ca(27.474,0,12.54),
 			["TimeLength"]=0,
 		},
-		["LeftWrist"]={
-			["CFrame"]=cn(-1095.614,0,0),
-			["TimeLength"]=0,
-		},
-		["RightKnee"]={
-			["CFrame"]=cn(698.431,0,0),
+		["LeftElbow"]={
+			["CFrame"]=ca(-0,0,1.379),
 			["TimeLength"]=0,
 		},
 	},
+	[2] = {
+		["LeftHip"]={
+			["CFrame"]=cn(0.182,-0.037,-0.228)*ca(80.735,0,-0),
+			["TimeLength"]=0.699,
+		},
+		["RightHip"]={
+			["CFrame"]=cn(-0.296,-0.033,-0.214)*ca(81.093,0,-0),
+			["TimeLength"]=0.699,
+		},
+		["RightShoulder"]={
+			["CFrame"]=cn(-0.034,0.007,-0.164)*ca(41.194,-3.55,-19.71),
+			["TimeLength"]=0.699,
+		},
+		["LeftShoulder"]={
+			["CFrame"]=cn(0.014,-0.014,-0.166)*ca(35.887,1.864,12.403),
+			["TimeLength"]=0.699,
+		},
+		["LeftElbow"]={
+			["CFrame"]=ca(-0,0,1.379),
+			["TimeLength"]=0.699,
+		},
+	},
+	[3] = {
+		["RightHip"]={
+			["CFrame"]=cn(-0.296,-0.033,-0.214)*ca(81.093,0,-0),
+			["TimeLength"]=-0.083,
+		},
+		["LeftHip"]={
+			["CFrame"]=cn(0.182,-0.037,-0.228)*ca(80.735,0,-0),
+			["TimeLength"]=-0.083,
+		},
+		["RightShoulder"]={
+			["CFrame"]=cn(0.002,0.084,-0.093)*ca(41.194,-3.55,-19.71),
+			["TimeLength"]=-0.083,
+		},
+		["LeftShoulder"]={
+			["CFrame"]=cn(-0.009,0.072,-0.102)*ca(35.887,1.864,12.403),
+			["TimeLength"]=-0.083,
+		},
+	},
+	[4] = {
+		["RightShoulder"]={
+			["CFrame"]=cn(-0.079,-0.084,-0.248)*ca(41.194,-3.55,-19.71),
+			["TimeLength"]=0.183,
+		},
+		["LeftShoulder"]={
+			["CFrame"]=cn(0.042,-0.118,-0.243)*ca(35.887,1.864,12.403),
+			["TimeLength"]=0.183,
+		},
+	},
 }
-
-return CFrames
