@@ -3,233 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KeyForge • Bot Access</title>
+    <title>KeyForge • Secure Bot Access</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .heading-font {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-        }
-        .key-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .key-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, #a855f7, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .heading-font { font-family: 'Space Grotesk', sans-serif; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <!-- Header -->
-        <nav class="flex items-center justify-between py-6">
+        <nav class="flex justify-between items-center py-6">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-violet-600 rounded-2xl flex items-center justify-center">
-                    <i class="fas fa-key text-white text-xl"></i>
+                    <i class="fas fa-key text-xl"></i>
                 </div>
-                <div>
-                    <span class="heading-font text-2xl font-semibold tracking-tight">KeyForge</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-6 text-sm">
-                <a href="#" class="hover:text-violet-400 transition-colors">Docs</a>
-                <a href="#" class="hover:text-violet-400 transition-colors">Commands</a>
-                <a href="#" class="hover:text-violet-400 transition-colors">Support</a>
-                <button onclick="generateKey()" 
-                        class="bg-white text-black px-5 py-2.5 rounded-2xl font-medium flex items-center gap-2 hover:bg-violet-100 transition-colors">
-                    <i class="fas fa-plus"></i>
-                    <span>New Key</span>
-                </button>
+                <span class="heading-font text-2xl font-semibold">KeyForge</span>
             </div>
         </nav>
 
-        <div class="text-center py-16">
-            <div class="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-700 rounded-3xl px-4 py-1.5 text-sm mb-6">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span>Secure • Production Ready</span>
-            </div>
-            
-            <h1 class="heading-font text-6xl font-semibold tracking-tighter mb-4">
-                Access your Bot with<br>
-                <span class="gradient-text">API Keys</span>
+        <div class="text-center py-12">
+            <h1 class="heading-font text-5xl font-bold tracking-tighter mb-4">
+                Secure 24h Bot Access
             </h1>
-            <p class="text-zinc-400 max-w-md mx-auto text-lg">
-                Generate secure API keys for your bot. 
-                Required for all commands. No bypass possible.
+            <p class="text-zinc-400 text-lg">Authorize • Verify • Get Temporary Key</p>
+        </div>
+
+        <!-- Step Progress -->
+        <div id="stepProgress" class="flex justify-between mb-8">
+            <div onclick="goToStep(1)" class="step flex-1 text-center cursor-pointer">
+                <div class="mx-auto w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold">1</div>
+                <p class="text-xs mt-2 text-violet-400">Authorize Discord</p>
+            </div>
+            <div onclick="goToStep(2)" class="step flex-1 text-center cursor-pointer">
+                <div class="mx-auto w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-bold">2</div>
+                <p class="text-xs mt-2">Verify</p>
+            </div>
+            <div onclick="goToStep(3)" class="step flex-1 text-center cursor-pointer">
+                <div class="mx-auto w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-bold">3</div>
+                <p class="text-xs mt-2">Get Key (24h)</p>
+            </div>
+        </div>
+
+        <!-- Step 1: Discord Authorization -->
+        <div id="step1" class="glass border border-zinc-700 rounded-3xl p-10">
+            <h2 class="text-2xl font-semibold mb-6">Step 1: Authorize Discord</h2>
+            <p class="text-zinc-400 mb-8">Connect your Discord account to generate a key.</p>
+            
+            <button onclick="startDiscordAuth()" 
+                    class="w-full bg-[#5865F2] hover:bg-[#4752C4] py-4 rounded-2xl font-medium flex items-center justify-center gap-3 text-lg">
+                <i class="fab fa-discord"></i>
+                Authorize with Discord
+            </button>
+            <p class="text-center text-xs text-zinc-500 mt-6">
+                This opens Discord OAuth. In production, this would redirect back with your user ID.
             </p>
         </div>
 
-        <!-- Key Generator -->
-        <div id="keySection" class="glass border border-zinc-700 rounded-3xl p-8 mb-12">
-            <div class="flex justify-between items-start mb-8">
-                <div>
-                    <h2 class="text-2xl font-semibold mb-1">Your API Keys</h2>
-                    <p class="text-zinc-400">Keys are required to run any bot command</p>
-                </div>
-                <button onclick="generateKey()" 
-                        class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 px-6 py-3 rounded-2xl transition-colors">
-                    <i class="fas fa-key"></i>
-                    Generate New Key
-                </button>
+        <!-- Step 2: Verification -->
+        <div id="step2" class="glass border border-zinc-700 rounded-3xl p-10 hidden">
+            <h2 class="text-2xl font-semibold mb-6">Step 2: Account Verification</h2>
+            <div class="bg-zinc-900 rounded-2xl p-6">
+                <p class="mb-4">Confirm your Discord username to continue:</p>
+                <input id="discordUsername" type="text" placeholder="YourDiscord#0000" 
+                       class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-violet-500">
             </div>
-
-            <div id="keysList" class="space-y-4">
-                <!-- Populated by JS -->
-            </div>
-
-            <div class="mt-8 pt-8 border-t border-zinc-700 text-xs text-zinc-500">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Keys are signed and validated server-side. Client-side generation is for demo only.</span>
-                </div>
-            </div>
+            <button onclick="verifyAccount()" 
+                    class="mt-6 w-full bg-violet-600 hover:bg-violet-500 py-4 rounded-2xl font-medium">
+                Verify & Continue
+            </button>
         </div>
 
-        <!-- Bot Setup Instructions -->
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="glass border border-zinc-700 rounded-3xl p-8">
-                <h3 class="font-semibold text-xl mb-4 flex items-center gap-2">
-                    <i class="fas fa-robot"></i>
-                    Bot Integration
-                </h3>
-                <div class="space-y-6 text-sm">
-                    <div>
-                        <div class="text-emerald-400 font-mono mb-1">1. DISCORD_BOT_TOKEN</div>
-                        <div class="bg-black/50 p-3 rounded-2xl font-mono text-xs break-all">Your Discord Bot Token (from Developer Portal)</div>
-                    </div>
-                    <div>
-                        <div class="text-emerald-400 font-mono mb-1">2. API_KEY_SECRET</div>
-                        <div class="bg-black/50 p-3 rounded-2xl font-mono text-xs">Used to validate user keys (keep secret)</div>
-                    </div>
-                </div>
+        <!-- Step 3: Key Generation -->
+        <div id="step3" class="glass border border-zinc-700 rounded-3xl p-10 hidden">
+            <h2 class="text-2xl font-semibold mb-6">Your 24-Hour API Key</h2>
+            <div id="keyDisplay" class="bg-black border border-emerald-500/30 rounded-3xl p-8 text-center font-mono text-xl break-all hidden">
+                <!-- Key appears here -->
             </div>
-
-            <div class="glass border border-zinc-700 rounded-3xl p-8">
-                <h3 class="font-semibold text-xl mb-6">How it works</h3>
-                <ol class="space-y-6 text-sm">
-                    <li class="flex gap-4">
-                        <div class="w-6 h-6 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-xs font-mono shrink-0">1</div>
-                        <div>Generate a key above</div>
-                    </li>
-                    <li class="flex gap-4">
-                        <div class="w-6 h-6 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-xs font-mono shrink-0">2</div>
-                        <div>Use <code class="bg-black/50 px-1.5 py-0.5 rounded">!setkey YOUR_KEY</code> in DMs or specific channels</div>
-                    </li>
-                    <li class="flex gap-4">
-                        <div class="w-6 h-6 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-xs font-mono shrink-0">3</div>
-                        <div>All other commands now unlocked</div>
-                    </li>
-                </ol>
-            </div>
+            <button onclick="generateTimeLimitedKey()" 
+                    class="mt-6 w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-medium">
+                Generate 24-Hour Key
+            </button>
+            <p class="text-center text-xs text-zinc-500 mt-4">Expires in 24 hours • Cannot be extended</p>
         </div>
 
-        <footer class="text-center text-zinc-500 text-xs mt-16 pb-8">
-            Hosted on GitHub Pages • Secure by design
-        </footer>
+        <div class="mt-12 text-center text-zinc-500 text-sm">
+            Keys are validated server-side. GitHub Pages is static — you need a small backend for full security.
+        </div>
     </div>
 
     <script>
-        // Mock key storage (in real app this would call your backend)
-        let keys = JSON.parse(localStorage.getItem('botKeys')) || [];
+        let currentStep = 1;
+        let authorizedUser = null;
 
-        function generateKey() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let key = 'kf_';
-            for (let i = 0; i < 32; i++) {
-                key += chars[Math.floor(Math.random() * chars.length)];
-            }
-            
-            const newKey = {
-                id: Date.now(),
-                key: key,
-                created: new Date().toISOString(),
-                status: 'active'
-            };
-            
-            keys.unshift(newKey);
-            localStorage.setItem('botKeys', JSON.stringify(keys));
-            renderKeys();
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(key).then(() => {
-                const btn = document.querySelector('button');
-                const orig = btn.innerHTML;
-                btn.innerHTML = '✅ Copied!';
-                setTimeout(() => btn.innerHTML = orig, 2000);
-            });
+        function showStep(step) {
+            document.querySelectorAll('#step1, #step2, #step3').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            currentStep = step;
         }
 
-        function renderKeys() {
-            const container = document.getElementById('keysList');
-            container.innerHTML = '';
-            
-            if (keys.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12 text-zinc-400">
-                        <i class="fas fa-key text-4xl mb-4 opacity-30"></i>
-                        <p>No keys yet. Generate your first one.</p>
-                    </div>
-                `;
+        function goToStep(step) {
+            if (step === 1) showStep(1);
+            if (step === 2 && authorizedUser) showStep(2);
+            if (step === 3 && authorizedUser) showStep(3);
+        }
+
+        function startDiscordAuth() {
+            alert("In a real app this would redirect to:\nhttps://discord.com/api/oauth2/authorize?...\n\nFor now, we'll simulate authorization.");
+            authorizedUser = "demo_user_" + Math.floor(Math.random()*10000);
+            showStep(2);
+        }
+
+        function verifyAccount() {
+            const username = document.getElementById('discordUsername').value.trim();
+            if (!username) {
+                alert("Please enter your Discord username");
                 return;
             }
-            
-            keys.forEach((k, index) => {
-                const div = document.createElement('div');
-                div.className = 'key-card bg-zinc-900 border border-zinc-700 rounded-3xl p-6 flex items-center justify-between';
-                div.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center">
-                            <i class="fas fa-key"></i>
-                        </div>
-                        <div>
-                            <div class="font-mono text-lg tracking-widest">${k.key}</div>
-                            <div class="text-xs text-zinc-500">Created ${new Date(k.created).toLocaleDateString()}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-4 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-2xl">ACTIVE</span>
-                        <button onclick="copyKey(${index})" 
-                                class="p-3 hover:bg-zinc-800 rounded-2xl transition-colors">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                        <button onclick="revokeKey(${index})" 
-                                class="p-3 hover:bg-red-950 text-red-400 rounded-2xl transition-colors">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+            authorizedUser = username;
+            showStep(3);
         }
 
-        function copyKey(index) {
-            navigator.clipboard.writeText(keys[index].key);
-        }
-
-        function revokeKey(index) {
-            if (confirm('Revoke this key?')) {
-                keys.splice(index, 1);
-                localStorage.setItem('botKeys', JSON.stringify(keys));
-                renderKeys();
+        function generateTimeLimitedKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = 'kf_' + Date.now().toString(36) + '_';
+            for (let i = 0; i < 24; i++) {
+                key += chars[Math.floor(Math.random() * chars.length)];
             }
+
+            const expiry = new Date(Date.now() + 24*60*60*1000).toISOString();
+
+            const keyObj = {
+                key: key,
+                expires: expiry,
+                user: authorizedUser
+            };
+
+            localStorage.setItem('tempBotKey', JSON.stringify(keyObj));
+
+            document.getElementById('keyDisplay').innerHTML = `
+                <div class="text-emerald-400 text-sm mb-2">YOUR TEMPORARY KEY (24h)</div>
+                <div class="text-2xl tracking-widest">${key}</div>
+                <div class="text-xs text-zinc-500 mt-4">Expires: ${new Date(expiry).toLocaleString()}</div>
+            `;
+            document.getElementById('keyDisplay').classList.remove('hidden');
+
+            navigator.clipboard.writeText(key);
+            alert("✅ Key copied! It will expire in 24 hours.");
         }
 
-        // Initialize
-        renderKeys();
+        // Init
+        showStep(1);
     </script>
 </body>
 </html>
