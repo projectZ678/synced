@@ -1,0 +1,11 @@
+{
+  "name": "gh-ip-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build-db": "node scripts/build-db.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

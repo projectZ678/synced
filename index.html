@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IP Lookup API</title>
+  <style>
+    body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 2rem; }
+    pre  { background: #161b22; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    a    { color: #58a6ff; }
+    h1   { color: #f0f6fc; }
+    .dim { color: #8b949e; }
+  </style>
+</head>
+<body>
+  <h1>⚡ IP Lookup API</h1>
+  <p class="dim">Self-hosted · No keys required · Powered by DB-IP Lite</p>
+
+  <h2>Endpoint</h2>
+  <pre>GET ?ip=1.2.3.4</pre>
+
+  <h2>Example</h2>
+  <pre id="example">Loading...</pre>
+
+  <h2>Live result</h2>
+  <pre id="result">Waiting for IP...</pre>
+
+  <p class="dim">
+    Data: <a href="https://db-ip.com" target="_blank">DB-IP City Lite</a> (CC BY 4.0)
+  </p>
+
+  <script src="db.js"></script>
+  <script src="ip-lookup.js"></script>
+  <script>
+    const base = location.href.split('?')[0];
+    document.getElementById('example').textContent =
+      `fetch("${base}?ip=8.8.8.8")\n  .then(r => r.json())\n  .then(console.log)`;
+
+    // Handle ?ip= query param — return JSON if requested via fetch/XHR
+    const params = new URLSearchParams(location.search);
+    const ip = params.get('ip');
+
+    if (ip) {
+      const result = window.IPLookup.lookup(ip);
+
+      // If the request wants JSON (fetch/XHR), redirect to a data: URI isn't
+      // possible — instead we write JSON to the page body so it can be consumed.
+      // Trick: replace the whole document with raw JSON when ?ip= is present.
+      document.open();
+      document.write(JSON.stringify(result, null, 2));
+      document.close();
+    } else {
+      // Show a demo lookup of the visitor's IP via WebRTC
+      tryGetMyIP().then(ip => {
+        if (!ip) { document.getElementById('result').textContent = 'Could not detect IP via WebRTC.'; return; }
+        const data = window.IPLookup.lookup(ip);
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      });
+    }
+
+    function tryGetMyIP() {
+      return new Promise(resolve => {
+        try {
+          const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+          pc.createDataChannel('');
+          pc.createOffer().then(o => pc.setLocalDescription(o));
+          pc.onicecandidate = e => {
+            if (!e || !e.candidate) return;
+            const m = e.candidate.candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
+            if (m) { pc.close(); resolve(m[1]); }
+          };
+          setTimeout(() => resolve(null), 3000);
+        } catch { resolve(null); }
+      });
+    }
+  </script>
+</body>
+</html>
