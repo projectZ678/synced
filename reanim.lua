@@ -42,7 +42,6 @@ local stalkie = {
 
 local API = {};
 
--- FIX: Replace table.clear with this function
 local function clear_table(t)
 	if not t then return end;
 	for key in pairs(t) do
@@ -163,7 +162,7 @@ API.stop_animation = function()
         end
         local clone_animate_script = clone_char:FindFirstChild("Animate")
         if clone_animate_script then
-            clone_animate_script.Disabled = false -- FIX: Use Disabled not Enabled
+            clone_animate_script.Disabled = false
         end
     end
     
@@ -258,7 +257,7 @@ API.reanimate = function(bool, remote, args)
 				if p:IsA("BasePart") and clone_part then
 					p.CFrame = clone_part.CFrame;
 					p.Velocity = Vector3.new();
-					p.RotVelocity = Vector3.new(); -- FIX: Add RotVelocity
+					p.RotVelocity = Vector3.new();
 				end;
 			end;
 		end);
@@ -395,7 +394,7 @@ API.play_animation = function(url, speed)
     end
     local clone_animate_script = clone_char:FindFirstChild("Animate")
     if clone_animate_script then
-        clone_animate_script.Disabled = true -- FIX: Use Disabled not Enabled
+        clone_animate_script.Disabled = true
     end
     
     local anim = stalkie.animation;
@@ -418,7 +417,7 @@ API.play_animation = function(url, speed)
         anim.cache[url] = keyframe_data;
     end
 
-    -- FIX: Support KeyframeSequence format
+    -- Extract keyframes from KeyframeSequence
     local keyframes = nil;
     if keyframe_data.KeyframeSequence then
         keyframes = keyframe_data.KeyframeSequence;
@@ -440,19 +439,22 @@ API.play_animation = function(url, speed)
     clear_table(anim.joints);
     clear_table(anim.original_motor_c0s);
     
-    -- FIX: Store Motor6D joints by Part1 AND Part0 name for better matching
+    -- CRITICAL FIX: Store Motor6D joints properly
     for _, descendant in ipairs(clone_char:GetDescendants()) do
         if descendant:IsA("Motor6D") then
+            -- Store by Part1 name
             local part1Name = descendant.Part1 and descendant.Part1.Name or "Unknown";
-            local part0Name = descendant.Part0 and descendant.Part0.Name or "Unknown";
-            
-            -- Store under both names
             if part1Name ~= "Unknown" then
                 anim.joints[part1Name] = descendant;
             end
+            
+            -- Also store by Part0 name as fallback
+            local part0Name = descendant.Part0 and descendant.Part0.Name or "Unknown";
             if part0Name ~= "Unknown" and part0Name ~= part1Name then
                 anim.joints[part0Name] = descendant;
             end
+            
+            -- Store original C0
             anim.original_motor_c0s[descendant] = descendant.C0;
         end
     end
@@ -564,5 +566,34 @@ API.get_real_character = function(player)
 	if typeof(player) == "string" then return nil end;
 	return stalkie.real_chars[player];
 end;
+
+-- Debug function to check joint matching
+API.debug_joints = function()
+	local player = get_local_player();
+	if typeof(player) == "string" then return player end;
+	local clone = API.get_clone(player);
+	if not clone then return "No clone found" end;
+
+	print("=== MOTOR6D JOINTS IN CLONE ===");
+	for _, desc in clone:GetDescendants() do
+		if desc:IsA("Motor6D") then
+			local p1 = desc.Part1 and desc.Part1.Name or "NONE";
+			local p0 = desc.Part0 and desc.Part0.Name or "NONE";
+			print("Motor: Part1=" .. p1 .. ", Part0=" .. p0);
+		end
+	end
+
+	print("=== STORED JOINTS ===");
+	for name, _ in pairs(stalkie.animation.joints) do
+		print("Stored: " .. name);
+	end
+
+	print("=== KEYFRAME PARTS (first frame) ===");
+	if stalkie.animation.keyframes and stalkie.animation.keyframes[1] then
+		for name, _ in pairs(stalkie.animation.keyframes[1].Data) do
+			print("Keyframe: " .. name);
+		end
+	end
+end
 
 return API;
