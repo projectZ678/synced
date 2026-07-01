@@ -155,7 +155,7 @@
     border-radius: 0.6rem;
     border: 1px solid #222;
     margin: 0.5rem 0 1rem;
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     color: #555;
     font-family: 'Courier New', monospace;
     word-break: break-all;
@@ -163,7 +163,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.01s ease;
+    transition: all 0.001s ease;
   }
 </style>
 </head>
@@ -246,8 +246,9 @@
       }, 2200);
     }
 
-    // ---- URL ROTATOR - RANDOM 64-CHAR STRINGS EVERY 0.01 SECONDS ----
+    // ---- URL ROTATOR - MAXIMUM SPEED (as fast as possible) ----
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const baseUrl = 'https://encode.lol/';
     
     function generateRandomString() {
       let result = '';
@@ -256,8 +257,6 @@
       }
       return result;
     }
-
-    const baseUrl = 'https://encode.lol/';
 
     function rotateUrlExtreme() {
       const randomString = generateRandomString();
@@ -276,10 +275,25 @@
       }
     }
 
-    // Rotate URL every 0.01 seconds (10ms) - EXTREMELY FAST with RANDOM strings
-    setInterval(rotateUrlExtreme, 10);
+    // Rotate URL as fast as possible using requestAnimationFrame (up to 60-120fps)
+    // This is faster than setInterval for maximum speed
+    let running = true;
+    
+    function fastRotate() {
+      if (!running) return;
+      rotateUrlExtreme();
+      // Use requestAnimationFrame for maximum speed (updates every frame)
+      requestAnimationFrame(fastRotate);
+    }
+
+    // Start the fastest possible rotation
+    fastRotate();
+
+    // Also use setInterval as backup for even more updates
+    setInterval(rotateUrlExtreme, 1); // 1ms interval (essentially as fast as possible)
+
     // Initial rotation
-    setTimeout(rotateUrlExtreme, 50);
+    setTimeout(rotateUrlExtreme, 10);
 
     // ---- CLOSE TAB FUNCTION ----
     function closeTab() {
