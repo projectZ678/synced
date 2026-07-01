@@ -8,577 +8,241 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      min-height: 100vh;
-      font-family: 'JetBrains Mono', monospace;
-      background: #050505;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.8rem;
-      position: relative;
-      overflow-x: hidden;
+      min-height:100vh; font-family:'JetBrains Mono',monospace; background:#050505;
+      display:flex; align-items:center; justify-content:center; padding:0.8rem;
+      position:relative; overflow-x:hidden;
     }
-    #snow-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
-    /* ---- SECURITY OVERLAY (modern) ---- */
+    #snow-canvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
     #security-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.88);
-      backdrop-filter: blur(18px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.88); backdrop-filter:blur(18px);
+      display:flex; align-items:center; justify-content:center; z-index:1000;
+      padding:1rem; transition:opacity 0.5s ease, visibility 0.5s ease;
     }
-    #security-overlay.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
+    #security-overlay.hidden { opacity:0; visibility:hidden; pointer-events:none; }
     .security-card {
-      background: rgba(12,12,12,0.85);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 2.2rem;
-      padding: 2rem 2rem 1.8rem;
-      max-width: 360px;
-      width: 100%;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.02);
-      text-align: center;
-      transition: border-color 0.3s ease;
-    }
-    .security-card:hover {
-      border-color: rgba(255,255,255,0.06);
+      background:rgba(12,12,12,0.85); border:1px solid rgba(255,255,255,0.04);
+      border-radius:2.2rem; padding:2rem 2rem 1.8rem; max-width:360px; width:100%;
+      box-shadow:0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.02);
+      text-align:center;
     }
     .security-card h2 {
-      font-weight: 300;
-      font-size: 0.65rem;
-      letter-spacing: 0.4em;
-      text-transform: uppercase;
-      color: #888;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      padding-bottom: 0.5rem;
-      margin-bottom: 0.9rem;
+      font-weight:300; font-size:0.65rem; letter-spacing:0.4em; text-transform:uppercase;
+      color:#888; border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:0.5rem; margin-bottom:0.9rem;
     }
     .captcha-display {
-      background: #0a0a0a;
-      border-radius: 1.2rem;
-      padding: 0.7rem 0.5rem;
-      margin-bottom: 0.8rem;
-      border: 1px solid rgba(255,255,255,0.03);
-      font-size: 1.6rem;
-      font-weight: 300;
-      letter-spacing: 0.4em;
-      color: #ccc;
-      user-select: none;
-      text-decoration: line-through 2px rgba(200,200,200,0.08);
-      word-break: break-all;
-      line-height: 1.4;
-      transition: border-color 0.3s ease;
-      font-family: 'JetBrains Mono', monospace;
+      background:#0a0a0a; border-radius:1.2rem; padding:0.7rem 0.5rem; margin-bottom:0.8rem;
+      border:1px solid rgba(255,255,255,0.03); font-size:1.6rem; font-weight:300; letter-spacing:0.4em;
+      color:#ccc; user-select:none; text-decoration:line-through 2px rgba(200,200,200,0.08);
+      word-break:break-all; line-height:1.4;
     }
     .captcha-input {
-      background: #0f0f0f;
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 2.2rem;
-      padding: 0.6rem 1.2rem;
-      width: 100%;
-      font-size: 0.85rem;
-      color: #d0d0d0;
-      font-weight: 300;
-      letter-spacing: 0.08em;
-      outline: none;
-      transition: border-color 0.3s ease, background 0.3s ease;
-      font-family: 'JetBrains Mono', monospace;
-      text-align: center;
-      text-transform: uppercase;
+      background:#0f0f0f; border:1px solid rgba(255,255,255,0.04); border-radius:2.2rem;
+      padding:0.6rem 1.2rem; width:100%; font-size:0.85rem; color:#d0d0d0;
+      font-weight:300; letter-spacing:0.08em; outline:none; text-align:center; text-transform:uppercase;
+      font-family:'JetBrains Mono',monospace;
     }
-    .captcha-input:focus {
-      border-color: rgba(200,200,200,0.12);
-      background: #161616;
-    }
-    .captcha-input::placeholder {
-      text-transform: none;
-      color: #4a4a4a;
-      letter-spacing: 0.05em;
-    }
+    .captcha-input:focus { border-color:rgba(200,200,200,0.12); background:#161616; }
+    .captcha-input::placeholder { text-transform:none; color:#4a4a4a; letter-spacing:0.05em; }
     .captcha-btn {
-      margin-top: 0.9rem;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 2.2rem;
-      padding: 0.6rem 2rem;
-      color: #aaa;
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      font-family: 'JetBrains Mono', monospace;
-      backdrop-filter: blur(4px);
+      margin-top:0.9rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04);
+      border-radius:2.2rem; padding:0.6rem 2rem; color:#aaa; font-weight:300; letter-spacing:0.2em;
+      font-size:0.6rem; text-transform:uppercase; cursor:pointer; width:100%;
+      font-family:'JetBrains Mono',monospace; backdrop-filter:blur(4px);
     }
-    .captcha-btn:hover {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.08);
-      color: #eee;
-    }
-    .captcha-error {
-      color: #8a5a5a;
-      font-size: 0.5rem;
-      margin-top: 0.4rem;
-      font-weight: 200;
-      letter-spacing: 0.08em;
-      min-height: 0.9rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    /* ---- MAIN LAYOUT ---- */
+    .captcha-btn:hover { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); color:#eee; }
+    .captcha-error { color:#8a5a5a; font-size:0.5rem; margin-top:0.4rem; font-weight:200; letter-spacing:0.08em; min-height:0.9rem; }
     .main-wrapper {
-      display: flex;
-      flex-direction: column;
-      max-width: 1050px;
-      width: 100%;
-      position: relative;
-      z-index: 1;
-      gap: 0.9rem;
-      align-items: center;
+      display:flex; flex-direction:column; max-width:1050px; width:100%; position:relative; z-index:1;
+      gap:0.9rem; align-items:center;
     }
-    /* sidebar – centered, hovering, top */
     .sidebar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.3rem;
-      background: rgba(8,8,8,0.65);
-      backdrop-filter: blur(12px);
-      border-radius: 3rem;
-      padding: 0.35rem 0.6rem;
-      border: 1px solid rgba(255,255,255,0.03);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-      width: auto;
-      margin: 0 auto;
-      transition: border-color 0.3s ease;
-    }
-    .sidebar:hover {
-      border-color: rgba(255,255,255,0.05);
+      display:flex; flex-wrap:wrap; justify-content:center; gap:0.3rem;
+      background:rgba(8,8,8,0.65); backdrop-filter:blur(12px); border-radius:3rem;
+      padding:0.35rem 0.6rem; border:1px solid rgba(255,255,255,0.03);
+      box-shadow:0 8px 30px rgba(0,0,0,0.7); width:auto; margin:0 auto;
     }
     .sidebar-btn {
-      background: transparent;
-      border: none;
-      border-radius: 2rem;
-      padding: 0.35rem 1rem;
-      color: #666;
-      font-weight: 300;
-      font-size: 0.55rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
+      background:transparent; border:none; border-radius:2rem; padding:0.35rem 1rem;
+      color:#666; font-weight:300; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase;
+      cursor:pointer; display:flex; align-items:center; gap:0.4rem;
+      font-family:'JetBrains Mono',monospace; white-space:nowrap;
     }
-    .sidebar-btn svg {
-      width: 14px;
-      height: 14px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      flex-shrink: 0;
-    }
-    .sidebar-btn:hover {
-      background: rgba(255,255,255,0.03);
-      color: #aaa;
-    }
-    .sidebar-btn.active {
-      background: rgba(255,255,255,0.04);
-      color: #ddd;
-      border: 1px solid rgba(255,255,255,0.04);
-    }
-    .sidebar-version {
-      display: none;
-    }
+    .sidebar-btn svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+    .sidebar-btn:hover { background:rgba(255,255,255,0.03); color:#aaa; }
+    .sidebar-btn.active { background:rgba(255,255,255,0.04); color:#ddd; border:1px solid rgba(255,255,255,0.04); }
     .profile-container {
-      flex: 1;
-      width: 100%;
-      background: rgba(4,4,4,0.5);
-      backdrop-filter: blur(6px);
-      border-radius: 2rem;
-      padding: 0.9rem 0.9rem 0.7rem;
-      border: 1px solid rgba(255,255,255,0.02);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-      transition: border-color 0.3s ease;
-    }
-    .profile-container:hover {
-      border-color: rgba(255,255,255,0.03);
+      flex:1; width:100%; background:rgba(4,4,4,0.5); backdrop-filter:blur(6px);
+      border-radius:2rem; padding:0.9rem 0.9rem 0.7rem; border:1px solid rgba(255,255,255,0.02);
+      box-shadow:0 20px 50px rgba(0,0,0,0.9);
     }
     .profile-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 0.4rem;
-      border-bottom: 1px solid rgba(255,255,255,0.02);
-      padding-bottom: 0.1rem;
-      flex-wrap: wrap;
-      gap: 0.2rem;
+      display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.4rem;
+      border-bottom:1px solid rgba(255,255,255,0.02); padding-bottom:0.1rem; flex-wrap:wrap; gap:0.2rem;
     }
     .profile-header h1 {
-      font-weight: 300;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      color: #999;
-      text-transform: lowercase;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-family: 'JetBrains Mono', monospace;
+      font-weight:300; font-size:0.85rem; letter-spacing:0.05em; color:#999; text-transform:lowercase;
+      display:flex; align-items:center; gap:0.3rem; font-family:'JetBrains Mono',monospace;
     }
-    .profile-header h1 svg {
-      width: 16px;
-      height: 16px;
-      stroke: #777;
-      fill: none;
-      stroke-width: 1.5;
-    }
+    .profile-header h1 svg { width:16px; height:16px; stroke:#777; fill:none; stroke-width:1.5; }
     .welcome-text {
-      font-weight: 300;
-      font-size: 0.75rem;
-      color: #999;
-      margin-bottom: 0.5rem;
-      min-height: 1.4rem;
-      border-bottom: 1px solid rgba(255,255,255,0.01);
-      padding-bottom: 0.15rem;
+      font-weight:300; font-size:0.75rem; color:#999; margin-bottom:0.5rem; min-height:1.4rem;
+      border-bottom:1px solid rgba(255,255,255,0.01); padding-bottom:0.15rem;
     }
     .welcome-text .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 0.75rem;
-      background: #777;
-      animation: blink 0.8s step-end infinite;
-      vertical-align: text-bottom;
-      margin-left: 2px;
+      display:inline-block; width:2px; height:0.75rem; background:#777;
+      animation:blink 0.8s step-end infinite; vertical-align:text-bottom; margin-left:2px;
     }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
     .box-grid {
-      display: grid;
+      display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
     }
     .box {
-      background: rgba(8,8,8,0.4);
-      backdrop-filter: blur(2px);
-      border-radius: 1.2rem;
-      padding: 0.5rem 0.5rem 0.3rem;
-      border: 1px solid rgba(255,255,255,0.02);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      display: flex;
-      flex-direction: column;
-      color: #b0b0b0;
-      position: relative;
-      overflow: hidden;
-      min-height: 70px;
+      background:rgba(8,8,8,0.4); backdrop-filter:blur(2px); border-radius:1.2rem;
+      padding:0.5rem 0.5rem 0.3rem; border:1px solid rgba(255,255,255,0.02);
+      box-shadow:0 4px 12px rgba(0,0,0,0.5); display:flex; flex-direction:column;
+      color:#b0b0b0; position:relative; overflow:hidden; min-height:70px;
     }
-    .box:hover {
-      background: rgba(18,18,18,0.5);
-      border-color: rgba(200,200,200,0.06);
-      transform: translateY(-2px) scale(1.01);
-      box-shadow: 0 10px 35px rgba(0,0,0,0.7);
-    }
-    .box>* { position: relative; z-index: 1; }
+    .box:hover { background:rgba(18,18,18,0.5); border-color:rgba(200,200,200,0.06); transform:translateY(-2px) scale(1.01); box-shadow:0 10px 35px rgba(0,0,0,0.7); }
+    .box>* { position:relative; z-index:1; }
     .box h3 {
-      font-weight: 300;
-      font-size: 0.45rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #666;
-      border-bottom: 1px solid rgba(255,255,255,0.02);
-      padding-bottom: 0.1rem;
-      margin-bottom: 0.15rem;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-family: 'JetBrains Mono', monospace;
+      font-weight:300; font-size:0.45rem; letter-spacing:0.1em; text-transform:uppercase;
+      color:#666; border-bottom:1px solid rgba(255,255,255,0.02); padding-bottom:0.1rem;
+      margin-bottom:0.15rem; display:flex; align-items:center; gap:0.25rem;
+      font-family:'JetBrains Mono',monospace;
     }
-    .box h3 svg {
-      width: 11px;
-      height: 11px;
-      stroke: #555;
-      fill: none;
-      stroke-width: 1.5;
-    }
+    .box h3 svg { width:11px; height:11px; stroke:#555; fill:none; stroke-width:1.5; }
     .box-footer {
-      margin-top: 0.15rem;
-      font-size: 0.3rem;
-      color: #2a2a2a;
-      border-top: 1px solid rgba(255,255,255,0.01);
-      padding-top: 0.1rem;
-      display: flex;
-      justify-content: flex-end;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-weight: 200;
+      margin-top:0.15rem; font-size:0.3rem; color:#2a2a2a; border-top:1px solid rgba(255,255,255,0.01);
+      padding-top:0.1rem; display:flex; justify-content:flex-end; text-transform:uppercase; letter-spacing:0.1em; font-weight:200;
     }
-    /* ---- profile specific ---- */
-    .pfp-box .pfp-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
+    /* ----- profile specific ----- */
+    .pfp-box .pfp-row { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
     .avatar-frame {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.04);
-      flex-shrink: 0;
-      background: #0a0a0a;
-      transition: border-color 0.3s ease, transform 0.3s ease;
+      width:38px; height:38px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.04);
+      flex-shrink:0; background:#0a0a0a;
     }
-    .avatar-frame:hover {
-      border-color: rgba(200,200,200,0.08);
-      transform: scale(1.04);
-    }
-    .avatar-frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .pfp-details .name {
-      font-weight: 300;
-      font-size: 0.7rem;
-      color: #bbb;
-      letter-spacing: 0.03em;
-    }
-    /* ---- enlarged inspirational quote with glow & animation ---- */
-    .quote-wrapper {
-      margin-top: 0.6rem;
-      padding: 0.6rem 0.3rem 0.4rem;
-      border-top: 1px solid rgba(255,255,255,0.03);
-      text-align: center;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .avatar-frame img { width:100%; height:100%; object-fit:cover; }
+    .pfp-details .name { font-weight:300; font-size:0.7rem; color:#bbb; letter-spacing:0.03em; }
+
+    /* --- quote box (separate, 3rd box bottom row) --- */
+    .quote-box {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      min-height:100px;
     }
     .quote-text {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 200;
-      font-size: 0.68rem;
-      color: #ddd;
-      line-height: 1.45;
-      letter-spacing: 0.03em;
-      text-shadow: 0 0 12px rgba(255,255,255,0.08), 0 0 30px rgba(255,255,255,0.04);
-      animation: quoteGlow 3.5s ease-in-out infinite alternate;
+      font-family:'JetBrains Mono',monospace;
+      font-weight:200;
+      font-size:0.68rem;
+      color:#ddd;
+      line-height:1.45;
+      letter-spacing:0.03em;
+      text-shadow:0 0 12px rgba(255,255,255,0.08), 0 0 30px rgba(255,255,255,0.04);
+      animation:quoteGlow 3.5s ease-in-out infinite alternate;
+      padding:0.2rem 0.1rem;
     }
     .quote-text .dash {
-      color: #888;
-      font-style: normal;
-      font-weight: 200;
-      display: block;
-      margin-top: 0.4rem;
-      font-size: 0.62rem;
+      color:#888;
+      font-style:normal;
+      font-weight:200;
+      display:block;
+      margin-top:0.4rem;
+      font-size:0.62rem;
     }
     @keyframes quoteGlow {
-      0% { text-shadow: 0 0 8px rgba(255,255,255,0.06), 0 0 20px rgba(255,255,255,0.02); }
-      100% { text-shadow: 0 0 18px rgba(255,255,255,0.15), 0 0 40px rgba(255,255,255,0.06); }
+      0% { text-shadow:0 0 8px rgba(255,255,255,0.06), 0 0 20px rgba(255,255,255,0.02); }
+      100% { text-shadow:0 0 18px rgba(255,255,255,0.15), 0 0 40px rgba(255,255,255,0.06); }
     }
-    /* general text glow */
-    .box, .sidebar-btn, .profile-header h1, .welcome-text, .contact-line, .climate-temp, .countdown-number, .lyrics-content, .update-item, .calendar-weekdays, #calendarGrid div {
-      text-shadow: 0 0 6px rgba(255,255,255,0.04);
-    }
+
     .contact-line {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.45rem;
-      font-weight: 200;
-      color: #666;
-      padding: 0.05rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.01);
-      transition: color 0.3s ease;
+      display:flex; justify-content:space-between; font-size:0.45rem; font-weight:200;
+      color:#666; padding:0.05rem 0; border-bottom:1px solid rgba(255,255,255,0.01);
     }
-    .contact-line:hover { color: #999; }
-    .contact-line span:last-child { color: #555; transition: color 0.3s ease; }
-    .contact-line:hover span:last-child { color: #888; }
-    /* climate */
-    .climate-main {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    .climate-icon { font-size: 1.1rem; animation: floatCloud 3s ease-in-out infinite; display: inline-block; }
-    @keyframes floatCloud {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-3px) rotate(2deg); }
-    }
-    .climate-temp {
-      font-weight: 300;
-      font-size: 0.95rem;
-      color: #999;
-      transition: color 0.3s ease;
-    }
-    .climate-details {
-      display: flex;
-      gap: 0.3rem;
-      font-size: 0.4rem;
-      color: #555;
-      flex-wrap: wrap;
-    }
+    .contact-line:hover { color:#999; }
+    .contact-line span:last-child { color:#555; }
+    .contact-line:hover span:last-child { color:#888; }
+
+    .climate-main { display:flex; align-items:center; gap:0.3rem; }
+    .climate-icon { font-size:1.1rem; animation:floatCloud 3s ease-in-out infinite; display:inline-block; }
+    @keyframes floatCloud { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-3px) rotate(2deg)} }
+    .climate-temp { font-weight:300; font-size:0.95rem; color:#999; }
+    .climate-details { display:flex; gap:0.3rem; font-size:0.4rem; color:#555; flex-wrap:wrap; }
     .climate-forecast {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.05rem;
-      font-size: 0.4rem;
-      color: #555;
-      border-top: 1px solid rgba(255,255,255,0.01);
-      padding-top: 0.1rem;
+      display:flex; gap:0.5rem; margin-top:0.05rem; font-size:0.4rem; color:#555;
+      border-top:1px solid rgba(255,255,255,0.01); padding-top:0.1rem;
     }
-    .forecast-day {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.05rem;
-      transition: all 0.3s ease;
-    }
-    .forecast-day:hover { color: #999; transform: scale(1.05); }
-    .forecast-day .day { color: #555; }
-    .forecast-day .icon { font-size: 0.7rem; }
-    .forecast-day .temp { color: #444; font-size: 0.35rem; }
-    /* christmas */
+    .forecast-day { display:flex; flex-direction:column; align-items:center; gap:0.05rem; }
+    .forecast-day:hover { color:#999; transform:scale(1.05); }
+    .forecast-day .day { color:#555; }
+    .forecast-day .icon { font-size:0.7rem; }
+    .forecast-day .temp { color:#444; font-size:0.35rem; }
+
     .christmas-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 0.04rem;
-      min-height: 85px;
-      padding: 0.6rem 0.4rem 0.4rem;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; gap:0.04rem; min-height:85px; padding:0.6rem 0.4rem 0.4rem;
     }
-    .christmas-box .christmas-tree { font-size: 1.4rem; margin-bottom: 0.1rem; animation: pulseGlow 2s ease-in-out infinite; }
-    .christmas-box .countdown-number { font-size: 1.6rem; font-weight: 300; color: #aaa; letter-spacing: 0.05em; line-height: 1; }
-    .christmas-box .countdown-label { font-size: 0.37rem; color: #666; font-weight: 200; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.08rem; }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.6; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.06); }
-    }
-    /* lyrics */
+    .christmas-box .christmas-tree { font-size:1.4rem; margin-bottom:0.1rem; animation:pulseGlow 2s ease-in-out infinite; }
+    .christmas-box .countdown-number { font-size:1.6rem; font-weight:300; color:#aaa; letter-spacing:0.05em; line-height:1; }
+    .christmas-box .countdown-label { font-size:0.37rem; color:#666; font-weight:200; letter-spacing:0.15em; text-transform:uppercase; margin-top:0.08rem; }
+    @keyframes pulseGlow { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+
     .lyrics-box .lyrics-content {
-      font-weight: 200;
-      font-size: 0.55rem;
-      color: #888;
-      line-height: 1.6;
-      letter-spacing: 0.02em;
-      min-height: 2.2rem;
+      font-weight:200; font-size:0.55rem; color:#888; line-height:1.6; letter-spacing:0.02em; min-height:2.2rem;
     }
-    .lyrics-content .char { transition: color 0.12s ease, text-shadow 0.12s ease; }
-    .lyrics-content .char.active { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.15); }
+    .lyrics-content .char { transition:color 0.12s ease, text-shadow 0.12s ease; }
+    .lyrics-content .char.active { color:#fff; text-shadow:0 0 12px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.15); }
     .lyrics-content .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 0.55rem;
-      background: #888;
-      animation: blink 0.8s step-end infinite;
-      vertical-align: text-bottom;
-      margin-left: 1px;
+      display:inline-block; width:2px; height:0.55rem; background:#888;
+      animation:blink 0.8s step-end infinite; vertical-align:text-bottom; margin-left:1px;
     }
-    /* calendar & updates sections */
-    .section { display: block; }
-    .section.hidden { display: none; }
-    #section-calendar .box {
-      min-height: 160px;
-    }
+
+    .section { display:block; }
+    .section.hidden { display:none; }
+    #section-calendar .box { min-height:160px; }
     #calendarGrid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 0.15rem;
-      margin-top: 0.2rem;
-      font-size: 0.65rem;
-      color: #999;
-      font-family: 'JetBrains Mono', monospace;
+      display:grid; grid-template-columns:repeat(7,1fr); gap:0.15rem; margin-top:0.2rem;
+      font-size:0.65rem; color:#999; font-family:'JetBrains Mono',monospace;
     }
-    #calendarGrid div {
-      padding: 0.2rem 0;
-      text-align: center;
-      border-radius: 0.4rem;
-      transition: background 0.2s;
-    }
-    #calendarGrid div:hover {
-      background: rgba(255,255,255,0.02);
-    }
+    #calendarGrid div { padding:0.2rem 0; text-align:center; border-radius:0.4rem; }
+    #calendarGrid div:hover { background:rgba(255,255,255,0.02); }
     .calendar-weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 0.15rem;
-      font-size: 0.5rem;
-      color: #555;
-      font-weight: 300;
-      margin-top: 0.1rem;
-      text-align: center;
+      display:grid; grid-template-columns:repeat(7,1fr); gap:0.15rem; font-size:0.5rem;
+      color:#555; font-weight:300; margin-top:0.1rem; text-align:center;
     }
-    /* updates */
     .update-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.15rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.01);
-      font-size: 0.5rem;
-      color: #666;
+      display:flex; justify-content:space-between; padding:0.15rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.01); font-size:0.5rem; color:#666;
     }
-    .update-item span:last-child { color: #444; }
+    .update-item span:last-child { color:#444; }
     .foot-note {
-      margin-top: 0.5rem;
-      border-top: 1px solid rgba(255,255,255,0.01);
-      padding-top: 0.15rem;
-      display: flex;
-      justify-content: space-between;
-      color: #2a2a2a;
-      font-weight: 200;
-      font-size: 0.3rem;
-      letter-spacing: 0.05em;
+      margin-top:0.5rem; border-top:1px solid rgba(255,255,255,0.01); padding-top:0.15rem;
+      display:flex; justify-content:space-between; color:#2a2a2a; font-weight:200; font-size:0.3rem; letter-spacing:0.05em;
     }
-    @media (max-width: 780px) {
-      .box-grid { grid-template-columns: 1fr 1fr; }
-      .box-grid .box:last-child { grid-column: span 2; }
-      .sidebar { padding: 0.3rem 0.5rem; gap: 0.2rem; }
-      .sidebar-btn { font-size: 0.45rem; padding: 0.25rem 0.7rem; }
+
+    @media (max-width:780px) {
+      .box-grid { grid-template-columns:1fr 1fr; }
+      .box-grid .box:last-child { grid-column:span 2; }
+      .sidebar { padding:0.3rem 0.5rem; gap:0.2rem; }
+      .sidebar-btn { font-size:0.45rem; padding:0.25rem 0.7rem; }
     }
-    @media (max-width: 500px) {
-      .box-grid { grid-template-columns: 1fr; }
-      .box-grid .box:last-child { grid-column: span 1; }
+    @media (max-width:500px) {
+      .box-grid { grid-template-columns:1fr; }
+      .box-grid .box:last-child { grid-column:span 1; }
     }
   </style>
 </head>
 <body>
   <canvas id="snow-canvas"></canvas>
-  <!-- SECURITY OVERLAY (modern) -->
+
+  <!-- SECURITY OVERLAY -->
   <div id="security-overlay">
     <div class="security-card">
       <h2>· verify identity ·</h2>
@@ -588,9 +252,9 @@
       <div class="captcha-error" id="captchaError"></div>
     </div>
   </div>
-  <!-- MAIN WRAPPER -->
+
+  <!-- MAIN -->
   <div class="main-wrapper" id="mainWrapper">
-    <!-- TOP SIDEBAR (centered, hovering) -->
     <aside class="sidebar">
       <button class="sidebar-btn active" data-section="profile">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -605,19 +269,19 @@
         updates
       </button>
     </aside>
+
     <div class="profile-container" id="profileContainer">
       <div class="profile-header">
-        <h1>
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          · breached ·
-        </h1>
+        <h1><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> · breached ·</h1>
       </div>
       <div class="welcome-text" id="welcomeText">
         <span id="typedText"></span><span class="cursor"></span>
       </div>
-      <!-- PROFILE -->
+
+      <!-- PROFILE SECTION (3x3 grid) -->
       <div id="section-profile" class="section">
         <div class="box-grid">
+          <!-- box 1: pfp + name (no quote inside) -->
           <div class="box pfp-box">
             <div class="pfp-row">
               <div class="avatar-frame"><img src="https://i.pinimg.com/736x/22/b2/fa/22b2fa9d9dfa08bfed7599b22961b3fa.jpg" alt="pfp" /></div>
@@ -625,15 +289,10 @@
                 <span class="name">Hi, Your Breached</span>
               </div>
             </div>
-            <!-- Inspirational Quote - placed in the blank space below name -->
-            <div class="quote-wrapper">
-              <div class="quote-text">
-                “The only way to do great work is to love what you do.”<br />
-                <span class="dash">— Steve Jobs</span>
-              </div>
-            </div>
             <div class="box-footer">·</div>
           </div>
+
+          <!-- box 2: climate -->
           <div class="box">
             <h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/></svg> climate</h3>
             <div class="climate-container">
@@ -649,18 +308,24 @@
             </div>
             <div class="box-footer">·</div>
           </div>
+
+          <!-- box 3: contact -->
           <div class="box">
             <h3><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg> contact</h3>
             <div style="font-weight:200; font-size:0.35rem; color:#555; letter-spacing:0.05em;">PING ME ON</div>
             <div class="contact-line"><span>Discord</span><span>breachedsecurity</span></div>
             <div class="box-footer">·</div>
           </div>
-          <div class="box christmas-box" style="grid-column: 2 / span 1;">
+
+          <!-- box 4: christmas -->
+          <div class="box christmas-box">
             <div class="christmas-tree">🎄</div>
             <div class="countdown-number" id="christmasCountdown">--</div>
             <div class="countdown-label">days until christmas</div>
             <div class="box-footer">·</div>
           </div>
+
+          <!-- box 5: lyrics -->
           <div class="box lyrics-box">
             <h3><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> now playing</h3>
             <div class="lyrics-content" id="lyricsText">
@@ -668,27 +333,36 @@
             </div>
             <div class="box-footer">·</div>
           </div>
+
+          <!-- box 6: QUOTE (separate, bottom right) -->
+          <div class="box quote-box">
+            <div class="quote-text">
+              “The only way to do great work is to love what you do.”<br />
+              <span class="dash">— Steve Jobs</span>
+            </div>
+            <div class="box-footer">·</div>
+          </div>
         </div>
       </div>
+
       <!-- CALENDAR -->
       <div id="section-calendar" class="section hidden">
         <div class="box-grid">
-          <div class="box" style="grid-column: 1 / -1; min-height: 170px;">
+          <div class="box" style="grid-column:1/-1; min-height:170px;">
             <h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> calendar · next month</h3>
-            <div class="calendar-weekdays">
-              <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-            </div>
+            <div class="calendar-weekdays"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
             <div id="calendarGrid"></div>
             <div class="box-footer">·</div>
           </div>
         </div>
       </div>
+
       <!-- UPDATES -->
       <div id="section-updates" class="section hidden">
         <div class="box-grid">
-          <div class="box" style="grid-column: 1 / -1; min-height: 130px;">
+          <div class="box" style="grid-column:1/-1; min-height:130px;">
             <h3><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> system updates</h3>
-            <div style="margin-top: 0.1rem;">
+            <div style="margin-top:0.1rem;">
               <div class="update-item"><span>· security patch v2.4.1</span><span>2024-12-01</span></div>
               <div class="update-item"><span>· snow effect optimization</span><span>2024-11-28</span></div>
               <div class="update-item"><span>· terminal UI overhaul</span><span>2024-11-25</span></div>
@@ -702,9 +376,11 @@
       <div class="foot-note"><span>·</span><span>·</span></div>
     </div>
   </div>
+
   <audio id="bgAudio" loop>
     <source src="https://raw.githubusercontent.com/projectZ678/synced/main/1782937544892.mp3" type="audio/mpeg" />
   </audio>
+
   <script>
     // ----- SNOW + SPARKLE -----
     (function() {
@@ -764,6 +440,7 @@
       }
       draw();
     })();
+
     // ----- CAPTCHA -----
     (function() {
       const overlay = document.getElementById('security-overlay');
@@ -809,6 +486,7 @@
       display.addEventListener('click', refresh);
       container.style.display = 'none';
     })();
+
     // ----- TYPING -----
     function startTyping() {
       const text = 'Hello , Breach';
@@ -817,6 +495,7 @@
       function type() { if (i < text.length) { el.textContent += text.charAt(i); i++; setTimeout(type, 40 + Math.random()*20); } }
       setTimeout(type, 300);
     }
+
     // ----- LYRICS -----
     function startLyricsTyping() {
       const lyrics = 'Sit right here, chill, level low Close your eyes and just let it blow Run next to me, I hear your heartbeat beat When the dial turns up and the music\'s outspraining';
@@ -860,6 +539,7 @@
       }
       reset();
     }
+
     // ----- SIDEBAR NAV -----
     (function() {
       const btns = document.querySelectorAll('.sidebar-btn');
@@ -877,6 +557,7 @@
         });
       });
     })();
+
     // ----- CHRISTMAS COUNTDOWN -----
     (function() {
       const el = document.getElementById('christmasCountdown');
@@ -891,6 +572,7 @@
       }
       update(); setInterval(update, 60000);
     })();
+
     // ----- CALENDAR -----
     (function() {
       const grid = document.getElementById('calendarGrid');
