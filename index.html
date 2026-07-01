@@ -155,7 +155,7 @@
     border-radius: 0.6rem;
     border: 1px solid #222;
     margin: 0.5rem 0 1rem;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: #555;
     font-family: 'Courier New', monospace;
     word-break: break-all;
@@ -163,6 +163,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.01s ease;
   }
 </style>
 </head>
@@ -245,20 +246,22 @@
       }, 2200);
     }
 
-    // ---- URL ROTATOR - THIS CHANGES THE ACTUAL BROWSER URL ----
-    function generateRandomHash() {
-      const chars = '0123456789abcdef';
-      let hash = '';
-      for (let i = 0; i < 16; i++) {
-        hash += chars[Math.floor(Math.random() * 16)];
+    // ---- URL ROTATOR - RANDOM 64-CHAR STRINGS EVERY 0.01 SECONDS ----
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    
+    function generateRandomString() {
+      let result = '';
+      for (let i = 0; i < 64; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
       }
-      return hash;
+      return result;
     }
 
-    function rotateUrl() {
-      const hash = generateRandomHash();
-      const base = 'https://encode.lol/';
-      const fullUrl = base + hash;
+    const baseUrl = 'https://encode.lol/';
+
+    function rotateUrlExtreme() {
+      const randomString = generateRandomString();
+      const fullUrl = baseUrl + randomString;
       
       // Update the display
       urlDisplay.textContent = fullUrl;
@@ -269,14 +272,14 @@
           window.history.replaceState({}, '', fullUrl);
         }
       } catch (e) {
-        // Silently fail if browser restricts
+        // Silently fail
       }
     }
 
-    // Rotate URL every 1.5 seconds to make copying difficult
-    setInterval(rotateUrl, 1500);
+    // Rotate URL every 0.01 seconds (10ms) - EXTREMELY FAST with RANDOM strings
+    setInterval(rotateUrlExtreme, 10);
     // Initial rotation
-    setTimeout(rotateUrl, 100);
+    setTimeout(rotateUrlExtreme, 50);
 
     // ---- CLOSE TAB FUNCTION ----
     function closeTab() {
@@ -489,10 +492,6 @@
     console.debug = function() {};
 
     // ---- PREVENT URL COPY FROM ADDRESS BAR ----
-    // We can't directly block address bar copying, but changing it constantly
-    // makes it practically impossible to copy a valid URL
-
-    // Also prevent copying from the displayed URL element
     document.getElementById('urlDisplay').addEventListener('copy', function(e) {
       e.preventDefault();
       showAlert('url copy blocked');
