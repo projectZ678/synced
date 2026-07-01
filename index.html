@@ -11,12 +11,12 @@
     box-sizing: border-box;
   }
   body {
-    background: #0a0a0a;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
     overflow: hidden;
     position: relative;
   }
@@ -32,130 +32,122 @@
   .snowflake {
     position: absolute;
     top: -10px;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
+    color: rgba(255,255,255,0.15);
+    font-size: 12px;
     animation: fall linear infinite;
-    opacity: 0.4;
     user-select: none;
     pointer-events: none;
   }
   @keyframes fall {
-    0% { transform: translateY(-10px) rotate(0deg); opacity: 0.4; }
-    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.1; }
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 0.3; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.05; }
   }
   .card {
-    background: #141414;
-    max-width: 560px;
+    background: linear-gradient(145deg, #111111, #1e1e1e);
+    max-width: 520px;
     width: 90%;
-    padding: 3rem 2.5rem;
-    border-radius: 2rem;
+    padding: 2.8rem 2.2rem;
+    border-radius: 1.8rem;
     border: 1px solid #2a2a2a;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.02);
     text-align: center;
     position: relative;
     z-index: 1;
-    backdrop-filter: blur(2px);
   }
   h1 {
-    color: #f0f0f0;
-    font-weight: 300;
-    font-size: 2.8rem;
-    letter-spacing: 2px;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 10px rgba(255,255,255,0.05);
+    color: #e8e8e8;
+    font-weight: 200;
+    font-size: 2.6rem;
+    letter-spacing: 4px;
+    margin-bottom: 0.3rem;
+    text-shadow: 0 2px 20px rgba(255,255,255,0.03);
   }
-  .animated-text {
-    color: #bbbbbb;
-    font-size: 1rem;
+  .subtitle {
+    color: #666;
+    font-size: 0.75rem;
     font-weight: 300;
     letter-spacing: 3px;
     text-transform: uppercase;
-    margin-bottom: 2rem;
-    animation: pulse 3s ease-in-out infinite;
-    border-top: 1px solid #2a2a2a;
-    border-bottom: 1px solid #2a2a2a;
-    padding: 0.8rem 0;
+    padding: 0.5rem 0;
+    border-top: 1px solid #222;
+    border-bottom: 1px solid #222;
     display: inline-block;
+    margin: 0.8rem 0 1.8rem;
+    animation: breathe 4s ease-in-out infinite;
   }
-  @keyframes pulse {
+  @keyframes breathe {
     0% { opacity: 0.4; letter-spacing: 3px; }
-    50% { opacity: 1; letter-spacing: 6px; }
+    50% { opacity: 1; letter-spacing: 5px; }
     100% { opacity: 0.4; letter-spacing: 3px; }
   }
   .status-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-    margin: 2rem 0 1.5rem;
+    gap: 0.7rem;
+    margin: 1.5rem 0 1.2rem;
   }
   .status-item {
-    background: #1a1a1a;
-    padding: 0.9rem 0.3rem;
-    border-radius: 1.2rem;
-    border: 1px solid #282828;
+    background: #151515;
+    padding: 0.8rem 0.2rem;
+    border-radius: 1rem;
+    border: 1px solid #242424;
   }
   .status-label {
     display: block;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     text-transform: uppercase;
     letter-spacing: 1.2px;
-    color: #6a6a6a;
-    margin-bottom: 0.3rem;
+    color: #555;
+    margin-bottom: 0.2rem;
     font-weight: 400;
   }
   .status-value {
-    font-weight: 500;
-    font-size: 0.95rem;
-    color: #d0d0d0;
-    letter-spacing: 0.5px;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: #bbb;
+    letter-spacing: 0.3px;
   }
-  .status-value.ok { color: #8a8a8a; }
-  .status-value.warn { color: #b0b0b0; }
-  .status-value.block { color: #a0a0a0; }
   .status-value .dot {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    margin-right: 6px;
+    margin-right: 5px;
   }
-  .dot.green { background: #6a6a6a; }
-  .dot.yellow { background: #8a8a8a; }
-  .dot.red { background: #7a7a7a; }
+  .dot.green { background: #4a4a4a; }
+  .dot.yellow { background: #6a6a6a; }
+  .dot.red { background: #5a5a5a; }
   .footnote {
-    margin-top: 1.8rem;
-    color: #3a3a3a;
-    font-size: 0.7rem;
+    margin-top: 1.5rem;
+    color: #333;
+    font-size: 0.6rem;
     letter-spacing: 1px;
-    border-top: 1px solid #1f1f1f;
-    padding-top: 1.5rem;
+    border-top: 1px solid #1a1a1a;
+    padding-top: 1.2rem;
   }
   .footnote span {
-    background: #1a1a1a;
-    padding: 0.2rem 1rem;
+    background: #121212;
+    padding: 0.15rem 1rem;
     border-radius: 20px;
-    color: #6a6a6a;
-    border: 1px solid #242424;
+    color: #555;
+    border: 1px solid #202020;
   }
   .alert-banner {
-    background: #1c1c1c;
-    border-left: 3px solid #5a5a5a;
-    color: #b0b0b0;
-    padding: 0.6rem 1rem;
-    border-radius: 0.8rem;
-    margin-top: 1.2rem;
-    font-size: 0.8rem;
+    background: #141414;
+    border-left: 3px solid #444;
+    color: #888;
+    padding: 0.5rem 0.8rem;
+    border-radius: 0.6rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
     display: none;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    letter-spacing: 0.5px;
+    gap: 0.5rem;
+    letter-spacing: 0.3px;
   }
   .alert-banner.show {
     display: flex;
-  }
-  .hidden {
-    display: none;
   }
 </style>
 </head>
@@ -165,7 +157,7 @@
 
 <div class="card">
   <h1>secure view</h1>
-  <div class="animated-text">integrity shield active</div>
+  <div class="subtitle">protection active</div>
 
   <div class="status-grid">
     <div class="status-item">
@@ -182,7 +174,7 @@
     </div>
     <div class="status-item">
       <span class="status-label">page save</span>
-      <span class="status-value" id="downloadStatus"><span class="dot green"></span> blocked</span>
+      <span class="status-value" id="downloadStatus"><span class="dot green"></span> allowed</span>
     </div>
   </div>
 
@@ -191,7 +183,7 @@
   </div>
 
   <div class="footnote">
-    <span>protected environment</span>
+    <span>black & white gradient</span>
   </div>
 </div>
 
@@ -202,16 +194,15 @@
     // ---- SNOWFALL ----
     (function createSnow() {
       const container = document.getElementById('snowfall');
-      const flakes = ['•', '◦', '❄', '❅', '❆', '✦'];
-      for (let i = 0; i < 65; i++) {
+      const chars = ['•', '◦', '❄', '❅', '✦'];
+      for (let i = 0; i < 55; i++) {
         const el = document.createElement('div');
         el.className = 'snowflake';
-        el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+        el.textContent = chars[Math.floor(Math.random() * chars.length)];
         el.style.left = Math.random() * 100 + '%';
-        el.style.fontSize = (6 + Math.random() * 16) + 'px';
-        el.style.animationDuration = (8 + Math.random() * 18) + 's';
+        el.style.fontSize = (5 + Math.random() * 14) + 'px';
+        el.style.animationDuration = (10 + Math.random() * 20) + 's';
         el.style.animationDelay = (Math.random() * 15) + 's';
-        el.style.opacity = 0.2 + Math.random() * 0.3;
         container.appendChild(el);
       }
     })();
@@ -233,19 +224,32 @@
       alertBox.classList.add('show');
       setTimeout(() => {
         alertBox.classList.remove('show');
-      }, 2600);
+      }, 2200);
     }
 
-    // ---- ADBLOCK ----
+    // ---- CLOSE TAB FUNCTION ----
+    function closeTab() {
+      try {
+        window.close();
+      } catch (e) {
+        // fallback: redirect to blank
+        window.location.href = 'about:blank';
+      }
+      // additional forceful close attempt
+      window.open('', '_self', '');
+      window.close();
+    }
+
+    // ---- ADBLOCK DETECTION ----
     (function detectAdBlock() {
       const bait = document.createElement('div');
-      bait.className = 'adsbox ad ad-banner banner-ads';
+      bait.className = 'adsbox ad ad-banner';
       bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;height:1px;width:1px;';
       bait.innerHTML = '&nbsp;';
       document.body.appendChild(bait);
 
       const testAd = document.createElement('div');
-      testAd.className = 'ad-unit ad-banner';
+      testAd.className = 'ad-unit';
       testAd.style.cssText = 'position:absolute;left:-9999px;top:-9999px;height:1px;width:1px;';
       testAd.innerHTML = '&nbsp;';
       document.body.appendChild(testAd);
@@ -272,7 +276,7 @@
       else window.addEventListener('load', check);
     })();
 
-    // ---- DEVTOOLS ----
+    // ---- DEVTOOLS DETECTION + CLOSE TAB ----
     let devtoolsOpen = false;
     function devtoolsCheck() {
       const threshold = 160;
@@ -282,77 +286,52 @@
       if (isOpen !== devtoolsOpen) {
         devtoolsOpen = isOpen;
         if (devtoolsOpen) {
-          setStatus(devtoolsEl, 'open', 'yellow');
-          showAlert('developer tools detected');
+          setStatus(devtoolsEl, 'detected', 'yellow');
+          showAlert('devtools detected - closing tab');
+          setTimeout(closeTab, 300);
         } else {
           setStatus(devtoolsEl, 'closed', 'green');
         }
       }
     }
-    setInterval(devtoolsCheck, 700);
+    setInterval(devtoolsCheck, 500);
     window.addEventListener('resize', devtoolsCheck);
-    setTimeout(devtoolsCheck, 400);
+    setTimeout(devtoolsCheck, 300);
 
-    // ---- BLOCK CTRL+U ----
+    // ---- CTRL+U (view source) - CLOSE TAB ----
     document.addEventListener('keydown', function(e) {
       const key = e.key || e.keyCode;
       if (e.ctrlKey && (key === 'u' || key === 'U' || key === 85)) {
         e.preventDefault();
         e.stopPropagation();
         setStatus(sourceEl, 'blocked', 'red');
-        showAlert('ctrl+u blocked');
+        showAlert('ctrl+u blocked - closing');
+        setTimeout(closeTab, 200);
         return false;
       }
       return true;
     }, true);
 
-    // ---- BLOCK RIGHT CLICK ----
+    // ---- RIGHT CLICK - CLOSE ----
     document.addEventListener('contextmenu', function(e) {
       e.preventDefault();
       showAlert('right click blocked');
+      setTimeout(closeTab, 300);
       return false;
     }, true);
 
-    // ---- BLOCK F12 ----
+    // ---- F12 - CLOSE ----
     document.addEventListener('keydown', function(e) {
       if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
         setStatus(devtoolsEl, 'blocked', 'red');
-        showAlert('f12 blocked');
+        showAlert('f12 blocked - closing');
+        setTimeout(closeTab, 200);
         return false;
       }
     }, true);
 
-    // ---- BLOCK SAVE SHORTCUTS ----
-    document.addEventListener('keydown', function(e) {
-      if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-        e.preventDefault();
-        setStatus(downloadEl, 'blocked', 'red');
-        showAlert('ctrl+s blocked');
-        return false;
-      }
-      if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
-        e.preventDefault();
-        setStatus(downloadEl, 'blocked', 'red');
-        showAlert('ctrl+shift+s blocked');
-        return false;
-      }
-      if (e.ctrlKey && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
-        e.preventDefault();
-        setStatus(downloadEl, 'blocked', 'red');
-        showAlert('ctrl+p blocked');
-        return false;
-      }
-    }, true);
-
-    // ---- BLOCK DRAG ----
-    document.addEventListener('dragstart', function(e) {
-      e.preventDefault();
-      showAlert('drag blocked');
-      return false;
-    }, true);
-
-    // ---- BLOCK DEVTOOLS SHORTCUTS ----
+    // ---- CTRL+SHIFT+I / J / C - CLOSE ----
     document.addEventListener('keydown', function(e) {
       const ctrl = e.ctrlKey || e.metaKey;
       const shift = e.shiftKey;
@@ -360,24 +339,27 @@
       if (ctrl && shift && (key === 'i' || key === 'I' || key === 73)) {
         e.preventDefault();
         setStatus(devtoolsEl, 'blocked', 'red');
-        showAlert('ctrl+shift+i blocked');
+        showAlert('devtools shortcut - closing');
+        setTimeout(closeTab, 200);
         return false;
       }
       if (ctrl && shift && (key === 'j' || key === 'J' || key === 74)) {
         e.preventDefault();
         setStatus(devtoolsEl, 'blocked', 'red');
-        showAlert('ctrl+shift+j blocked');
+        showAlert('console shortcut - closing');
+        setTimeout(closeTab, 200);
         return false;
       }
       if (ctrl && shift && (key === 'c' || key === 'C' || key === 67)) {
         e.preventDefault();
         setStatus(devtoolsEl, 'blocked', 'red');
-        showAlert('ctrl+shift+c blocked');
+        showAlert('inspect shortcut - closing');
+        setTimeout(closeTab, 200);
         return false;
       }
     }, true);
 
-    // ---- BLOCK COPY/CUT ----
+    // ---- COPY/CUT - BLOCK ----
     document.addEventListener('copy', function(e) {
       e.preventDefault();
       showAlert('copy blocked');
@@ -389,37 +371,38 @@
       return false;
     }, true);
 
-    // ---- BEFOREUNLOAD (source download attempt) ----
-    window.addEventListener('beforeunload', function(e) {
-      if (devtoolsOpen) {
-        setStatus(downloadEl, 'attempted', 'yellow');
-        showAlert('source download attempt');
+    // ---- PAGE SAVE (CTRL+S) - ALLOWED (but we show status) ----
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+        // allow save, just update status
+        setStatus(downloadEl, 'allowed', 'green');
+        showAlert('page save allowed');
+        // let the default action happen
+        return true;
       }
-    });
-
-    // ---- INIT STATUS ----
-    setStatus(adblockEl, 'clear', 'green');
-    setStatus(devtoolsEl, 'closed', 'green');
-    setStatus(sourceEl, 'locked', 'green');
-    setStatus(downloadEl, 'blocked', 'green');
-
-    setTimeout(devtoolsCheck, 500);
-
-    // console override to prevent easy source inspection
-    console.log = function() {};
-    console.warn = function() {};
-    console.error = function() {};
-    console.table = function() {};
-    console.group = function() {};
-    console.groupEnd = function() {};
-
-    // ---- PREVENT SELECTION ----
-    document.addEventListener('selectstart', function(e) {
-      e.preventDefault();
-      return false;
+      // block ctrl+shift+s (save as) to prevent source download
+      if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+        e.preventDefault();
+        setStatus(downloadEl, 'blocked', 'red');
+        showAlert('save as blocked');
+        return false;
+      }
+      // block print (can save as PDF)
+      if (e.ctrlKey && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
+        e.preventDefault();
+        setStatus(downloadEl, 'blocked', 'red');
+        showAlert('print blocked');
+        return false;
+      }
+      return true;
     }, true);
 
-    // ---- BLOCK VIEW SOURCE VIA DRAG TO ADDRESS BAR ----
+    // ---- DRAG/DROP BLOCK ----
+    document.addEventListener('dragstart', function(e) {
+      e.preventDefault();
+      showAlert('drag blocked');
+      return false;
+    }, true);
     document.addEventListener('drop', function(e) {
       e.preventDefault();
       showAlert('drop blocked');
@@ -429,6 +412,43 @@
       e.preventDefault();
       return false;
     }, true);
+
+    // ---- SELECTION BLOCK ----
+    document.addEventListener('selectstart', function(e) {
+      e.preventDefault();
+      return false;
+    }, true);
+
+    // ---- BEFOREUNLOAD ----
+    window.addEventListener('beforeunload', function(e) {
+      if (devtoolsOpen) {
+        setStatus(downloadEl, 'attempted', 'yellow');
+      }
+    });
+
+    // ---- INIT STATUS ----
+    setStatus(adblockEl, 'clear', 'green');
+    setStatus(devtoolsEl, 'closed', 'green');
+    setStatus(sourceEl, 'locked', 'green');
+    setStatus(downloadEl, 'allowed', 'green');
+
+    setTimeout(devtoolsCheck, 400);
+
+    // ---- SILENCE CONSOLE ----
+    console.log = function() {};
+    console.warn = function() {};
+    console.error = function() {};
+    console.table = function() {};
+    console.group = function() {};
+    console.groupEnd = function() {};
+    console.debug = function() {};
+
+    // ---- PREVENT SOURCE DOWNLOAD VIA DEVTOOLS (additional) ----
+    // Attempt to detect if devtools is used to save page source
+    // We already close tab on devtools detection above
+
+    // ---- OVERRIDE window.close protection ----
+    // We want our closeTab to work
 
   })();
 </script>
