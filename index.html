@@ -13,7 +13,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             min-height: 100vh;
             font-family: 'JetBrains Mono', monospace;
@@ -21,11 +20,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 0.8rem;
             position: relative;
             overflow-x: hidden;
         }
-
         #snow-canvas {
             position: fixed;
             top: 0;
@@ -35,178 +33,182 @@
             pointer-events: none;
             z-index: 0;
         }
-
         #security-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.96);
-            backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.97);
+            backdrop-filter: blur(16px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            padding: 1.5rem;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
+            padding: 1rem;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
         }
         #security-overlay.hidden {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
-
         .security-card {
             background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(100, 100, 100, 0.08);
-            border-radius: 2.5rem;
-            padding: 2.5rem 2rem;
-            max-width: 420px;
+            border: 1px solid rgba(100, 100, 100, 0.06);
+            border-radius: 1.5rem;
+            padding: 1.5rem 1.2rem;
+            max-width: 320px;
             width: 100%;
             box-shadow: 0 30px 60px rgba(0,0,0,0.9);
             text-align: center;
+            transition: border-color 0.3s ease;
         }
-
+        .security-card:hover {
+            border-color: rgba(140, 140, 140, 0.1);
+        }
         .security-card h2 {
             font-weight: 300;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             letter-spacing: 0.3em;
             text-transform: uppercase;
-            color: #888;
+            color: #777;
             border-bottom: 1px solid rgba(100,100,100,0.04);
-            padding-bottom: 0.7rem;
-            margin-bottom: 1.2rem;
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.6rem;
             font-family: 'JetBrains Mono', monospace;
         }
-
         .captcha-display {
             background: rgba(0,0,0,0.5);
-            border-radius: 1.2rem;
-            padding: 1rem 0.5rem;
-            margin-bottom: 1.2rem;
+            border-radius: 0.7rem;
+            padding: 0.6rem 0.4rem;
+            margin-bottom: 0.6rem;
             border: 1px solid rgba(100,100,100,0.04);
             font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
+            font-size: 1.4rem;
             font-weight: 300;
             letter-spacing: 0.3em;
             color: #b0b0b0;
             background: #111;
             user-select: none;
-            text-decoration: line-through 1.5px rgba(160,160,160,0.12);
+            text-decoration: line-through 1.5px rgba(160,160,160,0.1);
             word-break: break-all;
-            line-height: 1.4;
+            line-height: 1.3;
+            transition: border-color 0.3s ease;
         }
-
+        .captcha-display:hover {
+            border-color: rgba(140,140,140,0.08);
+        }
         .captcha-input {
             background: rgba(20,20,20,0.5);
             border: 1px solid rgba(100,100,100,0.04);
-            border-radius: 3rem;
-            padding: 0.6rem 1.2rem;
+            border-radius: 1.8rem;
+            padding: 0.35rem 0.8rem;
             width: 100%;
-            font-size: 0.95rem;
+            font-size: 0.75rem;
             color: #bbb;
             font-weight: 300;
             letter-spacing: 0.05em;
             outline: none;
-            transition: 0.15s;
+            transition: border-color 0.3s ease, background 0.3s ease;
             font-family: 'JetBrains Mono', monospace;
             text-align: center;
             text-transform: uppercase;
         }
         .captcha-input:focus {
-            border-color: rgba(140,140,140,0.08);
+            border-color: rgba(160,160,160,0.12);
             background: rgba(30,30,30,0.4);
         }
         .captcha-input::placeholder {
             text-transform: none;
+            color: #555;
         }
-
         .captcha-btn {
-            margin-top: 1.2rem;
-            background: rgba(40,40,40,0.1);
+            margin-top: 0.6rem;
+            background: rgba(40,40,40,0.08);
             border: 1px solid rgba(100,100,100,0.04);
-            border-radius: 3rem;
-            padding: 0.5rem 2rem;
+            border-radius: 1.8rem;
+            padding: 0.35rem 2rem;
             color: #888;
             font-weight: 300;
             letter-spacing: 0.1em;
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             text-transform: uppercase;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s ease;
             width: 100%;
             font-family: 'JetBrains Mono', monospace;
         }
         .captcha-btn:hover {
-            background: rgba(60,60,60,0.1);
-            border-color: rgba(120,120,120,0.06);
-            color: #aaa;
+            background: rgba(60,60,60,0.12);
+            border-color: rgba(140,140,140,0.08);
+            color: #bbb;
         }
-
         .captcha-error {
             color: #6a4a4a;
-            font-size: 0.65rem;
-            margin-top: 0.5rem;
+            font-size: 0.5rem;
+            margin-top: 0.25rem;
             font-weight: 200;
             letter-spacing: 0.05em;
-            min-height: 1.2rem;
+            min-height: 0.8rem;
             font-family: 'JetBrains Mono', monospace;
         }
-
         .main-wrapper {
             display: flex;
-            gap: 1.5rem;
-            max-width: 1200px;
+            gap: 0.7rem;
+            max-width: 1050px;
             width: 100%;
             position: relative;
             z-index: 1;
             align-items: flex-start;
         }
-
         .sidebar {
-            flex: 0 0 200px;
+            flex: 0 0 110px;
             background: rgba(4, 4, 4, 0.7);
             backdrop-filter: blur(4px);
-            border-radius: 2rem;
-            padding: 1.5rem 1rem;
-            border: 1px solid rgba(60, 60, 60, 0.06);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            border-radius: 1.2rem;
+            padding: 0.6rem 0.4rem;
+            border: 1px solid rgba(60, 60, 60, 0.04);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
-            gap: 0.8rem;
+            gap: 0.2rem;
+            transition: border-color 0.3s ease;
         }
-
+        .sidebar:hover {
+            border-color: rgba(100,100,100,0.06);
+        }
         .sidebar-btn {
-            background: rgba(20,20,20,0.3);
-            border: 1px solid rgba(80,80,80,0.04);
-            border-radius: 1.2rem;
-            padding: 0.8rem 1rem;
-            color: #888;
+            background: rgba(20,20,20,0.2);
+            border: 1px solid rgba(80,80,80,0.03);
+            border-radius: 0.6rem;
+            padding: 0.3rem 0.4rem;
+            color: #777;
             font-weight: 300;
-            font-size: 0.7rem;
+            font-size: 0.45rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.25s ease;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.4rem;
             font-family: 'JetBrains Mono', monospace;
         }
         .sidebar-btn:hover {
-            background: rgba(40,40,40,0.2);
+            background: rgba(40,40,40,0.15);
             border-color: rgba(120,120,120,0.06);
-            color: #bbb;
+            color: #aaa;
+            transform: translateX(2px);
         }
         .sidebar-btn.active {
-            background: rgba(60,60,60,0.15);
-            border-color: rgba(140,140,140,0.08);
+            background: rgba(60,60,60,0.12);
+            border-color: rgba(140,140,140,0.06);
             color: #ccc;
         }
         .sidebar-btn svg {
-            width: 18px;
-            height: 18px;
+            width: 12px;
+            height: 12px;
             fill: none;
             stroke: currentColor;
             stroke-width: 1.5;
@@ -215,75 +217,75 @@
             flex-shrink: 0;
         }
         .sidebar-divider {
-            border-top: 1px solid rgba(80,80,80,0.03);
-            margin: 0.2rem 0;
+            border-top: 1px solid rgba(80,80,80,0.02);
+            margin: 0.05rem 0;
         }
         .sidebar-version {
             font-weight: 200;
-            font-size: 0.5rem;
-            color: #444;
+            font-size: 0.35rem;
+            color: #3a3a3a;
             text-align: center;
             margin-top: auto;
-            padding-top: 0.5rem;
+            padding-top: 0.2rem;
             border-top: 1px solid rgba(80,80,80,0.02);
             font-family: 'JetBrains Mono', monospace;
         }
-
         .profile-container {
             flex: 1;
-            background: rgba(4, 4, 4, 0.65);
+            background: rgba(4, 4, 4, 0.6);
             backdrop-filter: blur(4px);
-            border-radius: 2.8rem;
-            padding: 1.8rem 1.8rem 1.5rem;
+            border-radius: 1.5rem;
+            padding: 0.8rem 0.8rem 0.7rem;
             border: 1px solid rgba(60, 60, 60, 0.04);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            transition: border-color 0.3s ease;
         }
-
+        .profile-container:hover {
+            border-color: rgba(100,100,100,0.06);
+        }
         .profile-header {
             display: flex;
             align-items: baseline;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(100,100,100,0.03);
-            padding-bottom: 0.3rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(100,100,100,0.02);
+            padding-bottom: 0.1rem;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.2rem;
         }
-
         .profile-header h1 {
             font-weight: 300;
-            font-size: 1.4rem;
+            font-size: 0.85rem;
             letter-spacing: 0.05em;
-            color: #a0a0a0;
+            color: #999;
             text-transform: lowercase;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.3rem;
             font-family: 'JetBrains Mono', monospace;
         }
         .profile-header h1 svg {
-            width: 20px;
-            height: 20px;
-            stroke: #888;
+            width: 14px;
+            height: 14px;
+            stroke: #777;
             fill: none;
             stroke-width: 1.5;
         }
-
         .welcome-text {
             font-family: 'JetBrains Mono', monospace;
             font-weight: 300;
-            font-size: 1.2rem;
-            color: #aaa;
-            margin-bottom: 1.5rem;
-            min-height: 2.5rem;
-            border-bottom: 1px solid rgba(80,80,80,0.04);
-            padding-bottom: 0.5rem;
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            min-height: 1.3rem;
+            border-bottom: 1px solid rgba(80,80,80,0.02);
+            padding-bottom: 0.15rem;
         }
         .welcome-text .cursor {
             display: inline-block;
             width: 2px;
-            height: 1.2rem;
-            background: #888;
+            height: 0.75rem;
+            background: #777;
             animation: blink 0.8s step-end infinite;
             vertical-align: text-bottom;
             margin-left: 2px;
@@ -292,159 +294,172 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
-
         .box-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
+            gap: 0.4rem;
         }
-
         .box {
-            background: rgba(8, 8, 8, 0.45);
+            background: rgba(8, 8, 8, 0.4);
             backdrop-filter: blur(2px);
-            border-radius: 1.8rem;
-            padding: 1.2rem 1rem 1rem;
-            border: 1px solid rgba(70, 70, 70, 0.03);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-            transition: all 0.15s ease;
+            border-radius: 1rem;
+            padding: 0.4rem 0.4rem 0.3rem;
+            border: 1px solid rgba(70, 70, 70, 0.02);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             flex-direction: column;
             color: #b0b0b0;
             position: relative;
             overflow: hidden;
-            min-height: 160px;
+            min-height: 70px;
         }
         .box:hover {
-            background: rgba(14, 14, 14, 0.5);
-            border-color: rgba(100,100,100,0.05);
+            background: rgba(18, 18, 18, 0.6);
+            border-color: rgba(200, 200, 200, 0.08);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7), 0 0 25px rgba(255,255,255,0.02);
         }
-
-        /* Animated coding language icons - scrolling sideways */
-        .code-scroll {
+        .box::after {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
+            top: -50%;
+            left: -50%;
             width: 200%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            padding: 0 2rem;
-            animation: scrollCode 25s linear infinite;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;
-            opacity: 0.06;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.8rem;
-            color: #aaa;
-            letter-spacing: 0.1em;
+            transition: all 0.6s ease;
+            opacity: 0;
         }
-        .code-scroll span {
-            white-space: nowrap;
+        .box:hover::after {
+            opacity: 1;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 60%);
+            animation: glowPulse 2s ease-in-out infinite;
         }
-        @keyframes scrollCode {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
         }
-
         .box>* {
             position: relative;
             z-index: 1;
         }
-
+        /* Lyrics box */
+        .lyrics-box {
+            min-height: 70px;
+            padding: 0.4rem 0.6rem;
+            overflow: hidden;
+        }
+        .lyrics-box .lyrics-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 200;
+            font-size: 0.55rem;
+            color: #888;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+            min-height: 2.2rem;
+            position: relative;
+        }
+        .lyrics-box .lyrics-content .char {
+            display: inline;
+            transition: color 0.12s ease, text-shadow 0.12s ease;
+        }
+        .lyrics-box .lyrics-content .char.active {
+            color: #fff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.15);
+        }
+        .lyrics-box .lyrics-content .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 0.55rem;
+            background: #888;
+            animation: blink 0.8s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 1px;
+        }
         .pfp-box {
             background: rgba(6, 6, 6, 0.5);
             border-left: 2px solid rgba(100,100,100,0.04);
         }
-
         .pfp-row {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
         }
-
         .avatar-frame {
-            width: 64px;
-            height: 64px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             overflow: hidden;
-            border: 1px solid rgba(100,100,100,0.06);
+            border: 1px solid rgba(100,100,100,0.04);
             flex-shrink: 0;
             background: #0a0a0a;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+        .avatar-frame:hover {
+            border-color: rgba(200,200,200,0.1);
+            transform: scale(1.05);
         }
         .avatar-frame img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .pfp-details .name {
             font-weight: 300;
-            font-size: 1.1rem;
+            font-size: 0.65rem;
             letter-spacing: 0.02em;
             color: #999;
             font-family: 'JetBrains Mono', monospace;
         }
-        .pfp-details .tag {
-            font-weight: 200;
-            font-size: 0.55rem;
-            background: rgba(30,30,30,0.15);
-            padding: 0.05rem 0.8rem;
-            border-radius: 30px;
-            display: inline-block;
-            color: #666;
-            border: 1px solid rgba(80,80,80,0.03);
-            font-family: 'JetBrains Mono', monospace;
-        }
         .pfp-details .bio {
-            font-size: 0.7rem;
+            font-size: 0.45rem;
             color: #555;
-            margin-top: 0.15rem;
+            margin-top: 0.05rem;
             font-weight: 200;
-            border-top: 1px solid rgba(80,80,80,0.03);
-            padding-top: 0.25rem;
-            line-height: 1.3;
+            border-top: 1px solid rgba(80,80,80,0.02);
+            padding-top: 0.1rem;
+            line-height: 1.2;
             font-family: 'JetBrains Mono', monospace;
         }
-
         .box h3 {
             font-weight: 300;
-            font-size: 0.7rem;
+            font-size: 0.45rem;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: #777;
-            border-bottom: 1px solid rgba(80,80,80,0.03);
-            padding-bottom: 0.25rem;
-            margin-bottom: 0.5rem;
+            color: #666;
+            border-bottom: 1px solid rgba(80,80,80,0.02);
+            padding-bottom: 0.1rem;
+            margin-bottom: 0.15rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.25rem;
             font-family: 'JetBrains Mono', monospace;
         }
         .box h3 svg {
-            width: 14px;
-            height: 14px;
-            stroke: #666;
+            width: 10px;
+            height: 10px;
+            stroke: #555;
             fill: none;
             stroke-width: 1.5;
         }
-
         .box p, .box li {
             font-weight: 200;
-            font-size: 0.7rem;
-            color: #777;
-            line-height: 1.5;
+            font-size: 0.45rem;
+            color: #666;
+            line-height: 1.2;
             list-style: none;
             font-family: 'JetBrains Mono', monospace;
         }
-
         .box-footer {
-            margin-top: 0.5rem;
-            font-size: 0.4rem;
-            color: #333;
+            margin-top: 0.15rem;
+            font-size: 0.3rem;
+            color: #2a2a2a;
             border-top: 1px solid rgba(80,80,80,0.02);
-            padding-top: 0.25rem;
+            padding-top: 0.1rem;
             display: flex;
             justify-content: flex-end;
             text-transform: uppercase;
@@ -452,188 +467,207 @@
             font-weight: 200;
             font-family: 'JetBrains Mono', monospace;
         }
-
         .contact-line {
             display: flex;
             justify-content: space-between;
-            font-size: 0.65rem;
+            font-size: 0.45rem;
             font-weight: 200;
-            color: #777;
-            padding: 0.15rem 0;
+            color: #666;
+            padding: 0.05rem 0;
             border-bottom: 1px solid rgba(80,80,80,0.02);
             font-family: 'JetBrains Mono', monospace;
+            transition: color 0.3s ease;
+        }
+        .contact-line:hover {
+            color: #999;
         }
         .contact-line span:last-child {
             color: #555;
+            transition: color 0.3s ease;
         }
-
-        /* Christmas countdown box */
+        .contact-line:hover span:last-child {
+            color: #888;
+        }
+        /* Enhanced Centered Christmas Box */
         .christmas-box {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            gap: 0.5rem;
-            min-height: 160px;
-        }
-        .christmas-box .countdown-number {
-            font-size: 2.2rem;
-            font-weight: 300;
-            color: #aaa;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.05em;
-        }
-        .christmas-box .countdown-label {
-            font-size: 0.6rem;
-            color: #666;
-            font-weight: 200;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            gap: 0.04rem;
+            min-height: 85px;
+            padding: 0.6rem 0.4rem 0.4rem;
+            grid-row: span 1;
         }
         .christmas-box .christmas-tree {
-            font-size: 2rem;
-            margin-bottom: 0.2rem;
+            font-size: 1.25rem;
+            margin-bottom: 0.1rem;
             animation: pulseGlow 2s ease-in-out infinite;
+        }
+        .christmas-box .countdown-number {
+            font-size: 1.45rem;
+            font-weight: 300;
+            color: #aaa;
+            letter-spacing: 0.05em;
+            line-height: 1;
+        }
+        .christmas-box:hover .countdown-number {
+            color: #ddd;
+            transform: scale(1.04);
+        }
+        .christmas-box .countdown-label {
+            font-size: 0.37rem;
+            color: #666;
+            font-weight: 200;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 0.08rem;
         }
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
+            50% { opacity: 1; transform: scale(1.06); }
         }
-
         .weather-temp {
             font-weight: 300;
-            font-size: 1.4rem;
+            font-size: 0.85rem;
             color: #999;
             letter-spacing: 0.02em;
             font-family: 'JetBrains Mono', monospace;
+            transition: color 0.3s ease;
+        }
+        .weather-temp:hover {
+            color: #bbb;
         }
         .weather-detail {
-            font-size: 0.6rem;
-            color: #666;
+            font-size: 0.4rem;
+            color: #555;
             font-weight: 200;
             display: flex;
-            gap: 0.6rem;
+            gap: 0.3rem;
             flex-wrap: wrap;
-            margin-top: 0.15rem;
+            margin-top: 0.05rem;
             font-family: 'JetBrains Mono', monospace;
         }
-
-        .image-box img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 1rem;
-            border: 1px solid rgba(80,80,80,0.04);
-            transition: 0.2s;
-        }
-        .image-box img:hover {
-            border-color: rgba(120,120,120,0.08);
-            transform: scale(1.01);
-        }
-
-        /* Climate animation */
         .climate-container {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
+            gap: 0.05rem;
         }
         .climate-main {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.4rem;
         }
         .climate-icon {
-            font-size: 2rem;
+            font-size: 1rem;
             animation: floatCloud 3s ease-in-out infinite;
             display: inline-block;
         }
         @keyframes floatCloud {
             0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-6px) rotate(2deg); }
+            50% { transform: translateY(-3px) rotate(2deg); }
         }
         .climate-temp {
             font-weight: 300;
-            font-size: 1.6rem;
-            color: #aaa;
+            font-size: 0.9rem;
+            color: #999;
             font-family: 'JetBrains Mono', monospace;
+            transition: color 0.3s ease;
+        }
+        .climate-temp:hover {
+            color: #bbb;
         }
         .climate-details {
             display: flex;
-            gap: 0.8rem;
-            font-size: 0.6rem;
-            color: #666;
+            gap: 0.3rem;
+            font-size: 0.4rem;
+            color: #555;
             font-family: 'JetBrains Mono', monospace;
             flex-wrap: wrap;
         }
         .climate-forecast {
             display: flex;
-            gap: 0.8rem;
-            margin-top: 0.2rem;
-            font-size: 0.55rem;
+            gap: 0.4rem;
+            margin-top: 0.05rem;
+            font-size: 0.4rem;
             color: #555;
             font-family: 'JetBrains Mono', monospace;
-            border-top: 1px solid rgba(80,80,80,0.03);
-            padding-top: 0.3rem;
+            border-top: 1px solid rgba(80,80,80,0.02);
+            padding-top: 0.1rem;
         }
         .forecast-day {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.1rem;
+            gap: 0.05rem;
+            transition: all 0.3s ease;
+        }
+        .forecast-day:hover {
+            color: #999;
+            transform: scale(1.05);
         }
         .forecast-day .day {
-            color: #666;
+            color: #555;
         }
         .forecast-day .icon {
-            font-size: 1rem;
+            font-size: 0.6rem;
         }
         .forecast-day .temp {
-            color: #555;
-            font-size: 0.5rem;
+            color: #444;
+            font-size: 0.35rem;
         }
-
-        @media (max-width: 960px) {
+        .breach-desc {
+            font-weight: 200;
+            font-size: 0.4rem;
+            color: #555;
+            line-height: 1.1;
+            font-family: 'JetBrains Mono', monospace;
+            border-top: 1px solid rgba(80,80,80,0.02);
+            padding-top: 0.1rem;
+            margin-top: 0.1rem;
+        }
+        @media (max-width: 780px) {
             .main-wrapper { flex-direction: column; }
             .sidebar {
                 flex: 1;
                 flex-direction: row;
                 flex-wrap: wrap;
-                padding: 1rem;
-                gap: 0.5rem;
+                padding: 0.4rem;
+                gap: 0.2rem;
                 justify-content: center;
             }
             .sidebar-btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.6rem;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.4rem;
                 flex: 1;
-                min-width: 100px;
+                min-width: 60px;
                 justify-content: center;
             }
             .sidebar-version { display: none; }
-            .profile-header h1 { font-size: 1.2rem; }
+            .profile-header h1 { font-size: 0.75rem; }
+            .box-grid .box:last-child {
+                grid-column: span 3;
+            }
         }
-
-        @media (max-width: 760px) {
+        @media (max-width: 600px) {
             .box-grid { grid-template-columns: 1fr 1fr; }
+            .box-grid .box:last-child {
+                grid-column: span 2;
+            }
         }
-        @media (max-width: 500px) {
+        @media (max-width: 420px) {
             .box-grid { grid-template-columns: 1fr; }
-            .profile-container { padding: 1rem; }
-            .welcome-text { font-size: 1rem; }
-            .climate-temp { font-size: 1.2rem; }
-            .christmas-box .countdown-number { font-size: 1.8rem; }
         }
-
         .foot-note {
-            margin-top: 1.2rem;
+            margin-top: 0.5rem;
             border-top: 1px solid rgba(80,80,80,0.02);
-            padding-top: 0.4rem;
+            padding-top: 0.15rem;
             display: flex;
             justify-content: space-between;
-            color: #333;
+            color: #2a2a2a;
             font-weight: 200;
-            font-size: 0.45rem;
+            font-size: 0.3rem;
             letter-spacing: 0.05em;
             font-family: 'JetBrains Mono', monospace;
         }
@@ -646,9 +680,7 @@
     </style>
 </head>
 <body>
-
     <canvas id="snow-canvas"></canvas>
-
     <div id="security-overlay">
         <div class="security-card">
             <h2>· security check ·</h2>
@@ -658,7 +690,6 @@
             <div class="captcha-error" id="captchaError"></div>
         </div>
     </div>
-
     <div class="main-wrapper" id="mainWrapper">
         <aside class="sidebar">
             <button class="sidebar-btn active" data-section="profile">
@@ -676,7 +707,6 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-version">· v2.0 ·</div>
         </aside>
-
         <div class="profile-container" id="profileContainer">
             <div class="profile-header">
                 <h1>
@@ -684,74 +714,32 @@
                     · breached ·
                 </h1>
             </div>
-
             <div class="welcome-text" id="welcomeText">
                 <span id="typedText"></span><span class="cursor"></span>
             </div>
-
             <!-- PROFILE SECTION -->
             <div id="section-profile" class="section">
                 <div class="box-grid">
                     <!-- PFP BOX -->
                     <div class="box pfp-box">
-                        <div class="code-scroll">
-                            <span>&lt;html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                            <span>&lt;/html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                        </div>
                         <div class="pfp-row">
                             <div class="avatar-frame">
                                 <img src="https://i.pinimg.com/736x/22/b2/fa/22b2fa9d9dfa08bfed7599b22961b3fa.jpg" alt="pfp" />
                             </div>
                             <div class="pfp-details">
                                 <span class="name">Hi, Your Breached</span>
-                                <span class="tag">· html / css / c# / c++ / py / golang ·</span>
                                 <span class="bio">cybersecurity penetration tester</span>
                             </div>
                         </div>
-                        <div style="margin-top:0.4rem; border-top:1px solid rgba(80,80,80,0.02); padding-top:0.25rem;">
-                            <span style="font-weight:200; font-size:0.55rem; color:#555; font-family:'JetBrains Mono',monospace;">· breachedsecurity ·</span>
+                        <div style="margin-top:0.1rem; border-top:1px solid rgba(80,80,80,0.02); padding-top:0.1rem;">
+                            <span style="font-weight:200; font-size:0.4rem; color:#555; font-family:'JetBrains Mono',monospace;">· breachedsecurity ·</span>
                         </div>
-                        <!-- Description about breaching and simswapping -->
-                        <div style="margin-top:0.4rem; border-top:1px solid rgba(80,80,80,0.02); padding-top:0.3rem;">
-                            <p style="font-weight:200; font-size:0.6rem; color:#666; line-height:1.4; font-family:'JetBrains Mono',monospace;">
-                                Breaching · exploiting vulnerabilities to gain unauthorized access. 
-                                SIM swapping · social engineering attack to hijack phone numbers and bypass 2FA.
-                            </p>
+                        <div class="breach-desc">
+                            Breaching · exploiting vulnerabilities. SIM swapping · hijacking phone numbers to bypass 2FA.
                         </div>
                         <div class="box-footer">·</div>
                     </div>
-
-                    <!-- IMAGE 1 -->
-                    <div class="box image-box">
-                        <h3>
-                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            gallery
-                        </h3>
-                        <img src="https://i.pinimg.com/736x/39/db/6d/39db6d55e4856e2b97df83b28deb13c2.jpg" alt="image 1" />
-                        <div class="box-footer">·</div>
-                    </div>
-
-                    <!-- IMAGE 2 -->
-                    <div class="box image-box">
-                        <h3>
-                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            gallery
-                        </h3>
-                        <img src="https://i.pinimg.com/736x/5e/d1/b8/5ed1b8f44fc2914bd69c342fbf02d36e.jpg" alt="image 2" />
-                        <div class="box-footer">·</div>
-                    </div>
-
-                    <!-- WEATHER - animated climate -->
+                    <!-- WEATHER -->
                     <div class="box">
                         <h3>
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/></svg>
@@ -797,119 +785,83 @@
                         </div>
                         <div class="box-footer">·</div>
                     </div>
-
-                    <!-- CONTACT - only Discord -->
+                    <!-- CONTACT -->
                     <div class="box">
                         <h3>
                             <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
                             contact
                         </h3>
-                        <div style="font-weight:200; font-size:0.5rem; color:#555; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace;">PING ME ON</div>
+                        <div style="font-weight:200; font-size:0.35rem; color:#555; letter-spacing:0.05em; font-family:'JetBrains Mono',monospace;">PING ME ON</div>
                         <div class="contact-line"><span>Discord</span><span>breachedsecurity</span></div>
                         <div class="box-footer">·</div>
                     </div>
-
-                    <!-- CHRISTMAS COUNTDOWN BOX -->
-                    <div class="box christmas-box">
-                        <div class="code-scroll">
-                            <span>&lt;html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                            <span>&lt;/html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                        </div>
+                    <!-- CHRISTMAS -->
+                    <div class="box christmas-box" style="grid-column: 2 / span 1; margin: 0 auto;">
                         <div class="christmas-tree">🎄</div>
                         <div class="countdown-number" id="christmasCountdown">--</div>
                         <div class="countdown-label">days until christmas</div>
                         <div class="box-footer">·</div>
                     </div>
-                </div>
-            </div>
-
-            <!-- CALENDAR SECTION -->
-            <div id="section-calendar" class="section hidden">
-                <div class="box-grid">
-                    <div class="box" style="grid-column: 1 / -1; min-height: 200px;">
-                        <div class="code-scroll">
-                            <span>&lt;html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                            <span>&lt;/html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                        </div>
+                    <!-- LYRICS BOX -->
+                    <div class="box lyrics-box">
                         <h3>
-                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            calendar · next month
+                            <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                            now playing
                         </h3>
-                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; margin-top: 0.5rem; font-size: 0.65rem; color: #888; font-family:'JetBrains Mono',monospace;">
-                            <div style="font-weight:300; color:#666;">Mon</div>
-                            <div style="font-weight:300; color:#666;">Tue</div>
-                            <div style="font-weight:300; color:#666;">Wed</div>
-                            <div style="font-weight:300; color:#666;">Thu</div>
-                            <div style="font-weight:300; color:#666;">Fri</div>
-                            <div style="font-weight:300; color:#666;">Sat</div>
-                            <div style="font-weight:300; color:#666;">Sun</div>
+                        <div class="lyrics-content" id="lyricsText">
+                            <span id="typedLyrics"></span><span class="cursor" id="lyricsCursor"></span>
                         </div>
-                        <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; margin-top: 0.2rem; font-size: 0.7rem; color: #888; font-family:'JetBrains Mono',monospace;"></div>
                         <div class="box-footer">·</div>
                     </div>
                 </div>
             </div>
-
-            <!-- UPDATES SECTION -->
+            <!-- CALENDAR & UPDATES -->
+            <div id="section-calendar" class="section hidden">
+                <div class="box-grid">
+                    <div class="box" style="grid-column: 1 / -1; min-height: 120px;">
+                        <h3>
+                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            calendar · next month
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.1rem; margin-top: 0.15rem; font-size: 0.45rem; color: #777; font-family:'JetBrains Mono',monospace;">
+                            <div style="font-weight:300; color:#555;">Mon</div>
+                            <div style="font-weight:300; color:#555;">Tue</div>
+                            <div style="font-weight:300; color:#555;">Wed</div>
+                            <div style="font-weight:300; color:#555;">Thu</div>
+                            <div style="font-weight:300; color:#555;">Fri</div>
+                            <div style="font-weight:300; color:#555;">Sat</div>
+                            <div style="font-weight:300; color:#555;">Sun</div>
+                        </div>
+                        <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.1rem; margin-top: 0.05rem; font-size: 0.5rem; color: #777; font-family:'JetBrains Mono',monospace;"></div>
+                        <div class="box-footer">·</div>
+                    </div>
+                </div>
+            </div>
             <div id="section-updates" class="section hidden">
                 <div class="box-grid">
-                    <div class="box" style="grid-column: 1 / -1; min-height: 200px;">
-                        <div class="code-scroll">
-                            <span>&lt;html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                            <span>&lt;/html&gt;</span>
-                            <span>css</span>
-                            <span>c#</span>
-                            <span>c++</span>
-                            <span>py</span>
-                            <span>golang</span>
-                        </div>
+                    <div class="box" style="grid-column: 1 / -1; min-height: 120px;">
                         <h3>
                             <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                             system updates
                         </h3>
-                        <div style="margin-top: 0.3rem; font-family:'JetBrains Mono',monospace;">
-                            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.7rem; color: #777;">
+                        <div style="margin-top: 0.1rem; font-family:'JetBrains Mono',monospace;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.1rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.5rem; color: #666;">
                                 <span>· security patch v2.4.1</span>
                                 <span style="color:#555;">2024-12-01</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.7rem; color: #777;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.1rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.5rem; color: #666;">
                                 <span>· snow effect optimization</span>
                                 <span style="color:#555;">2024-11-28</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.7rem; color: #777;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.1rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.5rem; color: #666;">
                                 <span>· terminal UI overhaul</span>
                                 <span style="color:#555;">2024-11-25</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.7rem; color: #777;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.1rem 0; border-bottom: 1px solid rgba(80,80,80,0.02); font-size: 0.5rem; color: #666;">
                                 <span>· captcha security upgrade</span>
                                 <span style="color:#555;">2024-11-20</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.7rem; color: #777;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.1rem 0; font-size: 0.5rem; color: #666;">
                                 <span>· audio background integration</span>
                                 <span style="color:#555;">2024-11-15</span>
                             </div>
@@ -918,28 +870,23 @@
                     </div>
                 </div>
             </div>
-
             <div class="foot-note">
                 <span>·</span>
                 <span>·</span>
             </div>
         </div>
     </div>
-
-    <!-- AUDIO - AUTOPLAY from GitHub raw -->
-    <audio id="bgAudio" loop autoplay>
+    <audio id="bgAudio" loop>
         <source src="https://raw.githubusercontent.com/projectZ678/synced/main/1782937544892.mp3" type="audio/mpeg" />
     </audio>
-
     <script>
-        // ---------- SNOWFALL ----------
+        // ---------- SNOWFALL + SPARKLE ----------
         (function() {
             const canvas = document.getElementById('snow-canvas');
             const ctx = canvas.getContext('2d');
             let width, height;
-            let flakes = [];
-            const MAX = 150;
-
+            let particles = [];
+            const MAX_PARTICLES = 160;
             function resize() {
                 width = window.innerWidth;
                 height = window.innerHeight;
@@ -948,50 +895,76 @@
             }
             window.addEventListener('resize', resize);
             resize();
-
-            class Flake {
+            class Particle {
                 constructor() { this.reset(); }
                 reset() {
                     this.x = Math.random() * width;
                     this.y = -10 - Math.random() * 30;
-                    this.size = 1.2 + Math.random() * 3;
-                    this.speed = 0.3 + Math.random() * 0.7;
-                    this.wind = (Math.random() - 0.5) * 0.2;
-                    this.opacity = 0.15 + Math.random() * 0.2;
+                    this.size = 0.6 + Math.random() * 2.2;
+                    this.speed = 0.25 + Math.random() * 0.5;
+                    this.wind = (Math.random() - 0.5) * 0.12;
+                    this.opacity = 0.1 + Math.random() * 0.25;
+                    this.isSparkle = Math.random() < 0.2;
+                    if (this.isSparkle) {
+                        this.size = 1.2 + Math.random() * 1.8;
+                        this.opacity = 0.3 + Math.random() * 0.4;
+                    }
+                    this.twinkle = Math.random() * Math.PI * 2;
                 }
                 update() {
-                    this.y += this.speed * 0.7;
-                    this.x += this.wind * 0.5 + Math.sin(this.y * 0.006) * 0.12;
+                    this.y += this.speed * 0.6;
+                    this.x += this.wind * 0.4 + Math.sin(this.y * 0.005) * 0.1;
+                    if (this.isSparkle) {
+                        this.twinkle += 0.05;
+                        this.opacity = 0.3 + Math.sin(this.twinkle) * 0.15 + 0.15;
+                    }
                     if (this.y > height + 20) { this.reset(); this.y = -10 - Math.random() * 30; }
                     if (this.x < -20) this.x = width + 20;
                     if (this.x > width + 20) this.x = -20;
                 }
                 draw(ctx) {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,255,255,${this.opacity * 0.5})`;
-                    ctx.fill();
+                    if (this.isSparkle) {
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+                        ctx.rotate(this.twinkle);
+                        const s = this.size * 0.5;
+                        ctx.beginPath();
+                        for (let i = 0; i < 4; i++) {
+                            const angle = (i / 4) * Math.PI * 2;
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(Math.cos(angle) * s, Math.sin(angle) * s);
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(Math.cos(angle + 0.4) * s * 0.4, Math.sin(angle + 0.4) * s * 0.4);
+                        }
+                        ctx.strokeStyle = `rgba(255,255,255,${this.opacity * 0.5})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                        ctx.restore();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${this.opacity * 0.5})`;
+                        ctx.fill();
+                    }
                 }
             }
-
-            for (let i = 0; i < MAX; i++) {
-                const f = new Flake();
-                f.y = Math.random() * height;
-                flakes.push(f);
+            for (let i = 0; i < MAX_PARTICLES; i++) {
+                const p = new Particle();
+                p.y = Math.random() * height;
+                particles.push(p);
             }
-
             function draw() {
                 ctx.clearRect(0, 0, width, height);
-                for (let f of flakes) {
-                    f.update();
-                    f.draw(ctx);
+                for (let p of particles) {
+                    p.update();
+                    p.draw(ctx);
                 }
                 requestAnimationFrame(draw);
             }
             draw();
         })();
 
-        // ---------- SECURITY CAPTCHA with auto uppercase and dot ----------
+        // ---------- SECURITY CAPTCHA ----------
         (function() {
             const overlay = document.getElementById('security-overlay');
             const container = document.getElementById('profileContainer');
@@ -999,7 +972,6 @@
             const captchaInput = document.getElementById('captchaInput');
             const captchaBtn = document.getElementById('captchaBtn');
             const captchaError = document.getElementById('captchaError');
-
             function generateCaptcha() {
                 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
                 let str = '';
@@ -1009,18 +981,14 @@
                 }
                 return str;
             }
-
             let currentCaptcha = generateCaptcha();
             captchaDisplay.textContent = currentCaptcha;
-
             function refreshCaptcha() {
                 currentCaptcha = generateCaptcha();
                 captchaDisplay.textContent = currentCaptcha;
                 captchaInput.value = '';
                 captchaError.textContent = '';
             }
-
-            // Auto uppercase and dot insertion
             captchaInput.addEventListener('input', function() {
                 let val = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 if (val.length > 3) {
@@ -1028,7 +996,6 @@
                 }
                 this.value = val;
             });
-
             function checkCaptcha() {
                 const input = captchaInput.value.trim().toUpperCase().replace(/·/g, '');
                 const expected = currentCaptcha.replace(/·/g, '');
@@ -1036,7 +1003,7 @@
                     overlay.classList.add('hidden');
                     container.style.display = 'block';
                     startTyping();
-                    // Play audio after captcha is solved
+                    startLyricsTyping();
                     const audio = document.getElementById('bgAudio');
                     audio.play().catch(e => console.log('autoplay blocked'));
                 } else {
@@ -1046,20 +1013,17 @@
                     captchaInput.focus();
                 }
             }
-
             captchaBtn.addEventListener('click', checkCaptcha);
             captchaInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') checkCaptcha();
             });
-
             captchaInput.focus();
             captchaDisplay.style.cursor = 'pointer';
             captchaDisplay.addEventListener('click', refreshCaptcha);
-
             container.style.display = 'none';
         })();
 
-        // ---------- TYPING ANIMATION - "Hello , Breach" ----------
+        // ---------- TYPING ANIMATION ----------
         function startTyping() {
             const text = 'Hello , Breach';
             const el = document.getElementById('typedText');
@@ -1069,10 +1033,67 @@
                 if (i < text.length) {
                     el.textContent += text.charAt(i);
                     i++;
-                    setTimeout(type, 80 + Math.random() * 40);
+                    setTimeout(type, 40 + Math.random() * 20);
                 }
             }
             setTimeout(type, 300);
+        }
+
+        // ---------- LYRICS TYPING AT 216 WPM + INSTANT RESTART ----------
+        function startLyricsTyping() {
+            const lyrics = 'Sit right here, chill, level low Close your eyes and just let it blow Run next to me, I hear your heartbeat beat When the dial turns up and the music\'s outspraining';
+            const el = document.getElementById('typedLyrics');
+            const cursor = document.getElementById('lyricsCursor');
+            let charIndex = 0;
+            let isTyping = true;
+            let timeoutId = null;
+            
+            // 216 WPM ≈ 55ms per character
+            const TYPING_INTERVAL = 55;
+            
+            function resetLyrics() {
+                if (timeoutId) clearTimeout(timeoutId);
+                el.innerHTML = '';
+                charIndex = 0;
+                isTyping = true;
+                if (cursor) cursor.style.display = 'inline-block';
+                typeNextChar();
+            }
+            function typeNextChar() {
+                if (!isTyping) return;
+                if (charIndex < lyrics.length) {
+                    const span = document.createElement('span');
+                    span.className = 'char';
+                    span.textContent = lyrics.charAt(charIndex);
+                    el.appendChild(span);
+                    const allChars = el.querySelectorAll('.char');
+                    if (allChars.length > 0) {
+                        allChars.forEach(c => c.classList.remove('active'));
+                        const latest = allChars[allChars.length - 1];
+                        latest.classList.add('active');
+                        for (let i = 1; i <= 4; i++) {
+                            if (allChars.length - 1 - i >= 0) {
+                                allChars[allChars.length - 1 - i].style.textShadow = '0 0 8px rgba(255,255,255,0.12)';
+                            }
+                        }
+                    }
+                    charIndex++;
+                    timeoutId = setTimeout(typeNextChar, TYPING_INTERVAL);
+                } else {
+                    // Instant restart when it hits the last word
+                    if (cursor) cursor.style.display = 'none';
+                    const allChars = el.querySelectorAll('.char');
+                    allChars.forEach(c => c.classList.remove('active'));
+                    if (allChars.length > 0) {
+                        for (let i = Math.max(0, allChars.length - 10); i < allChars.length; i++) {
+                            allChars[i].classList.add('active');
+                        }
+                    }
+                    // Restart immediately
+                    setTimeout(resetLyrics, 300); // tiny pause for visual effect
+                }
+            }
+            resetLyrics();
         }
 
         // ---------- SIDEBAR NAVIGATION ----------
@@ -1083,7 +1104,6 @@
                 calendar: document.getElementById('section-calendar'),
                 updates: document.getElementById('section-updates')
             };
-
             buttons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     buttons.forEach(b => b.classList.remove('active'));
@@ -1099,7 +1119,6 @@
         // ---------- CHRISTMAS COUNTDOWN ----------
         (function() {
             const el = document.getElementById('christmasCountdown');
-
             function updateChristmasCountdown() {
                 const now = new Date();
                 const currentYear = now.getFullYear();
@@ -1115,15 +1134,13 @@
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 el.textContent = days;
             }
-
             updateChristmasCountdown();
             setInterval(updateChristmasCountdown, 60000);
         })();
 
-        // ---------- CALENDAR (next month) ----------
+        // ---------- CALENDAR ----------
         (function() {
             const gridEl = document.getElementById('calendarGrid');
-
             function buildCalendar() {
                 const now = new Date();
                 const year = now.getFullYear();
@@ -1132,19 +1149,17 @@
                 const lastDay = new Date(year, month + 1, 0);
                 const daysInMonth = lastDay.getDate();
                 const startDay = firstDay.getDay();
-
                 let html = '';
                 let offset = (startDay === 0) ? 6 : startDay - 1;
                 for (let i = 0; i < offset; i++) {
-                    html += '<div style="color:#333;">·</div>';
+                    html += '<div style="color:#2a2a2a;">·</div>';
                 }
                 for (let d = 1; d <= daysInMonth; d++) {
                     const isToday = (d === now.getDate() && month === now.getMonth() + 1);
-                    html += `<div style="color:${isToday ? '#aaa' : '#666'}; font-weight:${isToday ? '300' : '200'};">${d}</div>`;
+                    html += `<div style="color:${isToday ? '#999' : '#555'}; font-weight:${isToday ? '300' : '200'};">${d}</div>`;
                 }
                 gridEl.innerHTML = html;
             }
-
             buildCalendar();
         })();
     </script>
