@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>protected view</title>
+<title>secure view</title>
 <style>
   * {
     margin: 0;
@@ -149,6 +149,21 @@
   .alert-banner.show {
     display: flex;
   }
+  .url-bar {
+    background: #0d0d0d;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid #222;
+    margin: 0.5rem 0 1rem;
+    font-size: 0.6rem;
+    color: #555;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 </head>
 <body>
@@ -158,6 +173,8 @@
 <div class="card">
   <h1>secure view</h1>
   <div class="subtitle">protection active</div>
+  
+  <div class="url-bar" id="urlDisplay">https://encode.lol/</div>
 
   <div class="status-grid">
     <div class="status-item">
@@ -214,6 +231,7 @@
     const downloadEl = document.getElementById('downloadStatus');
     const alertBox = document.getElementById('alertBox');
     const alertMsg = document.getElementById('alertMessage');
+    const urlDisplay = document.getElementById('urlDisplay');
 
     function setStatus(el, label, dotColor) {
       el.innerHTML = '<span class="dot ' + dotColor + '"></span> ' + label;
@@ -227,15 +245,46 @@
       }, 2200);
     }
 
+    // ---- URL ROTATOR - THIS CHANGES THE ACTUAL BROWSER URL ----
+    function generateRandomHash() {
+      const chars = '0123456789abcdef';
+      let hash = '';
+      for (let i = 0; i < 16; i++) {
+        hash += chars[Math.floor(Math.random() * 16)];
+      }
+      return hash;
+    }
+
+    function rotateUrl() {
+      const hash = generateRandomHash();
+      const base = 'https://encode.lol/';
+      const fullUrl = base + hash;
+      
+      // Update the display
+      urlDisplay.textContent = fullUrl;
+      
+      // ACTUALLY CHANGE THE URL IN THE ADDRESS BAR
+      try {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, '', fullUrl);
+        }
+      } catch (e) {
+        // Silently fail if browser restricts
+      }
+    }
+
+    // Rotate URL every 1.5 seconds to make copying difficult
+    setInterval(rotateUrl, 1500);
+    // Initial rotation
+    setTimeout(rotateUrl, 100);
+
     // ---- CLOSE TAB FUNCTION ----
     function closeTab() {
       try {
         window.close();
       } catch (e) {
-        // fallback: redirect to blank
         window.location.href = 'about:blank';
       }
-      // additional forceful close attempt
       window.open('', '_self', '');
       window.close();
     }
@@ -371,23 +420,19 @@
       return false;
     }, true);
 
-    // ---- PAGE SAVE (CTRL+S) - ALLOWED (but we show status) ----
+    // ---- PAGE SAVE (CTRL+S) - ALLOWED ----
     document.addEventListener('keydown', function(e) {
       if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-        // allow save, just update status
         setStatus(downloadEl, 'allowed', 'green');
         showAlert('page save allowed');
-        // let the default action happen
         return true;
       }
-      // block ctrl+shift+s (save as) to prevent source download
       if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
         e.preventDefault();
         setStatus(downloadEl, 'blocked', 'red');
         showAlert('save as blocked');
         return false;
       }
-      // block print (can save as PDF)
       if (e.ctrlKey && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
         e.preventDefault();
         setStatus(downloadEl, 'blocked', 'red');
@@ -443,12 +488,16 @@
     console.groupEnd = function() {};
     console.debug = function() {};
 
-    // ---- PREVENT SOURCE DOWNLOAD VIA DEVTOOLS (additional) ----
-    // Attempt to detect if devtools is used to save page source
-    // We already close tab on devtools detection above
+    // ---- PREVENT URL COPY FROM ADDRESS BAR ----
+    // We can't directly block address bar copying, but changing it constantly
+    // makes it practically impossible to copy a valid URL
 
-    // ---- OVERRIDE window.close protection ----
-    // We want our closeTab to work
+    // Also prevent copying from the displayed URL element
+    document.getElementById('urlDisplay').addEventListener('copy', function(e) {
+      e.preventDefault();
+      showAlert('url copy blocked');
+      return false;
+    }, true);
 
   })();
 </script>
