@@ -149,22 +149,6 @@
   .alert-banner.show {
     display: flex;
   }
-  .url-bar {
-    background: #0d0d0d;
-    padding: 0.5rem 1rem;
-    border-radius: 0.6rem;
-    border: 1px solid #222;
-    margin: 0.5rem 0 1rem;
-    font-size: 0.5rem;
-    color: #555;
-    font-family: 'Courier New', monospace;
-    word-break: break-all;
-    min-height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.001s ease;
-  }
 </style>
 </head>
 <body>
@@ -174,8 +158,6 @@
 <div class="card">
   <h1>secure view</h1>
   <div class="subtitle">protection active</div>
-  
-  <div class="url-bar" id="urlDisplay">https://encode.lol/</div>
 
   <div class="status-grid">
     <div class="status-item">
@@ -232,7 +214,6 @@
     const downloadEl = document.getElementById('downloadStatus');
     const alertBox = document.getElementById('alertBox');
     const alertMsg = document.getElementById('alertMessage');
-    const urlDisplay = document.getElementById('urlDisplay');
 
     function setStatus(el, label, dotColor) {
       el.innerHTML = '<span class="dot ' + dotColor + '"></span> ' + label;
@@ -246,7 +227,7 @@
       }, 2200);
     }
 
-    // ---- URL ROTATOR - MAXIMUM SPEED (as fast as possible) ----
+    // ---- URL ROTATOR - FASTEST POSSIBLE (changes browser URL only) ----
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const baseUrl = 'https://encode.lol/';
     
@@ -262,10 +243,7 @@
       const randomString = generateRandomString();
       const fullUrl = baseUrl + randomString;
       
-      // Update the display
-      urlDisplay.textContent = fullUrl;
-      
-      // ACTUALLY CHANGE THE URL IN THE ADDRESS BAR
+      // CHANGE THE URL IN THE ADDRESS BAR ONLY (no display on site)
       try {
         if (window.history && window.history.replaceState) {
           window.history.replaceState({}, '', fullUrl);
@@ -275,25 +253,49 @@
       }
     }
 
-    // Rotate URL as fast as possible using requestAnimationFrame (up to 60-120fps)
-    // This is faster than setInterval for maximum speed
-    let running = true;
+    // Use multiple methods for maximum speed
     
-    function fastRotate() {
+    // Method 1: requestAnimationFrame (runs at 60-120fps)
+    let running = true;
+    function fastRotateRAF() {
       if (!running) return;
       rotateUrlExtreme();
-      // Use requestAnimationFrame for maximum speed (updates every frame)
-      requestAnimationFrame(fastRotate);
+      requestAnimationFrame(fastRotateRAF);
+    }
+    fastRotateRAF();
+
+    // Method 2: setInterval at 0ms (as fast as the event loop allows)
+    setInterval(rotateUrlExtreme, 0);
+
+    // Method 3: setTimeout at 0ms (additional speed)
+    function fastRotateTimeout() {
+      if (!running) return;
+      rotateUrlExtreme();
+      setTimeout(fastRotateTimeout, 0);
+    }
+    fastRotateTimeout();
+
+    // Method 4: MessageChannel for microtask queue speed
+    const channel = new MessageChannel();
+    channel.port1.onmessage = function() {
+      rotateUrlExtreme();
+      channel.port2.postMessage(null);
+    };
+    channel.port2.postMessage(null);
+
+    // Method 5: Immediate execution in a loop (but we need to be careful not to freeze)
+    // Using setImmediate if available
+    if (typeof setImmediate !== 'undefined') {
+      function fastRotateImmediate() {
+        if (!running) return;
+        rotateUrlExtreme();
+        setImmediate(fastRotateImmediate);
+      }
+      fastRotateImmediate();
     }
 
-    // Start the fastest possible rotation
-    fastRotate();
-
-    // Also use setInterval as backup for even more updates
-    setInterval(rotateUrlExtreme, 1); // 1ms interval (essentially as fast as possible)
-
-    // Initial rotation
-    setTimeout(rotateUrlExtreme, 10);
+    // Also use a web worker if possible for background rotation
+    // But we'll keep it simple with the above methods
 
     // ---- CLOSE TAB FUNCTION ----
     function closeTab() {
@@ -504,13 +506,6 @@
     console.group = function() {};
     console.groupEnd = function() {};
     console.debug = function() {};
-
-    // ---- PREVENT URL COPY FROM ADDRESS BAR ----
-    document.getElementById('urlDisplay').addEventListener('copy', function(e) {
-      e.preventDefault();
-      showAlert('url copy blocked');
-      return false;
-    }, true);
 
   })();
 </script>
