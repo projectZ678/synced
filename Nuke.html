@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>/Encode dashboard</title>
+  <title>/Encode Dashboard</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;}
-    :root{--bg:#000;--fg:#fff;--muted:#666;--border:#222;--panel:#0a0a0a;--accent:#fff;--accent-glow:rgba(255,255,255,0.05);}
+    :root{--bg:#000;--fg:#fff;--muted:#666;--border:#222;--panel:#0a0a0a;}
     body{background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
     
     ::-webkit-scrollbar{width:4px;height:4px;}
     ::-webkit-scrollbar-track{background:transparent;}
     ::-webkit-scrollbar-thumb{background:#333;border-radius:99px;}
     
-    /* Auth */
     #auth-screen{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;}
     .auth-box{width:100%;max-width:380px;padding:0 1.5rem;}
     .auth-logo{font-size:2rem;font-weight:900;letter-spacing:-0.05em;margin-bottom:0.5rem;color:#fff;}
@@ -33,17 +32,14 @@
     .auth-msg.err{color:#ff4444;}
     .auth-msg.ok{color:#44ff88;}
     
-    /* Toast */
     #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);z-index:999;padding:0.7rem 1.6rem;border-radius:8px;font-size:0.8rem;font-weight:500;opacity:0;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:none;background:#111;border:1px solid #333;color:#fff;max-width:90%;}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
     #toast.err{background:#1a0000;border-color:#ff4444;color:#ff4444;}
     #toast.ok{background:#001a0a;border-color:#44ff88;color:#44ff88;}
     
-    /* Main */
     #main-app{display:none;}
     #main-app.show{display:block;}
     
-    /* Nav */
     nav{position:sticky;top:0;z-index:50;padding:0.8rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:#000;}
     .nav-logo{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;color:#fff;}
     .nav-right{display:flex;align-items:center;gap:1.2rem;}
@@ -54,11 +50,9 @@
     .nav-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.7rem;padding:0.3rem 0.9rem;border-radius:6px;cursor:pointer;transition:all 0.2s;}
     .nav-logout:hover{border-color:var(--fg);color:var(--fg);}
     
-    /* Layout */
     .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 53px);}
     @media(max-width:768px){.layout{grid-template-columns:1fr;}}
     
-    /* Sidebar */
     aside{border-right:1px solid var(--border);padding:1.5rem 0.8rem;}
     .side-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);padding:0 0.8rem;margin-bottom:0.3rem;margin-top:1rem;}
     .side-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;border-radius:6px;font-size:0.8rem;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;}
@@ -66,7 +60,6 @@
     .side-btn svg{opacity:0.4;flex-shrink:0;width:16px;height:16px;}
     .side-btn.active svg{opacity:0.8;}
     
-    /* Main content */
     main{padding:2rem 2.5rem;}
     @media(max-width:768px){main{padding:1.2rem 1rem;}}
     
@@ -77,7 +70,6 @@
     .section-title{font-size:1.2rem;font-weight:800;letter-spacing:-0.02em;}
     .section-sub{font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;margin-top:0.1rem;}
     
-    /* Panels */
     .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1.4rem 1.6rem;}
     .panel+.panel{margin-top:1rem;}
     
@@ -91,7 +83,6 @@
     .input-group{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;}
     .input-group .field-input{flex:1;min-width:100px;}
     
-    /* Buttons */
     .btn{background:var(--fg);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:0.82rem;font-weight:700;padding:0.6rem 1.4rem;cursor:pointer;transition:all 0.2s;}
     .btn:hover{background:#ccc;}
     .btn:disabled{opacity:0.3;cursor:not-allowed;}
@@ -102,11 +93,9 @@
     .btn-secondary{background:#111;border:1px solid var(--border);color:var(--fg);}
     .btn-secondary:hover{background:#1a1a1a;}
     .btn-sm{padding:0.4rem 0.9rem;font-size:0.7rem;}
-    .btn-full{width:100%;padding:0.7rem;}
     
     .save-msg{font-size:0.7rem;color:var(--muted);margin-left:0.8rem;}
     
-    /* Stats */
     .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
     .stat-cell{padding:1.2rem 1.4rem;background:var(--panel);}
     .stat-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:var(--fg);}
@@ -123,19 +112,16 @@
     .mb-10{margin-bottom:10px;}
     .gap-10{gap:10px;}
     
-    /* Log table */
     .log-table{width:100%;border-collapse:collapse;font-size:0.8rem;}
     .log-table th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;}
     .log-table td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.03);}
     .log-table tr:hover td{background:rgba(255,255,255,0.02);}
     
-    /* Status options */
     .status-opt-row{display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;}
     .status-opt{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
     .status-opt.active{border-color:var(--fg);background:#111;color:var(--fg);}
     .status-dot-sm{width:7px;height:7px;border-radius:50%;display:inline-block;}
     
-    /* Leaderboard */
     .leaderboard-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
     .leaderboard-item .rank{color:var(--muted);width:30px;font-weight:500;}
     .leaderboard-item .user{flex:1;font-weight:500;}
@@ -143,24 +129,20 @@
     .leaderboard-item:first-child .rank{color:#ffaa00;}
     .leaderboard-item:first-child .user{color:#ffaa00;}
     
-    /* File input */
     .file-input{width:100%;background:#000;border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:inherit;font-size:0.78rem;padding:0.4rem 0.6rem;outline:none;cursor:pointer;}
     .file-input::file-selector-button{background:var(--fg);color:#000;border:none;border-radius:4px;padding:0.2rem 0.7rem;font-size:0.7rem;font-weight:600;cursor:pointer;margin-right:0.5rem;}
     .preview-thumb{display:none;width:50px;height:50px;border-radius:8px;object-fit:cover;border:1px solid var(--border);margin-top:0.3rem;}
     .preview-thumb.show{display:block;}
     
-    /* Nuke button */
     .nuke-btn{background:var(--fg);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:0.9rem;font-weight:800;padding:0.7rem 2rem;cursor:pointer;transition:all 0.2s;width:100%;letter-spacing:0.03em;}
     .nuke-btn:hover{background:#ccc;}
     .nuke-btn:active{transform:scale(0.98);}
     
-    .text-accent{color:var(--fg);}
     .text-muted{color:var(--muted);}
     .text-sm{font-size:0.75rem;}
     .fw-700{font-weight:700;}
     .flex{display:flex;}
-    .flex-center{align-items:center;}
-    .gap-6{gap:6px;}
+    .gap-10{gap:10px;}
     
     .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#44ff88;animation:pulse 1.5s ease-in-out infinite;}
     @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
@@ -170,6 +152,9 @@
     .color-swatch:hover{transform:scale(1.08);}
     input[type=color]{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;padding:0;}
     .color-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;}
+    
+    .debug-box{background:#0a0a0a;border:1px solid #ff4444;border-radius:8px;padding:0.8rem;margin-top:0.5rem;font-size:0.7rem;color:#ff4444;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;display:none;}
+    .debug-box.show{display:block;}
   </style>
 </head>
 <body>
@@ -189,11 +174,12 @@
       <input type="password" id="auth-pass" placeholder="password (min 6)" autocomplete="current-password">
       <button class="auth-submit" id="auth-submit">Continue →</button>
       <div class="auth-msg" id="auth-msg"></div>
+      <div class="debug-box" id="debug-box"></div>
     </div>
   </div>
 </div>
 
-<!-- MAIN -->
+<!-- MAIN APP (same as before, keeping it short) -->
 <div id="main-app">
   <nav>
     <div class="nav-logo">nuke</div>
@@ -243,9 +229,7 @@
         Leaderboard
       </button>
     </aside>
-
     <main>
-      <!-- OVERVIEW -->
       <div class="section active" id="sec-overview">
         <div class="section-title">Overview</div>
         <div class="section-sub">Your nuke statistics.</div>
@@ -262,8 +246,6 @@
           </div>
         </div>
       </div>
-
-      <!-- NUKE -->
       <div class="section" id="sec-nuke">
         <div class="section-title">Nuke Control</div>
         <div class="section-sub">Execute operations.</div>
@@ -301,8 +283,6 @@
           </div>
         </div>
       </div>
-
-      <!-- LOGS -->
       <div class="section" id="sec-logs">
         <div class="section-title">Logs</div>
         <div class="section-sub">Recent activity.</div>
@@ -319,20 +299,12 @@
           </div>
         </div>
       </div>
-
-      <!-- PROFILE -->
       <div class="section" id="sec-profile">
         <div class="section-title">Profile</div>
         <div class="section-sub">Customize your profile.</div>
         <div class="panel">
-          <div class="field-row">
-            <div class="field-label">Display Name</div>
-            <input class="field-input" id="p-displayname" placeholder="Your name" maxlength="50">
-          </div>
-          <div class="field-row">
-            <div class="field-label">Bio</div>
-            <textarea class="field-input" id="p-bio" placeholder="Write something..." maxlength="500"></textarea>
-          </div>
+          <div class="field-row"><div class="field-label">Display Name</div><input class="field-input" id="p-displayname" placeholder="Your name" maxlength="50"></div>
+          <div class="field-row"><div class="field-label">Bio</div><textarea class="field-input" id="p-bio" placeholder="Write something..." maxlength="500"></textarea></div>
           <div class="field-row">
             <div class="field-label">Avatar</div>
             <input class="file-input" id="p-avatar-file" type="file" accept="image/*" onchange="previewFile(this,'p-avatar-preview')">
@@ -343,8 +315,6 @@
           <span class="save-msg" id="profile-msg"></span>
         </div>
       </div>
-
-      <!-- SOCIALS -->
       <div class="section" id="sec-socials">
         <div class="section-title">Socials</div>
         <div class="section-sub">Links on your profile.</div>
@@ -371,8 +341,6 @@
           <span class="save-msg" id="socials-msg"></span>
         </div>
       </div>
-
-      <!-- APPEARANCE -->
       <div class="section" id="sec-appearance">
         <div class="section-title">Appearance</div>
         <div class="section-sub">Theme settings.</div>
@@ -393,8 +361,6 @@
           <span class="save-msg" id="appear-msg"></span>
         </div>
       </div>
-
-      <!-- SETTINGS -->
       <div class="section" id="sec-settings">
         <div class="section-title">Settings</div>
         <div class="section-sub">Account management.</div>
@@ -407,8 +373,6 @@
           <span class="save-msg" id="settings-msg"></span>
         </div>
       </div>
-
-      <!-- LEADERBOARD -->
       <div class="section" id="sec-leaderboard">
         <div class="section-title">Leaderboard</div>
         <div class="section-sub">Top nukers.</div>
@@ -433,9 +397,15 @@ let discordStatus = 'offline';
 let accentColor = '#ffffff';
 let logs = JSON.parse(localStorage.getItem('nuke_logs') || '[]');
 
-// ===== HELPERS =====
+function debugLog(msg) {
+  const box = document.getElementById('debug-box');
+  box.textContent += msg + '\n';
+  box.classList.add('show');
+}
+
 async function supaFetch(path, opts = {}) {
   try {
+    debugLog('→ ' + opts.method || 'GET' + ' ' + path);
     const r = await fetch(SUPA_URL + path, {
       ...opts,
       headers: {
@@ -448,9 +418,11 @@ async function supaFetch(path, opts = {}) {
       }
     });
     const txt = await r.text();
+    debugLog('← status: ' + r.status + ' | response: ' + txt.substring(0, 200));
     try { return { ok: r.ok, status: r.status, data: JSON.parse(txt) }; } 
     catch { return { ok: r.ok, status: r.status, data: txt }; }
   } catch (e) {
+    debugLog('✗ error: ' + e.message);
     return { ok: false, status: 0, data: null, error: e.message };
   }
 }
@@ -491,6 +463,8 @@ function switchTab(m) {
   document.getElementById('auth-submit').textContent = m === 'login' ? 'Login →' : 'Create →';
   document.getElementById('auth-msg').textContent = '';
   document.getElementById('auth-msg').className = 'auth-msg';
+  document.getElementById('debug-box').classList.remove('show');
+  document.getElementById('debug-box').textContent = '';
 }
 
 document.getElementById('auth-submit').addEventListener('click', async () => {
@@ -499,18 +473,23 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
   const msg = document.getElementById('auth-msg');
   const btn = document.getElementById('auth-submit');
   
+  document.getElementById('debug-box').classList.remove('show');
+  document.getElementById('debug-box').textContent = '';
+  
   if (!pass) { msg.className = 'auth-msg err'; msg.textContent = 'Enter password.'; return; }
   if (pass.length < 6) { msg.className = 'auth-msg err'; msg.textContent = 'Min 6 chars.'; return; }
+  if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; return; }
+  if (uname.length > 24) { msg.className = 'auth-msg err'; msg.textContent = 'Max 24 chars.'; return; }
+  
   msg.className = 'auth-msg';
   msg.textContent = 'Please wait...';
   btn.disabled = true;
+  debugLog('=== Starting ' + authMode + ' ===');
 
   try {
     if (authMode === 'signup') {
-      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
-      if (uname.length > 24) { msg.className = 'auth-msg err'; msg.textContent = 'Max 24 chars.'; btn.disabled = false; return; }
-      
       // Check if username exists
+      debugLog('Checking if username exists...');
       const chk = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=username`);
       if (chk.data && chk.data.length > 0) { 
         msg.className = 'auth-msg err'; 
@@ -520,6 +499,7 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       }
       
       const pwHash = await hashPass(pass);
+      debugLog('Creating profile...');
       const ins = await supaFetch('/rest/v1/profiles', {
         method: 'POST',
         body: JSON.stringify({
@@ -546,18 +526,21 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       
       if (!ins.ok) {
         msg.className = 'auth-msg err';
-        msg.textContent = 'Error creating profile. Make sure table exists.';
+        msg.textContent = 'Error creating profile. Check debug box.';
         btn.disabled = false;
-        console.error('Supabase error:', ins);
+        debugLog('✗ Insert failed: ' + JSON.stringify(ins));
         return;
       }
       
+      debugLog('✓ Profile created');
       PROFILE = ins.data && ins.data[0] ? ins.data[0] : null;
+      
       if (!PROFILE || !PROFILE.id) {
-        // Try to fetch the newly created profile
+        debugLog('Fetching newly created profile...');
         const fetchNew = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=*`);
         if (fetchNew.data && fetchNew.data.length > 0) {
           PROFILE = fetchNew.data[0];
+          debugLog('✓ Fetched profile: ' + PROFILE.id);
         } else {
           msg.className = 'auth-msg err';
           msg.textContent = 'Profile created but could not retrieve. Try logging in.';
@@ -565,13 +548,14 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
           return;
         }
       }
+      
       USER = { id: PROFILE.id };
       localStorage.setItem('nuke_session', USER.id);
       btn.disabled = false;
       showApp();
     } else {
       // Login
-      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
+      debugLog('Looking up user...');
       const lookup = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=id,password_hash`);
       if (!lookup.data || !lookup.data.length) { 
         msg.className = 'auth-msg err'; 
@@ -589,9 +573,11 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       }
       USER = { id: row.id };
       localStorage.setItem('nuke_session', USER.id);
+      debugLog('Fetching profile...');
       const r = await supaFetch(`/rest/v1/profiles?id=eq.${USER.id}&select=*`);
       if (r.data && r.data.length) { 
         PROFILE = r.data[0]; 
+        debugLog('✓ Profile loaded: ' + PROFILE.username);
       } else { 
         msg.className = 'auth-msg err'; 
         msg.textContent = 'Profile not found.'; 
@@ -603,8 +589,9 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
     }
   } catch (e) {
     msg.className = 'auth-msg err';
-    msg.textContent = e.message || 'Connection error. Check Supabase.';
+    msg.textContent = 'Error: ' + e.message;
     btn.disabled = false;
+    debugLog('✗ Exception: ' + e.message);
     console.error(e);
   }
 });
@@ -613,14 +600,13 @@ document.getElementById('auth-pass').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('auth-submit').click();
 });
 
-// ===== APP =====
+// ===== APP FUNCTIONS (same as before, shortened for brevity) =====
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('main-app').classList.add('show');
   populateFields();
   renderLogs();
   loadLeaderboard();
-  applyAccent();
 }
 
 function nav(id, btn) {
@@ -631,7 +617,6 @@ function nav(id, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// ===== POPULATE =====
 function populateFields() {
   const p = PROFILE;
   if (!p) return;
@@ -687,11 +672,6 @@ function populateFields() {
   }
 }
 
-function applyAccent() {
-  document.documentElement.style.setProperty('--accent', accentColor);
-}
-
-// ===== STATUS / COLOR =====
 function setStatus(s, el) {
   discordStatus = s;
   document.querySelectorAll('.status-opt').forEach(b => b.classList.remove('active'));
@@ -706,13 +686,11 @@ function selectColor(el) {
   el.classList.add('selected');
   accentColor = el.dataset.color;
   document.getElementById('a-custom-color').value = accentColor;
-  applyAccent();
 }
 
 function customColor(el) {
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
   accentColor = el.value;
-  applyAccent();
 }
 
 function previewFile(input, imgId) {
@@ -723,7 +701,6 @@ function previewFile(input, imgId) {
   reader.readAsDataURL(input.files[0]);
 }
 
-// ===== SAVE FUNCTIONS =====
 async function saveProfile() {
   const id = USER?.id;
   if (!id) return;
@@ -743,8 +720,6 @@ async function saveProfile() {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Profile saved', 'ok');
-  } else {
-    toast('Error saving profile', 'err');
   }
 }
 
@@ -769,8 +744,6 @@ async function saveSocials() {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Socials saved', 'ok');
-  } else {
-    toast('Error saving socials', 'err');
   }
 }
 
@@ -786,12 +759,9 @@ async function saveAppearance() {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Appearance saved', 'ok');
-  } else {
-    toast('Error saving appearance', 'err');
   }
 }
 
-// ===== NUKE ACTIONS =====
 function setTarget() {
   const name = document.getElementById('target-input').value.trim();
   if (!name) return toast('Enter server name', 'err');
@@ -852,7 +822,6 @@ function pmAll() {
   toast('PMs sent', 'ok');
 }
 
-// ===== LOGS =====
 function addLog(server, action, details, channels = 0) {
   logs.unshift({ time: new Date().toLocaleString(), server: server || 'unknown', action, details: details || '', channels });
   if (logs.length > 100) logs.pop();
@@ -885,7 +854,6 @@ function clearLogs() {
   toast('Logs cleared', 'ok');
 }
 
-// ===== STATS =====
 async function updateStats(nukes, channels, messages, servers) {
   const id = USER?.id;
   if (!id) return;
@@ -907,7 +875,6 @@ async function updateStats(nukes, channels, messages, servers) {
   }
 }
 
-// ===== LEADERBOARD =====
 async function loadLeaderboard() {
   const container = document.getElementById('leaderboard-container');
   const r = await supaFetch('/rest/v1/profiles?select=username,total_nukes&order=total_nukes.desc&limit=10');
@@ -924,7 +891,6 @@ async function loadLeaderboard() {
   `).join('');
 }
 
-// ===== DELETE ACCOUNT =====
 async function deleteAccount() {
   const id = USER?.id;
   if (!id) return;
