@@ -3,199 +3,207 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>nuke — dashboard</title>
+  <title>nuke — dashboard v2</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;}
-    :root{--bg:#000;--fg:#fff;--muted:rgba(255,255,255,0.35);--border:rgba(255,255,255,0.08);--panel:rgba(255,255,255,0.04);}
-    body{background:radial-gradient(ellipse at 50% 20%, rgba(255,50,50,0.06) 0%, transparent 60%),var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;min-height:100vh;}
-    @media(max-width:768px){body{cursor:auto !important;}}
-
-    /* AUTH SCREENS */
-    #auth-screen{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;}
-    .auth-box{width:100%;max-width:380px;padding:0 1.5rem;}
-    .auth-logo{font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:2.5rem;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .auth-tabs{display:flex;gap:0;margin-bottom:1.8rem;border-bottom:1px solid var(--border);}
-    .auth-tab{background:none;border:none;color:var(--muted);font-family:inherit;font-size:0.85rem;font-weight:500;padding:0.6rem 0;margin-right:1.5rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
-    .auth-tab.active{color:var(--fg);border-bottom-color:#ff416c;}
+    :root{--bg:#0a0a0f;--fg:#fff;--muted:rgba(255,255,255,0.4);--border:rgba(255,255,255,0.06);--panel:rgba(255,255,255,0.03);--accent:#ff416c;--accent-glow:rgba(255,65,108,0.15);}
+    body{background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px;}
+    
+    /* Auth */
+    #auth-screen{position:fixed;inset:0;z-index:200;background:#0a0a0f;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(40px);}
+    .auth-box{width:100%;max-width:400px;padding:0 1.5rem;}
+    .auth-logo{font-size:2rem;font-weight:900;letter-spacing:-0.05em;margin-bottom:2rem;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .auth-sub{font-size:0.75rem;color:var(--muted);margin-top:-1.2rem;margin-bottom:2rem;}
+    .auth-tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:1px solid var(--border);}
+    .auth-tab{background:none;border:none;color:var(--muted);font-family:inherit;font-size:0.8rem;font-weight:500;padding:0.6rem 0;margin-right:1.5rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
+    .auth-tab.active{color:var(--fg);border-bottom-color:var(--accent);}
     .auth-form{display:flex;flex-direction:column;gap:0.75rem;}
-    .auth-form input{background:var(--panel);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:inherit;font-size:0.88rem;padding:0.8rem 1rem;outline:none;transition:border-color 0.2s;}
-    .auth-form input:focus{border-color:#ff416c;}
-    .auth-form input::placeholder{color:rgba(255,255,255,0.2);}
-    .auth-submit{background:#ff416c;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.88rem;font-weight:700;padding:0.85rem;cursor:pointer;transition:opacity 0.2s;margin-top:0.25rem;}
-    .auth-submit:hover{opacity:0.85;}
-    .auth-submit:disabled{opacity:0.3;cursor:not-allowed;}
-    .auth-msg{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:0.5rem;min-height:1em;}
+    .auth-form input{background:var(--panel);border:1px solid var(--border);border-radius:12px;color:var(--fg);font-family:inherit;font-size:0.88rem;padding:0.85rem 1rem;outline:none;transition:all 0.2s;}
+    .auth-form input:focus{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);}
+    .auth-form input::placeholder{color:rgba(255,255,255,0.15);}
+    .auth-submit{background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:0.88rem;font-weight:700;padding:0.9rem;cursor:pointer;transition:all 0.2s;margin-top:0.25rem;}
+    .auth-submit:hover{transform:scale(1.02);box-shadow:0 0 30px var(--accent-glow);}
+    .auth-submit:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+    .auth-msg{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:0.5rem;min-height:1.2em;}
     .auth-msg.err{color:#ff6b6b;}
     .auth-msg.ok{color:#6bff8a;}
-
-    /* TOAST */
-    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);z-index:999;padding:0.7rem 1.4rem;border-radius:10px;font-size:0.8rem;font-weight:500;opacity:0;transition:all 0.4s ease;pointer-events:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(16px);color:#fff;}
+    
+    /* Toast */
+    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);z-index:999;padding:0.7rem 1.6rem;border-radius:12px;font-size:0.8rem;font-weight:500;opacity:0;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:none;background:rgba(255,255,255,0.06);border:1px solid var(--border);backdrop-filter:blur(20px);color:#fff;max-width:90%;}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-    #toast.err{background:rgba(255,80,80,0.15);border-color:rgba(255,80,80,0.2);color:#ff6b6b;}
-    #toast.ok{background:rgba(80,255,130,0.08);border-color:rgba(80,255,130,0.15);color:#6bff8a;}
-
-    /* MAIN LAYOUT */
+    #toast.err{background:rgba(255,80,80,0.12);border-color:rgba(255,80,80,0.15);color:#ff6b6b;}
+    #toast.ok{background:rgba(80,255,130,0.06);border-color:rgba(80,255,130,0.1);color:#6bff8a;}
+    
+    /* Main */
     #main-app{display:none;}
     #main-app.show{display:block;}
-    nav{position:sticky;top:0;z-index:50;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);}
-    .nav-logo{font-size:1rem;font-weight:800;letter-spacing:-0.02em;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .nav-right{display:flex;align-items:center;gap:1rem;}
-    .nav-slug{font-size:0.75rem;color:var(--muted);}
-    .nav-slug span{color:var(--fg);}
-    .nav-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.75rem;padding:0.35rem 0.8rem;border-radius:7px;cursor:pointer;transition:all 0.2s;}
-    .nav-logout:hover{border-color:#ff416c;color:#ff416c;}
-
-    .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 57px);}
-    @media(max-width:700px){.layout{grid-template-columns:1fr;}}
-
-    aside{border-right:1px solid var(--border);padding:1.5rem 1rem;}
-    .side-section{margin-bottom:0.25rem;}
-    .side-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.25);padding:0 0.6rem;margin-bottom:0.4rem;margin-top:1rem;}
-    .side-btn{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.6rem;border-radius:8px;font-size:0.82rem;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;}
+    
+    /* Nav */
+    nav{position:sticky;top:0;z-index:50;padding:0.8rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);}
+    .nav-logo{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .nav-right{display:flex;align-items:center;gap:1.2rem;}
+    .nav-slug{font-size:0.7rem;color:var(--muted);}
+    .nav-slug span{color:var(--fg);font-weight:600;}
+    .nav-status{display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--muted);}
+    .nav-status .dot{width:8px;height:8px;border-radius:50%;background:#3ba55c;}
+    .nav-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.7rem;padding:0.3rem 0.9rem;border-radius:8px;cursor:pointer;transition:all 0.2s;}
+    .nav-logout:hover{border-color:var(--accent);color:var(--accent);}
+    
+    /* Layout */
+    .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 53px);}
+    @media(max-width:768px){.layout{grid-template-columns:1fr;}}
+    
+    /* Sidebar */
+    aside{border-right:1px solid var(--border);padding:1.5rem 0.8rem;background:rgba(255,255,255,0.01);}
+    .side-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.2);padding:0 0.8rem;margin-bottom:0.3rem;margin-top:1rem;}
+    .side-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;border-radius:10px;font-size:0.8rem;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;}
     .side-btn:hover,.side-btn.active{background:var(--panel);color:var(--fg);}
-    .side-btn svg{opacity:0.5;flex-shrink:0;}
-    .side-btn.active svg{opacity:1;}
-
-    main{padding:2rem 2.5rem;}
-    @media(max-width:700px){main{padding:1.2rem 1rem;}}
-
+    .side-btn svg{opacity:0.4;flex-shrink:0;width:16px;height:16px;}
+    .side-btn.active svg{opacity:0.8;color:var(--accent);}
+    
+    /* Main content */
+    main{padding:2rem 2.5rem;background:radial-gradient(ellipse at 80% 20%, rgba(255,65,108,0.03) 0%, transparent 60%);}
+    @media(max-width:768px){main{padding:1.2rem 1rem;}}
+    
     .section{display:none;}
-    .section.active{display:block;}
-    .section-title{font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;}
-    .section-sub{font-size:0.78rem;color:var(--muted);margin-bottom:1.8rem;}
-
-    .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.4rem;}
+    .section.active{display:block;animation:fadeIn 0.25s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    
+    .section-title{font-size:1.2rem;font-weight:800;letter-spacing:-0.02em;}
+    .section-sub{font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;margin-top:0.1rem;}
+    
+    /* Panels */
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.4rem 1.6rem;transition:border-color 0.2s;}
+    .panel:hover{border-color:rgba(255,255,255,0.08);}
     .panel+.panel{margin-top:1rem;}
-    .field-label{font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;}
-    .field-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;color:var(--fg);font-family:inherit;font-size:0.85rem;padding:0.7rem 0.9rem;outline:none;transition:border-color 0.2s;}
-    .field-input:focus{border-color:#ff416c;}
-    .field-input::placeholder{color:rgba(255,255,255,0.15);}
-    .field-input option{background:#111;color:#fff;}
-    textarea.field-input{resize:vertical;min-height:80px;line-height:1.5;}
-    .field-row{margin-bottom:1rem;}
-    .save-btn{background:#ff416c;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:0.82rem;font-weight:700;padding:0.65rem 1.4rem;cursor:pointer;transition:opacity 0.2s;}
-    .save-btn:hover{opacity:0.85;}
-    .save-btn:disabled{opacity:0.3;cursor:not-allowed;}
-    .save-msg{font-size:0.75rem;color:var(--muted);margin-left:0.8rem;}
-
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-    .stat-cell{padding:1.2rem;background:var(--panel);}
-    .stat-num{font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;color:#ff416c;}
-    .stat-lbl{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+    
+    .field-label{font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+    .field-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:inherit;font-size:0.82rem;padding:0.6rem 0.9rem;outline:none;transition:all 0.2s;}
+    .field-input:focus{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);}
+    .field-input::placeholder{color:rgba(255,255,255,0.12);}
+    textarea.field-input{resize:vertical;min-height:70px;line-height:1.5;}
+    .field-row{margin-bottom:0.8rem;}
+    
+    .input-group{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;}
+    .input-group .field-input{flex:1;min-width:100px;}
+    
+    /* Buttons */
+    .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.82rem;font-weight:700;padding:0.6rem 1.4rem;cursor:pointer;transition:all 0.2s;}
+    .btn:hover{transform:scale(1.02);box-shadow:0 0 25px var(--accent-glow);}
+    .btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+    .btn-danger{background:#c0392b;box-shadow:0 0 20px rgba(192,57,43,0.15);}
+    .btn-danger:hover{box-shadow:0 0 30px rgba(192,57,43,0.25);}
+    .btn-warning{background:#f39c12;color:#0a0a0f;}
+    .btn-warning:hover{box-shadow:0 0 25px rgba(243,156,18,0.25);}
+    .btn-secondary{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--fg);}
+    .btn-secondary:hover{background:rgba(255,255,255,0.08);}
+    .btn-sm{padding:0.4rem 0.9rem;font-size:0.7rem;}
+    .btn-full{width:100%;padding:0.7rem;}
+    
+    .save-msg{font-size:0.7rem;color:var(--muted);margin-left:0.8rem;}
+    
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+    .stat-cell{padding:1.2rem 1.4rem;background:var(--panel);}
+    .stat-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:var(--accent);}
+    .stat-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.15rem;}
     @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}}
-
-    .badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:99px;font-size:0.65rem;font-weight:600;background:rgba(255,65,108,0.15);border:1px solid rgba(255,65,108,0.2);color:#ff416c;}
-
-    .nuke-btn{background:#ff416c;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:0.9rem;font-weight:700;padding:0.8rem 2rem;cursor:pointer;transition:all 0.2s;width:100%;}
-    .nuke-btn:hover{transform:scale(1.02);box-shadow:0 0 30px rgba(255,65,108,0.3);}
-    .nuke-btn.danger{background:#c0392b;}
-    .nuke-btn.warning{background:#f39c12;color:#000;}
-    .nuke-btn.secondary{background:rgba(255,255,255,0.06);color:#fff;border:1px solid var(--border);}
-
-    .input-group{display:flex;gap:0.6rem;flex-wrap:wrap;margin:0.5rem 0;}
-    .input-group .field-input{flex:1;min-width:120px;}
-
-    .log-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
-    .log-table th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;}
-    .log-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.04);}
-    .log-table tr:hover{background:var(--panel);}
-
-    .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+    
+    .badge{display:inline-block;padding:0.15rem 0.6rem;border-radius:99px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:rgba(255,65,108,0.12);border:1px solid rgba(255,65,108,0.15);color:var(--accent);}
+    .badge-success{background:rgba(59,165,92,0.12);border-color:rgba(59,165,92,0.15);color:#3ba55c;}
+    .badge-warning{background:rgba(250,168,26,0.12);border-color:rgba(250,168,26,0.15);color:#faa81a;}
+    
+    .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
     .mt-10{margin-top:10px;}
     .mt-20{margin-top:20px;}
     .mb-10{margin-bottom:10px;}
-    .hidden{display:none !important;}
-
-    .tab-bar{display:flex;gap:4px;margin-bottom:20px;background:var(--panel);padding:4px;border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;}
-    .tab{padding:10px 24px;border-radius:8px;cursor:pointer;background:transparent;color:var(--muted);border:none;font-weight:500;transition:0.2s;font-family:inherit;font-size:0.85rem;}
-    .tab.active{background:#1a1a2e;color:#fff;}
-    .tab:hover{background:#1a1a2e;color:#ddd;}
-
-    .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
-    .status-online{background:#3ba55c;}
-    .status-offline{background:#747f8d;}
-    .status-dnd{background:#ed4245;}
-    .status-idle{background:#faa81a;}
-
-    .preview-link{display:inline-flex;align-items:center;gap:0.5rem;color:#ff416c;font-size:0.78rem;text-decoration:none;border:1px solid rgba(255,65,108,0.2);border-radius:8px;padding:0.45rem 0.8rem;transition:all 0.2s;margin-bottom:1.5rem;}
-    .preview-link:hover{border-color:#ff416c;}
-
-    .color-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.5rem;}
-    .color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;flex-shrink:0;}
-    .color-swatch.selected{border-color:var(--fg);}
-    input[type=color]{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;padding:0;}
-
-    .status-opt-row{display:flex;gap:0.6rem;margin-top:0.6rem;flex-wrap:wrap;}
-    .status-opt{display:flex;align-items:center;gap:0.4rem;padding:0.35rem 0.7rem;border:1px solid var(--border);border-radius:8px;font-size:0.75rem;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
-    .status-opt.active{border-color:#ff416c;background:rgba(255,65,108,0.1);color:var(--fg);}
-    .status-dot-sm{width:8px;height:8px;border-radius:50;}
-
-    .file-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;color:var(--fg);font-family:inherit;font-size:0.82rem;padding:0.5rem 0.7rem;outline:none;cursor:pointer;}
-    .file-input::file-selector-button{background:#ff416c;color:#fff;border:none;border-radius:6px;padding:0.25rem 0.7rem;font-size:0.75rem;font-weight:600;cursor:pointer;margin-right:0.6rem;}
-    .preview-thumb{display:none;width:60px;height:60px;border-radius:10px;object-fit:cover;border:1px solid var(--border);margin-top:0.4rem;}
+    .gap-10{gap:10px;}
+    
+    /* Log table */
+    .log-table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+    .log-table th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:400;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;}
+    .log-table td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.03);}
+    .log-table tr:hover td{background:rgba(255,255,255,0.02);}
+    
+    /* Status options */
+    .status-opt-row{display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;}
+    .status-opt{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.7rem;border:1px solid var(--border);border-radius:8px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
+    .status-opt.active{border-color:var(--accent);background:rgba(255,65,108,0.08);color:var(--fg);}
+    .status-dot-sm{width:7px;height:7px;border-radius:50;display:inline-block;}
+    
+    /* Color picker */
+    .color-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;}
+    .color-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0;}
+    .color-swatch.selected{border-color:var(--fg);transform:scale(1.1);}
+    .color-swatch:hover{transform:scale(1.08);}
+    input[type=color]{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;padding:0;}
+    
+    /* Leaderboard */
+    .leaderboard-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+    .leaderboard-item .rank{color:var(--muted);width:30px;font-weight:500;}
+    .leaderboard-item .user{flex:1;font-weight:500;}
+    .leaderboard-item .count{color:var(--accent);font-weight:700;}
+    .leaderboard-item:first-child .rank{color:#faa81a;}
+    .leaderboard-item:first-child .user{color:#faa81a;}
+    
+    /* File input */
+    .file-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:inherit;font-size:0.78rem;padding:0.4rem 0.6rem;outline:none;cursor:pointer;}
+    .file-input::file-selector-button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:0.2rem 0.7rem;font-size:0.7rem;font-weight:600;cursor:pointer;margin-right:0.5rem;}
+    .preview-thumb{display:none;width:50px;height:50px;border-radius:10px;object-fit:cover;border:1px solid var(--border);margin-top:0.3rem;}
     .preview-thumb.show{display:block;}
-    .upload-status{font-size:0.7rem;color:var(--muted);margin-top:0.2rem;}
-    .upload-status.ok{color:#6bff8a;}
-    .upload-status.err{color:#ff6b6b;}
-
-    .deco-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow-y:auto;padding:4px 0;}
-    .deco-grid::-webkit-scrollbar{width:4px;}
-    .deco-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:99px;}
-    .deco-opt{width:48px;height:48px;border-radius:10px;border:2px solid transparent;overflow:hidden;cursor:pointer;position:relative;background:var(--panel);flex-shrink:0;transition:border-color 0.15s;}
-    .deco-opt:hover{border-color:rgba(255,255,255,0.25);}
-    .deco-opt.active{border-color:#ff416c;}
-    .deco-opt img{width:100%;height:100%;object-fit:contain;}
-    .deco-none{width:48px;height:48px;border-radius:10px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--muted);flex-shrink:0;transition:border-color 0.15s;background:var(--panel);}
-    .deco-none:hover{border-color:rgba(255,255,255,0.25);}
-    .deco-none.active{border-color:#ff416c;color:var(--fg);}
-
-    .leaderboard-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
-    .leaderboard-item .rank{color:var(--muted);width:30px;}
-    .leaderboard-item .user{flex:1;}
-    .leaderboard-item .count{color:#ff416c;font-weight:600;}
-
-    /* Force white text on all inputs */
-    body, .section-title, .section-sub, .field-label, .save-msg, .stat-lbl, .badge, .nav-slug, .nav-slug span, .side-label, .side-btn, .auth-logo, .auth-tab, .auth-msg, .field-input, .stat-num, .nav-logout, .auth-form input, .auth-form input::placeholder, .field-input::placeholder, .status-opt, .upload-status, .remove-link, .deco-none, .widget-name, .claim-modal-title, .claim-modal-sub, .claim-pfx, .claim-modal-msg {
-      color: #ffffff !important;
-    }
-    .auth-tab.active { color: #ffffff !important; }
-    .side-btn.active { color: #ffffff !important; }
-    .nav-slug span { color: #ffffff !important; }
-    .status-opt.active { color: #ffffff !important; }
-    .upload-status.ok { color: #6bff8a !important; }
-    .upload-status.err { color: #ff6b6b !important; }
-    .auth-msg.err { color: #ff6b6b !important; }
-    #toast.err { color: #ff6b6b !important; }
-    #toast.ok { color: #6bff8a !important; }
-    .stat-num { color: #ff416c !important; }
+    
+    /* Nuke button special */
+    .nuke-btn{background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:0.9rem;font-weight:800;padding:0.7rem 2rem;cursor:pointer;transition:all 0.2s;width:100%;letter-spacing:0.03em;}
+    .nuke-btn:hover{transform:scale(1.01);box-shadow:0 0 40px var(--accent-glow);}
+    .nuke-btn:active{transform:scale(0.98);}
+    
+    /* misc */
+    .text-accent{color:var(--accent);}
+    .text-muted{color:var(--muted);}
+    .text-sm{font-size:0.75rem;}
+    .fw-700{font-weight:700;}
+    .flex{display:flex;}
+    .flex-center{align-items:center;}
+    .gap-6{gap:6px;}
+    
+    /* Live indicator */
+    .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ba55c;animation:pulse 1.5s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
   </style>
 </head>
 <body>
 <div id="toast"></div>
 
-<!-- AUTH SCREEN -->
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">nuke</div>
+    <div class="auth-sub">⏤ dashboard v2</div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</button>
       <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
     </div>
     <div class="auth-form" id="auth-form">
       <input type="text" id="auth-username" placeholder="username" autocomplete="off" maxlength="24">
-      <input type="password" id="auth-pass" placeholder="password (min 6 chars)" autocomplete="current-password">
+      <input type="password" id="auth-pass" placeholder="password (min 6)" autocomplete="current-password">
       <button class="auth-submit" id="auth-submit">Continue →</button>
       <div class="auth-msg" id="auth-msg"></div>
     </div>
   </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- MAIN -->
 <div id="main-app">
   <nav>
     <div class="nav-logo">nuke</div>
     <div class="nav-right">
+      <span class="nav-status"><span class="dot"></span><span id="nav-status-label">online</span></span>
       <span class="nav-slug">nuke.lol/<span id="nav-slug-val">—</span></span>
       <button class="nav-logout" onclick="logout()">logout</button>
     </div>
@@ -204,39 +212,39 @@
     <aside>
       <div class="side-label">overview</div>
       <button class="side-btn active" onclick="nav('overview',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Overview
       </button>
-      <div class="side-label">nuke</div>
+      <div class="side-label">operations</div>
       <button class="side-btn" onclick="nav('nuke',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         Nuke Control
       </button>
       <button class="side-btn" onclick="nav('logs',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Logs
       </button>
       <div class="side-label">profile</div>
       <button class="side-btn" onclick="nav('profile',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Profile
       </button>
       <button class="side-btn" onclick="nav('socials',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Socials
       </button>
       <button class="side-btn" onclick="nav('appearance',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         Appearance
       </button>
       <div class="side-label">account</div>
       <button class="side-btn" onclick="nav('settings',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings
       </button>
-      <div class="side-label">leaderboard</div>
+      <div class="side-label">community</div>
       <button class="side-btn" onclick="nav('leaderboard',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 11 4 16 9"/><polyline points="8 15 11 18 16 15"/><line x1="11" y1="4" x2="11" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 11 4 16 9"/><polyline points="8 15 11 18 16 15"/><line x1="11" y1="4" x2="11" y2="18"/></svg>
         Leaderboard
       </button>
     </aside>
@@ -245,64 +253,55 @@
       <!-- OVERVIEW -->
       <div class="section active" id="sec-overview">
         <div class="section-title">Overview</div>
-        <div class="section-sub">Your nuke statistics at a glance.</div>
+        <div class="section-sub">Your nuke statistics in real-time.</div>
         <div class="stats-grid">
           <div class="stat-cell"><div class="stat-num" id="ov-nukes">0</div><div class="stat-lbl">Total Nukes</div></div>
           <div class="stat-cell"><div class="stat-num" id="ov-channels">0</div><div class="stat-lbl">Channels Deleted</div></div>
           <div class="stat-cell"><div class="stat-num" id="ov-messages">0</div><div class="stat-lbl">Messages Spammed</div></div>
           <div class="stat-cell"><div class="stat-num" id="ov-servers">0</div><div class="stat-lbl">Servers Hit</div></div>
         </div>
-        <div class="panel" style="margin-top:1rem;">
-          <div class="field-label">Current Target</div>
-          <div style="font-size:0.9rem;color:var(--muted);">Server: <span id="ov-target" style="color:#ff416c;font-weight:600;">None</span></div>
-          <div style="margin-top:0.8rem;"><span class="badge" id="ov-status-badge">offline</span></div>
+        <div class="panel mt-20">
+          <div class="flex-between">
+            <div><span class="field-label" style="margin-bottom:0;">Current Target</span><div class="text-accent fw-700" id="ov-target" style="font-size:1rem;">None</div></div>
+            <div><span class="badge" id="ov-status-badge">offline</span></div>
+          </div>
         </div>
       </div>
 
-      <!-- NUKE CONTROL -->
+      <!-- NUKE -->
       <div class="section" id="sec-nuke">
         <div class="section-title">Nuke Control</div>
-        <div class="section-sub">Execute operations on the target server.</div>
+        <div class="section-sub">Execute full-scale operations.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Target Server</div>
             <div class="input-group">
-              <input class="field-input" id="target-input" type="text" placeholder="Server name or ID">
-              <button class="save-btn" onclick="setTarget()">Set Target</button>
+              <input class="field-input" id="target-input" placeholder="Server name or ID">
+              <button class="btn btn-sm" onclick="setTarget()">Set</button>
             </div>
           </div>
           <div class="field-row">
             <div class="field-label">Full Nuke</div>
             <div class="input-group">
-              <input class="field-input" id="nuke-count" type="number" placeholder="Channels" value="50">
-              <input class="field-input" id="nuke-name" type="text" placeholder="Channel name" value="nuked">
+              <input class="field-input" id="nuke-count" type="number" placeholder="Channels" value="80">
+              <input class="field-input" id="nuke-name" placeholder="Channel name" value="rekt">
             </div>
             <div class="input-group">
-              <input class="field-input" id="nuke-text" type="text" placeholder="Spam message" value="DESTROYED">
+              <input class="field-input" id="nuke-text" placeholder="Spam message" value="@everyone DESTROYED">
             </div>
-            <button class="nuke-btn" onclick="executeNuke()">NUKE</button>
+            <button class="nuke-btn" onclick="executeNuke()">🔥 NUKE</button>
           </div>
-          <div class="field-row mt-10">
-            <div class="field-label">Quick Actions</div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-              <button class="nuke-btn warning" onclick="spamChannels()">Spam Channels</button>
-              <button class="nuke-btn secondary" onclick="deleteChannels()">Delete Channels</button>
-              <button class="nuke-btn warning" onclick="stopSpam()">Stop Spam</button>
-            </div>
-          </div>
-          <div class="field-row mt-10">
-            <div class="field-label">Webhook Spam</div>
-            <div class="input-group">
-              <input class="field-input" id="webhook-channel" type="text" placeholder="Channel ID">
-              <input class="field-input" id="webhook-msg" type="text" placeholder="Message" value="webhook spam">
-            </div>
-            <button class="nuke-btn danger" onclick="webhookSpam()">Launch Webhooks</button>
+          <div class="flex gap-10 mt-10" style="flex-wrap:wrap;">
+            <button class="btn btn-warning btn-sm" onclick="spamChannels()">Spam Channels</button>
+            <button class="btn btn-secondary btn-sm" onclick="deleteChannels()">Delete Channels</button>
+            <button class="btn btn-secondary btn-sm" onclick="stopSpam()">Stop Spam</button>
+            <button class="btn btn-danger btn-sm" onclick="webhookSpam()">Webhook Flood</button>
           </div>
           <div class="field-row mt-10">
             <div class="field-label">PM All Members</div>
             <div class="input-group">
-              <input class="field-input" id="pm-message" type="text" placeholder="Message to send to all members">
-              <button class="nuke-btn secondary" onclick="pmAll()">Send PMs</button>
+              <input class="field-input" id="pm-message" placeholder="Message to all members">
+              <button class="btn btn-sm" onclick="pmAll()">Send</button>
             </div>
           </div>
         </div>
@@ -310,17 +309,17 @@
 
       <!-- LOGS -->
       <div class="section" id="sec-logs">
-        <div class="section-title">Nuke Logs</div>
-        <div class="section-sub">History of all your nuke operations.</div>
+        <div class="section-title">Logs</div>
+        <div class="section-sub">Recent nuke activity.</div>
         <div class="panel">
-          <div class="flex-between">
-            <span></span>
-            <button class="save-btn" onclick="clearLogs()" style="background:rgba(255,80,80,0.12);color:#ff6b6b;border:1px solid rgba(255,80,80,0.2);">Clear Logs</button>
+          <div class="flex-between mb-10">
+            <span class="text-sm text-muted"><span class="live-dot"></span> live</span>
+            <button class="btn btn-sm btn-danger" onclick="clearLogs()">Clear</button>
           </div>
           <div style="overflow-x:auto;">
             <table class="log-table">
-              <thead><tr><th>Time</th><th>Server</th><th>Action</th><th>Details</th><th>Channels</th></tr></thead>
-              <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);">No logs yet</td></tr></tbody>
+              <thead><tr><th>Time</th><th>Server</th><th>Action</th><th>Details</th><th>Ch</th></tr></thead>
+              <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs yet</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -329,24 +328,24 @@
       <!-- PROFILE -->
       <div class="section" id="sec-profile">
         <div class="section-title">Profile</div>
-        <div class="section-sub">Customize your profile.</div>
+        <div class="section-sub">Customize your public profile.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Display Name</div>
-            <input class="field-input" id="p-displayname" type="text" placeholder="Your name" maxlength="50">
+            <input class="field-input" id="p-displayname" placeholder="Your name" maxlength="50">
           </div>
           <div class="field-row">
             <div class="field-label">Bio</div>
-            <textarea class="field-input" id="p-bio" placeholder="Say something..." maxlength="500"></textarea>
+            <textarea class="field-input" id="p-bio" placeholder="Write something..." maxlength="500"></textarea>
           </div>
           <div class="field-row">
             <div class="field-label">Avatar</div>
             <input class="file-input" id="p-avatar-file" type="file" accept="image/*" onchange="previewFile(this,'p-avatar-preview')">
-            <input class="field-input" id="p-avatar-url" type="url" placeholder="or paste image URL" style="margin-top:0.3rem;">
+            <input class="field-input" id="p-avatar-url" placeholder="or paste image URL" style="margin-top:0.3rem;">
             <img class="preview-thumb" id="p-avatar-preview" src="">
-            <div class="upload-status" id="p-avatar-status"></div>
+            <div class="upload-status text-sm text-muted" id="p-avatar-status"></div>
           </div>
-          <button class="save-btn" onclick="saveProfile()">Save Profile</button>
+          <button class="btn" onclick="saveProfile()">Save Profile</button>
           <span class="save-msg" id="profile-msg"></span>
         </div>
       </div>
@@ -354,10 +353,10 @@
       <!-- SOCIALS -->
       <div class="section" id="sec-socials">
         <div class="section-title">Socials</div>
-        <div class="section-sub">Links displayed on your profile.</div>
+        <div class="section-sub">Links shown on your profile card.</div>
         <div class="panel">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-            <div class="field-row"><div class="field-label">Discord</div><input class="field-input" id="s-discord" type="text" placeholder="username"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+            <div class="field-row"><div class="field-label">Discord</div><input class="field-input" id="s-discord" placeholder="username"></div>
             <div class="field-row">
               <div class="field-label">Status</div>
               <div class="status-opt-row">
@@ -367,14 +366,14 @@
                 <button class="status-opt" data-status="idle" onclick="setStatus('idle',this)"><span class="status-dot-sm" style="background:#faa81a"></span>idle</button>
               </div>
             </div>
-            <div class="field-row"><div class="field-label">Twitter/X</div><input class="field-input" id="s-twitter" type="text" placeholder="@handle"></div>
-            <div class="field-row"><div class="field-label">Instagram</div><input class="field-input" id="s-instagram" type="text" placeholder="@handle"></div>
-            <div class="field-row"><div class="field-label">YouTube</div><input class="field-input" id="s-youtube" type="text" placeholder="channel URL"></div>
-            <div class="field-row"><div class="field-label">GitHub</div><input class="field-input" id="s-github" type="text" placeholder="username"></div>
-            <div class="field-row"><div class="field-label">Twitch</div><input class="field-input" id="s-twitch" type="text" placeholder="username"></div>
-            <div class="field-row"><div class="field-label">TikTok</div><input class="field-input" id="s-tiktok" type="text" placeholder="@handle"></div>
+            <div class="field-row"><div class="field-label">Twitter/X</div><input class="field-input" id="s-twitter" placeholder="@handle"></div>
+            <div class="field-row"><div class="field-label">Instagram</div><input class="field-input" id="s-instagram" placeholder="@handle"></div>
+            <div class="field-row"><div class="field-label">YouTube</div><input class="field-input" id="s-youtube" placeholder="channel URL"></div>
+            <div class="field-row"><div class="field-label">GitHub</div><input class="field-input" id="s-github" placeholder="username"></div>
+            <div class="field-row"><div class="field-label">Twitch</div><input class="field-input" id="s-twitch" placeholder="username"></div>
+            <div class="field-row"><div class="field-label">TikTok</div><input class="field-input" id="s-tiktok" placeholder="@handle"></div>
           </div>
-          <button class="save-btn" onclick="saveSocials()">Save Socials</button>
+          <button class="btn" onclick="saveSocials()">Save Socials</button>
           <span class="save-msg" id="socials-msg"></span>
         </div>
       </div>
@@ -382,7 +381,7 @@
       <!-- APPEARANCE -->
       <div class="section" id="sec-appearance">
         <div class="section-title">Appearance</div>
-        <div class="section-sub">Customize the look of your dashboard and profile.</div>
+        <div class="section-sub">Customize your dashboard theme.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Accent Color</div>
@@ -393,10 +392,10 @@
               <div class="color-swatch" style="background:#10b981" data-color="#10b981" onclick="selectColor(this)"></div>
               <div class="color-swatch" style="background:#f59e0b" data-color="#f59e0b" onclick="selectColor(this)"></div>
               <div class="color-swatch" style="background:#ffffff" data-color="#ffffff" onclick="selectColor(this)"></div>
-              <input type="color" id="a-custom-color" value="#ff416c" title="Custom color" oninput="customColor(this)">
+              <input type="color" id="a-custom-color" value="#ff416c" title="Custom" oninput="customColor(this)">
             </div>
           </div>
-          <button class="save-btn" onclick="saveAppearance()">Save Appearance</button>
+          <button class="btn" onclick="saveAppearance()">Save Appearance</button>
           <span class="save-msg" id="appear-msg"></span>
         </div>
       </div>
@@ -407,10 +406,10 @@
         <div class="section-sub">Account management.</div>
         <div class="panel">
           <div class="field-label">Username</div>
-          <div style="font-size:0.85rem;font-weight:600;margin-bottom:1.2rem;">nuke.lol/<span id="set-slug"></span></div>
+          <div class="fw-700 text-sm" style="margin-bottom:1rem;">nuke.lol/<span id="set-slug"></span></div>
           <div class="field-label">Email</div>
-          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:1.2rem;" id="set-email">—</div>
-          <button class="save-btn" style="background:rgba(255,80,80,0.12);color:#ff6b6b;border:1px solid rgba(255,80,80,0.2);" onclick="if(confirm('Delete your account and all logs? This cannot be undone.'))deleteAccount()">Delete Account</button>
+          <div class="text-sm text-muted" style="margin-bottom:1.2rem;" id="set-email">—</div>
+          <button class="btn btn-danger" onclick="if(confirm('Delete account and all data? This is permanent.'))deleteAccount()">Delete Account</button>
           <span class="save-msg" id="settings-msg"></span>
         </div>
       </div>
@@ -418,10 +417,10 @@
       <!-- LEADERBOARD -->
       <div class="section" id="sec-leaderboard">
         <div class="section-title">Leaderboard</div>
-        <div class="section-sub">Top nukers ranked by total operations.</div>
+        <div class="section-sub">Top nukers worldwide.</div>
         <div class="panel">
           <div id="leaderboard-container">
-            <div class="leaderboard-item"><span class="rank">1.</span><span class="user" style="color:var(--muted);">Loading...</span><span class="count">—</span></div>
+            <div class="text-muted text-sm" style="padding:0.5rem;">Loading...</div>
           </div>
         </div>
       </div>
@@ -430,28 +429,17 @@
 </div>
 
 <script>
-// ===== SUPABASE CONFIG =====
-const SUPA_URL = 'YOUR_SUPABASE_URL';
-const SUPA_KEY = 'YOUR_SUPABASE_ANON_KEY';
-const BASE_PATH = location.pathname.replace(/\/?[^/]*$/, '/');
+// ===== SUPABASE =====
+const SUPA_URL = 'https://ixozgqycpbjkaftzgmqs.supabase.co';
+const SUPA_KEY = 'sb_publishable_2GOLzDazYL5V-ROVL_HOwQ__RspdK9U';
 
 let USER = null;
 let PROFILE = null;
 let discordStatus = 'offline';
 let accentColor = '#ff416c';
+let logs = JSON.parse(localStorage.getItem('nuke_logs') || '[]');
 
-// ===== HASH FUNCTION (works without crypto.subtle) =====
-async function hashPass(pw) {
-  let h = 0;
-  for (let i = 0; i < pw.length; i++) {
-    const c = pw.charCodeAt(i);
-    h = ((h << 5) - h) + c;
-    h |= 0;
-  }
-  return 'h_' + Math.abs(h).toString(16) + '_' + pw.length;
-}
-
-// ===== SUPABASE FETCH =====
+// ===== HELPERS =====
 async function supaFetch(path, opts = {}) {
   const r = await fetch(SUPA_URL + path, {
     ...opts,
@@ -474,7 +462,7 @@ function toast(msg, type = '') {
   t.textContent = msg;
   t.className = 'show ' + (type || '');
   clearTimeout(t._hide);
-  t._hide = setTimeout(() => t.classList.remove('show'), 2500);
+  t._hide = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 function flashMsg(id, txt) {
@@ -485,6 +473,16 @@ function flashMsg(id, txt) {
   el._f = setTimeout(() => el.textContent = '', 2500);
 }
 
+async function hashPass(pw) {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) {
+    const c = pw.charCodeAt(i);
+    h = ((h << 5) - h) + c;
+    h |= 0;
+  }
+  return 'h_' + Math.abs(h).toString(16) + '_' + pw.length;
+}
+
 // ===== AUTH =====
 let authMode = 'login';
 
@@ -492,7 +490,7 @@ function switchTab(m) {
   authMode = m;
   document.getElementById('tab-login').classList.toggle('active', m === 'login');
   document.getElementById('tab-signup').classList.toggle('active', m === 'signup');
-  document.getElementById('auth-submit').textContent = m === 'login' ? 'Login →' : 'Create account →';
+  document.getElementById('auth-submit').textContent = m === 'login' ? 'Login →' : 'Create →';
   document.getElementById('auth-msg').textContent = '';
 }
 
@@ -502,16 +500,16 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
   const msg = document.getElementById('auth-msg');
   const btn = document.getElementById('auth-submit');
   
-  if (!pass) { msg.className = 'auth-msg err'; msg.textContent = 'Enter a password.'; return; }
-  if (pass.length < 6) { msg.className = 'auth-msg err'; msg.textContent = 'Password must be at least 6 characters.'; return; }
+  if (!pass) { msg.className = 'auth-msg err'; msg.textContent = 'Enter password.'; return; }
+  if (pass.length < 6) { msg.className = 'auth-msg err'; msg.textContent = 'Min 6 chars.'; return; }
   msg.className = 'auth-msg';
   msg.textContent = 'Please wait...';
   btn.disabled = true;
 
   try {
     if (authMode === 'signup') {
-      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter a username.'; btn.disabled = false; return; }
-      if (uname.length > 24) { msg.className = 'auth-msg err'; msg.textContent = 'Username max 24 characters.'; btn.disabled = false; return; }
+      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
+      if (uname.length > 24) { msg.className = 'auth-msg err'; msg.textContent = 'Max 24 chars.'; btn.disabled = false; return; }
       
       const chk = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=username`);
       if (chk.data?.length) { msg.className = 'auth-msg err'; msg.textContent = 'Username taken.'; btn.disabled = false; return; }
@@ -525,8 +523,6 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
           display_name: uname,
           bio: '',
           avatar_url: '',
-          banner_url: '',
-          background_url: '',
           discord: '',
           twitter: '',
           instagram: '',
@@ -544,19 +540,17 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       });
       if (!ins.ok) {
         msg.className = 'auth-msg err';
-        msg.textContent = 'Error creating profile. Check Supabase tables.';
+        msg.textContent = 'Error creating profile.';
         btn.disabled = false;
         return;
       }
       PROFILE = ins.data?.[0] || {};
-      if (!PROFILE.id) { msg.className = 'auth-msg err'; msg.textContent = 'Profile created but no ID.'; btn.disabled = false; return; }
       USER = { id: PROFILE.id };
       localStorage.setItem('nuke_session', USER.id);
       btn.disabled = false;
       showApp();
     } else {
-      // Login
-      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter your username.'; btn.disabled = false; return; }
+      if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
       const lookup = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=id,password_hash`);
       if (!lookup.data?.length) { msg.className = 'auth-msg err'; msg.textContent = 'User not found.'; btn.disabled = false; return; }
       const row = lookup.data[0];
@@ -565,15 +559,14 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       USER = { id: row.id };
       localStorage.setItem('nuke_session', USER.id);
       const r = await supaFetch(`/rest/v1/profiles?id=eq.${USER.id}&select=*`);
-      if (r.data?.length) { PROFILE = r.data[0]; } else { msg.className = 'auth-msg err'; msg.textContent = 'Profile not found.'; btn.disabled = false; return; }
+      if (r.data?.length) { PROFILE = r.data[0]; } else { msg.className = 'auth-msg err'; msg.textContent = 'Profile error.'; btn.disabled = false; return; }
       btn.disabled = false;
       showApp();
     }
   } catch (e) {
     msg.className = 'auth-msg err';
-    msg.textContent = e.message || 'An error occurred.';
+    msg.textContent = e.message || 'Error.';
     btn.disabled = false;
-    console.error(e);
   }
 });
 
@@ -581,16 +574,16 @@ document.getElementById('auth-pass').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('auth-submit').click();
 });
 
-// ===== SHOW APP =====
+// ===== APP =====
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('main-app').classList.add('show');
   populateFields();
-  loadLogs();
+  renderLogs();
   loadLeaderboard();
+  applyAccent();
 }
 
-// ===== NAVIGATION =====
 function nav(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
@@ -599,7 +592,7 @@ function nav(id, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// ===== POPULATE FIELDS =====
+// ===== POPULATE =====
 function populateFields() {
   const p = PROFILE;
   if (!p) return;
@@ -621,7 +614,7 @@ function populateFields() {
     el.classList.add('show');
   }
   
-  ['discord', 'twitter', 'instagram', 'youtube', 'github', 'twitch', 'tiktok'].forEach(k => {
+  ['discord','twitter','instagram','youtube','github','twitch','tiktok'].forEach(k => {
     const el = document.getElementById('s-' + k);
     if (el) el.value = p[k] || '';
   });
@@ -630,6 +623,11 @@ function populateFields() {
   document.querySelectorAll('.status-opt').forEach(el => {
     el.classList.toggle('active', el.dataset.status === discordStatus);
   });
+  document.getElementById('nav-status-label').textContent = discordStatus;
+  document.querySelector('.nav-status .dot').style.background = 
+    discordStatus === 'online' ? '#3ba55c' : 
+    discordStatus === 'dnd' ? '#ed4245' : 
+    discordStatus === 'idle' ? '#faa81a' : '#747f8d';
   
   accentColor = p.accent || '#ff416c';
   document.querySelectorAll('.color-swatch').forEach(s => {
@@ -637,33 +635,51 @@ function populateFields() {
   });
   document.getElementById('a-custom-color').value = accentColor;
   
-  // Status badge
   const badge = document.getElementById('ov-status-badge');
-  badge.textContent = 'online';
-  badge.style.color = '#3ba55c';
+  if (discordStatus === 'online') {
+    badge.textContent = 'online';
+    badge.className = 'badge badge-success';
+  } else if (discordStatus === 'dnd') {
+    badge.textContent = 'dnd';
+    badge.className = 'badge';
+  } else if (discordStatus === 'idle') {
+    badge.textContent = 'idle';
+    badge.className = 'badge badge-warning';
+  } else {
+    badge.textContent = 'offline';
+    badge.className = 'badge';
+  }
 }
 
-// ===== SET STATUS =====
+function applyAccent() {
+  document.documentElement.style.setProperty('--accent', accentColor);
+  document.documentElement.style.setProperty('--accent-glow', accentColor + '22');
+}
+
+// ===== STATUS / COLOR =====
 function setStatus(s, el) {
   discordStatus = s;
   document.querySelectorAll('.status-opt').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('nav-status-label').textContent = s;
+  const dot = document.querySelector('.nav-status .dot');
+  dot.style.background = s === 'online' ? '#3ba55c' : s === 'dnd' ? '#ed4245' : s === 'idle' ? '#faa81a' : '#747f8d';
 }
 
-// ===== SELECT COLOR =====
 function selectColor(el) {
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
   el.classList.add('selected');
   accentColor = el.dataset.color;
   document.getElementById('a-custom-color').value = accentColor;
+  applyAccent();
 }
 
 function customColor(el) {
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
   accentColor = el.value;
+  applyAccent();
 }
 
-// ===== PREVIEW FILE =====
 function previewFile(input, imgId) {
   const img = document.getElementById(imgId);
   if (!input.files || !input.files[0]) { img.classList.remove('show'); return; }
@@ -672,7 +688,7 @@ function previewFile(input, imgId) {
   reader.readAsDataURL(input.files[0]);
 }
 
-// ===== SAVE PROFILE =====
+// ===== SAVE FUNCTIONS =====
 async function saveProfile() {
   const id = USER?.id;
   if (!id) return;
@@ -687,17 +703,14 @@ async function saveProfile() {
     method: 'PATCH',
     body: JSON.stringify(fields)
   });
-  flashMsg('profile-msg', r.ok ? 'Saved!' : 'Error saving.');
+  flashMsg('profile-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Profile saved', 'ok');
-  } else {
-    toast('Error saving profile', 'err');
   }
 }
 
-// ===== SAVE SOCIALS =====
 async function saveSocials() {
   const id = USER?.id;
   if (!id) return;
@@ -714,17 +727,14 @@ async function saveSocials() {
       discord_status: discordStatus
     })
   });
-  flashMsg('socials-msg', r.ok ? 'Saved!' : 'Error saving.');
+  flashMsg('socials-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Socials saved', 'ok');
-  } else {
-    toast('Error saving socials', 'err');
   }
 }
 
-// ===== SAVE APPEARANCE =====
 async function saveAppearance() {
   const id = USER?.id;
   if (!id) return;
@@ -732,92 +742,78 @@ async function saveAppearance() {
     method: 'PATCH',
     body: JSON.stringify({ accent: accentColor })
   });
-  flashMsg('appear-msg', r.ok ? 'Saved!' : 'Error saving.');
+  flashMsg('appear-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
     if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Appearance saved', 'ok');
-  } else {
-    toast('Error saving appearance', 'err');
   }
 }
 
-// ===== NUKE COMMANDS (simulate via bot) =====
+// ===== NUKE ACTIONS =====
 function setTarget() {
   const name = document.getElementById('target-input').value.trim();
   if (!name) return toast('Enter server name', 'err');
   localStorage.setItem('nuke_target', name);
   document.getElementById('ov-target').textContent = name;
   addLog(name, 'set_target', 'Target set');
-  toast('Target set to ' + name, 'ok');
+  toast('Target set: ' + name, 'ok');
 }
 
 function executeNuke() {
-  const count = document.getElementById('nuke-count').value || 50;
-  const name = document.getElementById('nuke-name').value || 'nuked';
-  const text = document.getElementById('nuke-text').value || 'DESTROYED';
+  const count = document.getElementById('nuke-count').value || 80;
+  const name = document.getElementById('nuke-name').value || 'rekt';
+  const text = document.getElementById('nuke-text').value || '@everyone DESTROYED';
   const target = localStorage.getItem('nuke_target');
   if (!target) return toast('Set target first', 'err');
   
-  addLog(target, 'nuke', `${count} channels, name: ${name}`, count);
-  toast(`Nuke command sent to ${target}`, 'ok');
-  
-  // Update stats
+  addLog(target, 'nuke', `${count} ch, "${name}"`, parseInt(count));
+  toast(`🔥 Nuke launched on ${target}`, 'ok');
   updateStats(1, parseInt(count), parseInt(count) * 50, 1);
 }
 
 function spamChannels() {
   const target = localStorage.getItem('nuke_target');
-  if (!target) return toast('Set target first', 'err');
-  const count = prompt('Number of channels:', '20');
+  if (!target) return toast('Set target', 'err');
+  const count = prompt('Channel count:', '30');
   if (!count) return;
-  addLog(target, 'spam_channels', `${count} channels created`, parseInt(count));
-  toast(`Spam channels command sent`, 'ok');
+  addLog(target, 'spam_channels', `${count} channels`, parseInt(count));
+  toast('Spam channels sent', 'ok');
 }
 
 function deleteChannels() {
   const target = localStorage.getItem('nuke_target');
-  if (!target) return toast('Set target first', 'err');
-  addLog(target, 'delete_channels', 'All channels deleted');
-  toast('Delete channels command sent', 'ok');
+  if (!target) return toast('Set target', 'err');
+  addLog(target, 'delete_channels', 'All deleted');
+  toast('Delete command sent', 'ok');
 }
 
 function stopSpam() {
-  addLog(localStorage.getItem('nuke_target') || 'unknown', 'stop_spam', 'Spam stopped');
-  toast('Stop spam command sent', 'ok');
+  addLog(localStorage.getItem('nuke_target') || 'unknown', 'stop_spam', 'Stopped');
+  toast('Stop command sent', 'ok');
 }
 
 function webhookSpam() {
   const target = localStorage.getItem('nuke_target');
-  if (!target) return toast('Set target first', 'err');
-  const ch = document.getElementById('webhook-channel').value.trim();
-  const msg = document.getElementById('webhook-msg').value || 'webhook spam';
-  if (!ch) return toast('Enter channel ID', 'err');
-  addLog(target, 'webhook_spam', `Channel ${ch}, msg: ${msg.substring(0,30)}`);
-  toast('Webhook spam launched', 'ok');
+  if (!target) return toast('Set target', 'err');
+  const ch = document.getElementById('webhook-channel')?.value || prompt('Channel ID:');
+  if (!ch) return;
+  addLog(target, 'webhook_spam', `Channel ${ch}`);
+  toast('Webhook flood launched', 'ok');
 }
 
 function pmAll() {
   const target = localStorage.getItem('nuke_target');
-  if (!target) return toast('Set target first', 'err');
+  if (!target) return toast('Set target', 'err');
   const msg = document.getElementById('pm-message').value.trim();
-  if (!msg) return toast('Enter a message', 'err');
-  addLog(target, 'pm_all', `Message: ${msg.substring(0,40)}`);
-  toast('PMs sent to all members', 'ok');
+  if (!msg) return toast('Enter message', 'err');
+  addLog(target, 'pm_all', `"${msg.substring(0,30)}..."`);
+  toast('PMs sent', 'ok');
 }
 
 // ===== LOGS =====
-let logs = JSON.parse(localStorage.getItem('nuke_logs') || '[]');
-
 function addLog(server, action, details, channels = 0) {
-  const entry = {
-    time: new Date().toLocaleString(),
-    server: server || 'unknown',
-    action: action,
-    details: details || '',
-    channels: channels
-  };
-  logs.unshift(entry);
+  logs.unshift({ time: new Date().toLocaleString(), server: server || 'unknown', action, details: details || '', channels });
   if (logs.length > 100) logs.pop();
   localStorage.setItem('nuke_logs', JSON.stringify(logs));
   renderLogs();
@@ -826,7 +822,7 @@ function addLog(server, action, details, channels = 0) {
 function renderLogs() {
   const tbody = document.getElementById('log-body');
   if (!logs.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No logs yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs yet</td></tr>';
     return;
   }
   tbody.innerHTML = logs.slice(0, 50).map(l => `
@@ -840,11 +836,6 @@ function renderLogs() {
   `).join('');
 }
 
-function loadLogs() {
-  logs = JSON.parse(localStorage.getItem('nuke_logs') || '[]');
-  renderLogs();
-}
-
 function clearLogs() {
   if (!confirm('Clear all logs?')) return;
   logs = [];
@@ -853,25 +844,20 @@ function clearLogs() {
   toast('Logs cleared', 'ok');
 }
 
-// ===== STATS UPDATE =====
+// ===== STATS =====
 async function updateStats(nukes, channels, messages, servers) {
   const id = USER?.id;
   if (!id) return;
   const p = PROFILE;
   if (!p) return;
   
-  const newNukes = (p.total_nukes || 0) + nukes;
-  const newChannels = (p.total_channels || 0) + channels;
-  const newMessages = (p.total_messages || 0) + messages;
-  const newServers = (p.total_servers || 0) + servers;
-  
   const r = await supaFetch(`/rest/v1/profiles?id=eq.${id}`, {
     method: 'PATCH',
     body: JSON.stringify({
-      total_nukes: newNukes,
-      total_channels: newChannels,
-      total_messages: newMessages,
-      total_servers: newServers
+      total_nukes: (p.total_nukes || 0) + nukes,
+      total_channels: (p.total_channels || 0) + channels,
+      total_messages: (p.total_messages || 0) + messages,
+      total_servers: (p.total_servers || 0) + servers
     })
   });
   if (r.ok) {
@@ -885,7 +871,7 @@ async function loadLeaderboard() {
   const container = document.getElementById('leaderboard-container');
   const r = await supaFetch('/rest/v1/profiles?select=username,total_nukes&order=total_nukes.desc&limit=10');
   if (!r.data || !r.data.length) {
-    container.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">No users yet.</div>';
+    container.innerHTML = '<div class="text-muted text-sm" style="padding:0.5rem;">No users yet.</div>';
     return;
   }
   container.innerHTML = r.data.map((u, i) => `
@@ -902,13 +888,10 @@ async function deleteAccount() {
   const id = USER?.id;
   if (!id) return;
   await supaFetch(`/rest/v1/profiles?id=eq.${id}`, { method: 'DELETE' });
-  localStorage.removeItem('nuke_session');
-  localStorage.removeItem('nuke_target');
-  localStorage.removeItem('nuke_logs');
+  localStorage.clear();
   logout();
 }
 
-// ===== LOGOUT =====
 function logout() {
   localStorage.removeItem('nuke_session');
   location.reload();
