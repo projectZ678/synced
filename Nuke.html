@@ -3,72 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>nuke — dashboard v2</title>
+  <title>/Encode dashboard</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;}
-    :root{--bg:#0a0a0f;--fg:#fff;--muted:rgba(255,255,255,0.4);--border:rgba(255,255,255,0.06);--panel:rgba(255,255,255,0.03);--accent:#ff416c;--accent-glow:rgba(255,65,108,0.15);}
+    :root{--bg:#000;--fg:#fff;--muted:#666;--border:#222;--panel:#0a0a0a;--accent:#fff;--accent-glow:rgba(255,255,255,0.05);}
     body{background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
     
-    /* Scrollbar */
     ::-webkit-scrollbar{width:4px;height:4px;}
     ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px;}
+    ::-webkit-scrollbar-thumb{background:#333;border-radius:99px;}
     
     /* Auth */
-    #auth-screen{position:fixed;inset:0;z-index:200;background:#0a0a0f;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(40px);}
-    .auth-box{width:100%;max-width:400px;padding:0 1.5rem;}
-    .auth-logo{font-size:2rem;font-weight:900;letter-spacing:-0.05em;margin-bottom:2rem;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .auth-sub{font-size:0.75rem;color:var(--muted);margin-top:-1.2rem;margin-bottom:2rem;}
+    #auth-screen{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;}
+    .auth-box{width:100%;max-width:380px;padding:0 1.5rem;}
+    .auth-logo{font-size:2rem;font-weight:900;letter-spacing:-0.05em;margin-bottom:0.5rem;color:#fff;}
+    .auth-sub{font-size:0.75rem;color:var(--muted);margin-bottom:2rem;}
     .auth-tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:1px solid var(--border);}
     .auth-tab{background:none;border:none;color:var(--muted);font-family:inherit;font-size:0.8rem;font-weight:500;padding:0.6rem 0;margin-right:1.5rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
-    .auth-tab.active{color:var(--fg);border-bottom-color:var(--accent);}
+    .auth-tab.active{color:var(--fg);border-bottom-color:var(--fg);}
     .auth-form{display:flex;flex-direction:column;gap:0.75rem;}
-    .auth-form input{background:var(--panel);border:1px solid var(--border);border-radius:12px;color:var(--fg);font-family:inherit;font-size:0.88rem;padding:0.85rem 1rem;outline:none;transition:all 0.2s;}
-    .auth-form input:focus{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);}
-    .auth-form input::placeholder{color:rgba(255,255,255,0.15);}
-    .auth-submit{background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:0.88rem;font-weight:700;padding:0.9rem;cursor:pointer;transition:all 0.2s;margin-top:0.25rem;}
-    .auth-submit:hover{transform:scale(1.02);box-shadow:0 0 30px var(--accent-glow);}
-    .auth-submit:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+    .auth-form input{background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:inherit;font-size:0.88rem;padding:0.8rem 1rem;outline:none;transition:all 0.2s;}
+    .auth-form input:focus{border-color:var(--fg);}
+    .auth-form input::placeholder{color:var(--muted);}
+    .auth-submit{background:var(--fg);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:0.88rem;font-weight:700;padding:0.9rem;cursor:pointer;transition:all 0.2s;margin-top:0.25rem;}
+    .auth-submit:hover{background:#ccc;}
+    .auth-submit:disabled{opacity:0.3;cursor:not-allowed;}
     .auth-msg{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:0.5rem;min-height:1.2em;}
-    .auth-msg.err{color:#ff6b6b;}
-    .auth-msg.ok{color:#6bff8a;}
+    .auth-msg.err{color:#ff4444;}
+    .auth-msg.ok{color:#44ff88;}
     
     /* Toast */
-    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);z-index:999;padding:0.7rem 1.6rem;border-radius:12px;font-size:0.8rem;font-weight:500;opacity:0;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:none;background:rgba(255,255,255,0.06);border:1px solid var(--border);backdrop-filter:blur(20px);color:#fff;max-width:90%;}
+    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);z-index:999;padding:0.7rem 1.6rem;border-radius:8px;font-size:0.8rem;font-weight:500;opacity:0;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:none;background:#111;border:1px solid #333;color:#fff;max-width:90%;}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-    #toast.err{background:rgba(255,80,80,0.12);border-color:rgba(255,80,80,0.15);color:#ff6b6b;}
-    #toast.ok{background:rgba(80,255,130,0.06);border-color:rgba(80,255,130,0.1);color:#6bff8a;}
+    #toast.err{background:#1a0000;border-color:#ff4444;color:#ff4444;}
+    #toast.ok{background:#001a0a;border-color:#44ff88;color:#44ff88;}
     
     /* Main */
     #main-app{display:none;}
     #main-app.show{display:block;}
     
     /* Nav */
-    nav{position:sticky;top:0;z-index:50;padding:0.8rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);}
-    .nav-logo{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    nav{position:sticky;top:0;z-index:50;padding:0.8rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:#000;}
+    .nav-logo{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;color:#fff;}
     .nav-right{display:flex;align-items:center;gap:1.2rem;}
     .nav-slug{font-size:0.7rem;color:var(--muted);}
     .nav-slug span{color:var(--fg);font-weight:600;}
     .nav-status{display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--muted);}
-    .nav-status .dot{width:8px;height:8px;border-radius:50%;background:#3ba55c;}
-    .nav-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.7rem;padding:0.3rem 0.9rem;border-radius:8px;cursor:pointer;transition:all 0.2s;}
-    .nav-logout:hover{border-color:var(--accent);color:var(--accent);}
+    .nav-status .dot{width:8px;height:8px;border-radius:50%;background:#666;}
+    .nav-logout{background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.7rem;padding:0.3rem 0.9rem;border-radius:6px;cursor:pointer;transition:all 0.2s;}
+    .nav-logout:hover{border-color:var(--fg);color:var(--fg);}
     
     /* Layout */
     .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 53px);}
     @media(max-width:768px){.layout{grid-template-columns:1fr;}}
     
     /* Sidebar */
-    aside{border-right:1px solid var(--border);padding:1.5rem 0.8rem;background:rgba(255,255,255,0.01);}
-    .side-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.2);padding:0 0.8rem;margin-bottom:0.3rem;margin-top:1rem;}
-    .side-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;border-radius:10px;font-size:0.8rem;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;}
+    aside{border-right:1px solid var(--border);padding:1.5rem 0.8rem;}
+    .side-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);padding:0 0.8rem;margin-bottom:0.3rem;margin-top:1rem;}
+    .side-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;border-radius:6px;font-size:0.8rem;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;}
     .side-btn:hover,.side-btn.active{background:var(--panel);color:var(--fg);}
     .side-btn svg{opacity:0.4;flex-shrink:0;width:16px;height:16px;}
-    .side-btn.active svg{opacity:0.8;color:var(--accent);}
+    .side-btn.active svg{opacity:0.8;}
     
     /* Main content */
-    main{padding:2rem 2.5rem;background:radial-gradient(ellipse at 80% 20%, rgba(255,65,108,0.03) 0%, transparent 60%);}
+    main{padding:2rem 2.5rem;}
     @media(max-width:768px){main{padding:1.2rem 1rem;}}
     
     .section{display:none;}
@@ -79,14 +78,13 @@
     .section-sub{font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;margin-top:0.1rem;}
     
     /* Panels */
-    .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.4rem 1.6rem;transition:border-color 0.2s;}
-    .panel:hover{border-color:rgba(255,255,255,0.08);}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1.4rem 1.6rem;}
     .panel+.panel{margin-top:1rem;}
     
     .field-label{font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
-    .field-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:inherit;font-size:0.82rem;padding:0.6rem 0.9rem;outline:none;transition:all 0.2s;}
-    .field-input:focus{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);}
-    .field-input::placeholder{color:rgba(255,255,255,0.12);}
+    .field-input{width:100%;background:#000;border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:inherit;font-size:0.82rem;padding:0.6rem 0.9rem;outline:none;transition:all 0.2s;}
+    .field-input:focus{border-color:var(--fg);}
+    .field-input::placeholder{color:var(--muted);}
     textarea.field-input{resize:vertical;min-height:70px;line-height:1.5;}
     .field-row{margin-bottom:0.8rem;}
     
@@ -94,30 +92,30 @@
     .input-group .field-input{flex:1;min-width:100px;}
     
     /* Buttons */
-    .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.82rem;font-weight:700;padding:0.6rem 1.4rem;cursor:pointer;transition:all 0.2s;}
-    .btn:hover{transform:scale(1.02);box-shadow:0 0 25px var(--accent-glow);}
-    .btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
-    .btn-danger{background:#c0392b;box-shadow:0 0 20px rgba(192,57,43,0.15);}
-    .btn-danger:hover{box-shadow:0 0 30px rgba(192,57,43,0.25);}
-    .btn-warning{background:#f39c12;color:#0a0a0f;}
-    .btn-warning:hover{box-shadow:0 0 25px rgba(243,156,18,0.25);}
-    .btn-secondary{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--fg);}
-    .btn-secondary:hover{background:rgba(255,255,255,0.08);}
+    .btn{background:var(--fg);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:0.82rem;font-weight:700;padding:0.6rem 1.4rem;cursor:pointer;transition:all 0.2s;}
+    .btn:hover{background:#ccc;}
+    .btn:disabled{opacity:0.3;cursor:not-allowed;}
+    .btn-danger{background:#ff4444;color:#000;}
+    .btn-danger:hover{background:#ff6666;}
+    .btn-warning{background:#ffaa00;color:#000;}
+    .btn-warning:hover{background:#ffbb33;}
+    .btn-secondary{background:#111;border:1px solid var(--border);color:var(--fg);}
+    .btn-secondary:hover{background:#1a1a1a;}
     .btn-sm{padding:0.4rem 0.9rem;font-size:0.7rem;}
     .btn-full{width:100%;padding:0.7rem;}
     
     .save-msg{font-size:0.7rem;color:var(--muted);margin-left:0.8rem;}
     
     /* Stats */
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
     .stat-cell{padding:1.2rem 1.4rem;background:var(--panel);}
-    .stat-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:var(--accent);}
+    .stat-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:var(--fg);}
     .stat-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.15rem;}
     @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}}
     
-    .badge{display:inline-block;padding:0.15rem 0.6rem;border-radius:99px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:rgba(255,65,108,0.12);border:1px solid rgba(255,65,108,0.15);color:var(--accent);}
-    .badge-success{background:rgba(59,165,92,0.12);border-color:rgba(59,165,92,0.15);color:#3ba55c;}
-    .badge-warning{background:rgba(250,168,26,0.12);border-color:rgba(250,168,26,0.15);color:#faa81a;}
+    .badge{display:inline-block;padding:0.15rem 0.6rem;border-radius:99px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:#111;border:1px solid #333;color:var(--muted);}
+    .badge-success{background:#001a0a;border-color:#44ff88;color:#44ff88;}
+    .badge-warning{background:#1a1400;border-color:#ffaa00;color:#ffaa00;}
     
     .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
     .mt-10{margin-top:10px;}
@@ -133,38 +131,30 @@
     
     /* Status options */
     .status-opt-row{display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;}
-    .status-opt{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.7rem;border:1px solid var(--border);border-radius:8px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
-    .status-opt.active{border-color:var(--accent);background:rgba(255,65,108,0.08);color:var(--fg);}
-    .status-dot-sm{width:7px;height:7px;border-radius:50;display:inline-block;}
-    
-    /* Color picker */
-    .color-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;}
-    .color-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0;}
-    .color-swatch.selected{border-color:var(--fg);transform:scale(1.1);}
-    .color-swatch:hover{transform:scale(1.08);}
-    input[type=color]{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;padding:0;}
+    .status-opt{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-size:0.7rem;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
+    .status-opt.active{border-color:var(--fg);background:#111;color:var(--fg);}
+    .status-dot-sm{width:7px;height:7px;border-radius:50%;display:inline-block;}
     
     /* Leaderboard */
     .leaderboard-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
     .leaderboard-item .rank{color:var(--muted);width:30px;font-weight:500;}
     .leaderboard-item .user{flex:1;font-weight:500;}
-    .leaderboard-item .count{color:var(--accent);font-weight:700;}
-    .leaderboard-item:first-child .rank{color:#faa81a;}
-    .leaderboard-item:first-child .user{color:#faa81a;}
+    .leaderboard-item .count{color:var(--fg);font-weight:700;}
+    .leaderboard-item:first-child .rank{color:#ffaa00;}
+    .leaderboard-item:first-child .user{color:#ffaa00;}
     
     /* File input */
-    .file-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:inherit;font-size:0.78rem;padding:0.4rem 0.6rem;outline:none;cursor:pointer;}
-    .file-input::file-selector-button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:0.2rem 0.7rem;font-size:0.7rem;font-weight:600;cursor:pointer;margin-right:0.5rem;}
-    .preview-thumb{display:none;width:50px;height:50px;border-radius:10px;object-fit:cover;border:1px solid var(--border);margin-top:0.3rem;}
+    .file-input{width:100%;background:#000;border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:inherit;font-size:0.78rem;padding:0.4rem 0.6rem;outline:none;cursor:pointer;}
+    .file-input::file-selector-button{background:var(--fg);color:#000;border:none;border-radius:4px;padding:0.2rem 0.7rem;font-size:0.7rem;font-weight:600;cursor:pointer;margin-right:0.5rem;}
+    .preview-thumb{display:none;width:50px;height:50px;border-radius:8px;object-fit:cover;border:1px solid var(--border);margin-top:0.3rem;}
     .preview-thumb.show{display:block;}
     
-    /* Nuke button special */
-    .nuke-btn{background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:0.9rem;font-weight:800;padding:0.7rem 2rem;cursor:pointer;transition:all 0.2s;width:100%;letter-spacing:0.03em;}
-    .nuke-btn:hover{transform:scale(1.01);box-shadow:0 0 40px var(--accent-glow);}
+    /* Nuke button */
+    .nuke-btn{background:var(--fg);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:0.9rem;font-weight:800;padding:0.7rem 2rem;cursor:pointer;transition:all 0.2s;width:100%;letter-spacing:0.03em;}
+    .nuke-btn:hover{background:#ccc;}
     .nuke-btn:active{transform:scale(0.98);}
     
-    /* misc */
-    .text-accent{color:var(--accent);}
+    .text-accent{color:var(--fg);}
     .text-muted{color:var(--muted);}
     .text-sm{font-size:0.75rem;}
     .fw-700{font-weight:700;}
@@ -172,9 +162,14 @@
     .flex-center{align-items:center;}
     .gap-6{gap:6px;}
     
-    /* Live indicator */
-    .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ba55c;animation:pulse 1.5s ease-in-out infinite;}
+    .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#44ff88;animation:pulse 1.5s ease-in-out infinite;}
     @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    
+    .color-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0;}
+    .color-swatch.selected{border-color:var(--fg);transform:scale(1.1);}
+    .color-swatch:hover{transform:scale(1.08);}
+    input[type=color]{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;padding:0;}
+    .color-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;}
   </style>
 </head>
 <body>
@@ -184,7 +179,7 @@
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">nuke</div>
-    <div class="auth-sub">⏤ dashboard v2</div>
+    <div class="auth-sub">⏤ black & white</div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</button>
       <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
@@ -203,7 +198,7 @@
   <nav>
     <div class="nav-logo">nuke</div>
     <div class="nav-right">
-      <span class="nav-status"><span class="dot"></span><span id="nav-status-label">online</span></span>
+      <span class="nav-status"><span class="dot"></span><span id="nav-status-label">offline</span></span>
       <span class="nav-slug">nuke.lol/<span id="nav-slug-val">—</span></span>
       <button class="nav-logout" onclick="logout()">logout</button>
     </div>
@@ -253,7 +248,7 @@
       <!-- OVERVIEW -->
       <div class="section active" id="sec-overview">
         <div class="section-title">Overview</div>
-        <div class="section-sub">Your nuke statistics in real-time.</div>
+        <div class="section-sub">Your nuke statistics.</div>
         <div class="stats-grid">
           <div class="stat-cell"><div class="stat-num" id="ov-nukes">0</div><div class="stat-lbl">Total Nukes</div></div>
           <div class="stat-cell"><div class="stat-num" id="ov-channels">0</div><div class="stat-lbl">Channels Deleted</div></div>
@@ -262,7 +257,7 @@
         </div>
         <div class="panel mt-20">
           <div class="flex-between">
-            <div><span class="field-label" style="margin-bottom:0;">Current Target</span><div class="text-accent fw-700" id="ov-target" style="font-size:1rem;">None</div></div>
+            <div><span class="field-label" style="margin-bottom:0;">Target</span><div class="fw-700" id="ov-target" style="font-size:1rem;">None</div></div>
             <div><span class="badge" id="ov-status-badge">offline</span></div>
           </div>
         </div>
@@ -271,7 +266,7 @@
       <!-- NUKE -->
       <div class="section" id="sec-nuke">
         <div class="section-title">Nuke Control</div>
-        <div class="section-sub">Execute full-scale operations.</div>
+        <div class="section-sub">Execute operations.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Target Server</div>
@@ -289,7 +284,7 @@
             <div class="input-group">
               <input class="field-input" id="nuke-text" placeholder="Spam message" value="@everyone DESTROYED">
             </div>
-            <button class="nuke-btn" onclick="executeNuke()">🔥 NUKE</button>
+            <button class="nuke-btn" onclick="executeNuke()">NUKE</button>
           </div>
           <div class="flex gap-10 mt-10" style="flex-wrap:wrap;">
             <button class="btn btn-warning btn-sm" onclick="spamChannels()">Spam Channels</button>
@@ -310,7 +305,7 @@
       <!-- LOGS -->
       <div class="section" id="sec-logs">
         <div class="section-title">Logs</div>
-        <div class="section-sub">Recent nuke activity.</div>
+        <div class="section-sub">Recent activity.</div>
         <div class="panel">
           <div class="flex-between mb-10">
             <span class="text-sm text-muted"><span class="live-dot"></span> live</span>
@@ -319,7 +314,7 @@
           <div style="overflow-x:auto;">
             <table class="log-table">
               <thead><tr><th>Time</th><th>Server</th><th>Action</th><th>Details</th><th>Ch</th></tr></thead>
-              <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs yet</td></tr></tbody>
+              <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -328,7 +323,7 @@
       <!-- PROFILE -->
       <div class="section" id="sec-profile">
         <div class="section-title">Profile</div>
-        <div class="section-sub">Customize your public profile.</div>
+        <div class="section-sub">Customize your profile.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Display Name</div>
@@ -343,7 +338,6 @@
             <input class="file-input" id="p-avatar-file" type="file" accept="image/*" onchange="previewFile(this,'p-avatar-preview')">
             <input class="field-input" id="p-avatar-url" placeholder="or paste image URL" style="margin-top:0.3rem;">
             <img class="preview-thumb" id="p-avatar-preview" src="">
-            <div class="upload-status text-sm text-muted" id="p-avatar-status"></div>
           </div>
           <button class="btn" onclick="saveProfile()">Save Profile</button>
           <span class="save-msg" id="profile-msg"></span>
@@ -353,17 +347,17 @@
       <!-- SOCIALS -->
       <div class="section" id="sec-socials">
         <div class="section-title">Socials</div>
-        <div class="section-sub">Links shown on your profile card.</div>
+        <div class="section-sub">Links on your profile.</div>
         <div class="panel">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
             <div class="field-row"><div class="field-label">Discord</div><input class="field-input" id="s-discord" placeholder="username"></div>
             <div class="field-row">
               <div class="field-label">Status</div>
               <div class="status-opt-row">
-                <button class="status-opt active" data-status="offline" onclick="setStatus('offline',this)"><span class="status-dot-sm" style="background:#747f8d"></span>offline</button>
-                <button class="status-opt" data-status="online" onclick="setStatus('online',this)"><span class="status-dot-sm" style="background:#3ba55c"></span>online</button>
-                <button class="status-opt" data-status="dnd" onclick="setStatus('dnd',this)"><span class="status-dot-sm" style="background:#ed4245"></span>dnd</button>
-                <button class="status-opt" data-status="idle" onclick="setStatus('idle',this)"><span class="status-dot-sm" style="background:#faa81a"></span>idle</button>
+                <button class="status-opt active" data-status="offline" onclick="setStatus('offline',this)"><span class="status-dot-sm" style="background:#666"></span>offline</button>
+                <button class="status-opt" data-status="online" onclick="setStatus('online',this)"><span class="status-dot-sm" style="background:#44ff88"></span>online</button>
+                <button class="status-opt" data-status="dnd" onclick="setStatus('dnd',this)"><span class="status-dot-sm" style="background:#ff4444"></span>dnd</button>
+                <button class="status-opt" data-status="idle" onclick="setStatus('idle',this)"><span class="status-dot-sm" style="background:#ffaa00"></span>idle</button>
               </div>
             </div>
             <div class="field-row"><div class="field-label">Twitter/X</div><input class="field-input" id="s-twitter" placeholder="@handle"></div>
@@ -381,18 +375,18 @@
       <!-- APPEARANCE -->
       <div class="section" id="sec-appearance">
         <div class="section-title">Appearance</div>
-        <div class="section-sub">Customize your dashboard theme.</div>
+        <div class="section-sub">Theme settings.</div>
         <div class="panel">
           <div class="field-row">
             <div class="field-label">Accent Color</div>
             <div class="color-row">
-              <div class="color-swatch selected" style="background:#ff416c" data-color="#ff416c" onclick="selectColor(this)"></div>
-              <div class="color-swatch" style="background:#a855f7" data-color="#a855f7" onclick="selectColor(this)"></div>
-              <div class="color-swatch" style="background:#3b82f6" data-color="#3b82f6" onclick="selectColor(this)"></div>
-              <div class="color-swatch" style="background:#10b981" data-color="#10b981" onclick="selectColor(this)"></div>
-              <div class="color-swatch" style="background:#f59e0b" data-color="#f59e0b" onclick="selectColor(this)"></div>
-              <div class="color-swatch" style="background:#ffffff" data-color="#ffffff" onclick="selectColor(this)"></div>
-              <input type="color" id="a-custom-color" value="#ff416c" title="Custom" oninput="customColor(this)">
+              <div class="color-swatch selected" style="background:#ffffff" data-color="#ffffff" onclick="selectColor(this)"></div>
+              <div class="color-swatch" style="background:#888888" data-color="#888888" onclick="selectColor(this)"></div>
+              <div class="color-swatch" style="background:#444444" data-color="#444444" onclick="selectColor(this)"></div>
+              <div class="color-swatch" style="background:#ff4444" data-color="#ff4444" onclick="selectColor(this)"></div>
+              <div class="color-swatch" style="background:#44ff88" data-color="#44ff88" onclick="selectColor(this)"></div>
+              <div class="color-swatch" style="background:#ffaa00" data-color="#ffaa00" onclick="selectColor(this)"></div>
+              <input type="color" id="a-custom-color" value="#ffffff" title="Custom" oninput="customColor(this)">
             </div>
           </div>
           <button class="btn" onclick="saveAppearance()">Save Appearance</button>
@@ -417,7 +411,7 @@
       <!-- LEADERBOARD -->
       <div class="section" id="sec-leaderboard">
         <div class="section-title">Leaderboard</div>
-        <div class="section-sub">Top nukers worldwide.</div>
+        <div class="section-sub">Top nukers.</div>
         <div class="panel">
           <div id="leaderboard-container">
             <div class="text-muted text-sm" style="padding:0.5rem;">Loading...</div>
@@ -436,25 +430,29 @@ const SUPA_KEY = 'sb_publishable_2GOLzDazYL5V-ROVL_HOwQ__RspdK9U';
 let USER = null;
 let PROFILE = null;
 let discordStatus = 'offline';
-let accentColor = '#ff416c';
+let accentColor = '#ffffff';
 let logs = JSON.parse(localStorage.getItem('nuke_logs') || '[]');
 
 // ===== HELPERS =====
 async function supaFetch(path, opts = {}) {
-  const r = await fetch(SUPA_URL + path, {
-    ...opts,
-    headers: {
-      'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Prefer': 'return=representation',
-      ...(opts.headers || {})
-    }
-  });
-  const txt = await r.text();
-  try { return { ok: r.ok, status: r.status, data: JSON.parse(txt) }; } 
-  catch { return { ok: r.ok, status: r.status, data: txt }; }
+  try {
+    const r = await fetch(SUPA_URL + path, {
+      ...opts,
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Prefer': 'return=representation',
+        ...(opts.headers || {})
+      }
+    });
+    const txt = await r.text();
+    try { return { ok: r.ok, status: r.status, data: JSON.parse(txt) }; } 
+    catch { return { ok: r.ok, status: r.status, data: txt }; }
+  } catch (e) {
+    return { ok: false, status: 0, data: null, error: e.message };
+  }
 }
 
 function toast(msg, type = '') {
@@ -492,6 +490,7 @@ function switchTab(m) {
   document.getElementById('tab-signup').classList.toggle('active', m === 'signup');
   document.getElementById('auth-submit').textContent = m === 'login' ? 'Login →' : 'Create →';
   document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-msg').className = 'auth-msg';
 }
 
 document.getElementById('auth-submit').addEventListener('click', async () => {
@@ -511,8 +510,14 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
       if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
       if (uname.length > 24) { msg.className = 'auth-msg err'; msg.textContent = 'Max 24 chars.'; btn.disabled = false; return; }
       
+      // Check if username exists
       const chk = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=username`);
-      if (chk.data?.length) { msg.className = 'auth-msg err'; msg.textContent = 'Username taken.'; btn.disabled = false; return; }
+      if (chk.data && chk.data.length > 0) { 
+        msg.className = 'auth-msg err'; 
+        msg.textContent = 'Username taken.'; 
+        btn.disabled = false; 
+        return; 
+      }
       
       const pwHash = await hashPass(pass);
       const ins = await supaFetch('/rest/v1/profiles', {
@@ -531,42 +536,76 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
           twitch: '',
           tiktok: '',
           discord_status: 'offline',
-          accent: '#ff416c',
+          accent: '#ffffff',
           total_nukes: 0,
           total_channels: 0,
           total_messages: 0,
           total_servers: 0
         })
       });
+      
       if (!ins.ok) {
         msg.className = 'auth-msg err';
-        msg.textContent = 'Error creating profile.';
+        msg.textContent = 'Error creating profile. Make sure table exists.';
         btn.disabled = false;
+        console.error('Supabase error:', ins);
         return;
       }
-      PROFILE = ins.data?.[0] || {};
+      
+      PROFILE = ins.data && ins.data[0] ? ins.data[0] : null;
+      if (!PROFILE || !PROFILE.id) {
+        // Try to fetch the newly created profile
+        const fetchNew = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=*`);
+        if (fetchNew.data && fetchNew.data.length > 0) {
+          PROFILE = fetchNew.data[0];
+        } else {
+          msg.className = 'auth-msg err';
+          msg.textContent = 'Profile created but could not retrieve. Try logging in.';
+          btn.disabled = false;
+          return;
+        }
+      }
       USER = { id: PROFILE.id };
       localStorage.setItem('nuke_session', USER.id);
       btn.disabled = false;
       showApp();
     } else {
+      // Login
       if (!uname) { msg.className = 'auth-msg err'; msg.textContent = 'Enter username.'; btn.disabled = false; return; }
       const lookup = await supaFetch(`/rest/v1/profiles?username=eq.${encodeURIComponent(uname)}&select=id,password_hash`);
-      if (!lookup.data?.length) { msg.className = 'auth-msg err'; msg.textContent = 'User not found.'; btn.disabled = false; return; }
+      if (!lookup.data || !lookup.data.length) { 
+        msg.className = 'auth-msg err'; 
+        msg.textContent = 'User not found.'; 
+        btn.disabled = false; 
+        return; 
+      }
       const row = lookup.data[0];
       const pwHash = await hashPass(pass);
-      if (pwHash !== row.password_hash) { msg.className = 'auth-msg err'; msg.textContent = 'Wrong password.'; btn.disabled = false; return; }
+      if (pwHash !== row.password_hash) { 
+        msg.className = 'auth-msg err'; 
+        msg.textContent = 'Wrong password.'; 
+        btn.disabled = false; 
+        return; 
+      }
       USER = { id: row.id };
       localStorage.setItem('nuke_session', USER.id);
       const r = await supaFetch(`/rest/v1/profiles?id=eq.${USER.id}&select=*`);
-      if (r.data?.length) { PROFILE = r.data[0]; } else { msg.className = 'auth-msg err'; msg.textContent = 'Profile error.'; btn.disabled = false; return; }
+      if (r.data && r.data.length) { 
+        PROFILE = r.data[0]; 
+      } else { 
+        msg.className = 'auth-msg err'; 
+        msg.textContent = 'Profile not found.'; 
+        btn.disabled = false; 
+        return; 
+      }
       btn.disabled = false;
       showApp();
     }
   } catch (e) {
     msg.className = 'auth-msg err';
-    msg.textContent = e.message || 'Error.';
+    msg.textContent = e.message || 'Connection error. Check Supabase.';
     btn.disabled = false;
+    console.error(e);
   }
 });
 
@@ -598,7 +637,7 @@ function populateFields() {
   if (!p) return;
   document.getElementById('nav-slug-val').textContent = p.username || '—';
   document.getElementById('set-slug').textContent = p.username || '—';
-  document.getElementById('set-email').textContent = p.email || 'set during signup';
+  document.getElementById('set-email').textContent = p.email || 'not set';
   document.getElementById('ov-target').textContent = localStorage.getItem('nuke_target') || 'None';
   document.getElementById('ov-nukes').textContent = p.total_nukes || 0;
   document.getElementById('ov-channels').textContent = p.total_channels || 0;
@@ -624,12 +663,12 @@ function populateFields() {
     el.classList.toggle('active', el.dataset.status === discordStatus);
   });
   document.getElementById('nav-status-label').textContent = discordStatus;
-  document.querySelector('.nav-status .dot').style.background = 
-    discordStatus === 'online' ? '#3ba55c' : 
-    discordStatus === 'dnd' ? '#ed4245' : 
-    discordStatus === 'idle' ? '#faa81a' : '#747f8d';
+  const dot = document.querySelector('.nav-status .dot');
+  dot.style.background = discordStatus === 'online' ? '#44ff88' : 
+                          discordStatus === 'dnd' ? '#ff4444' : 
+                          discordStatus === 'idle' ? '#ffaa00' : '#666';
   
-  accentColor = p.accent || '#ff416c';
+  accentColor = p.accent || '#ffffff';
   document.querySelectorAll('.color-swatch').forEach(s => {
     s.classList.toggle('selected', s.dataset.color === accentColor);
   });
@@ -639,21 +678,17 @@ function populateFields() {
   if (discordStatus === 'online') {
     badge.textContent = 'online';
     badge.className = 'badge badge-success';
-  } else if (discordStatus === 'dnd') {
-    badge.textContent = 'dnd';
-    badge.className = 'badge';
   } else if (discordStatus === 'idle') {
     badge.textContent = 'idle';
     badge.className = 'badge badge-warning';
   } else {
-    badge.textContent = 'offline';
+    badge.textContent = discordStatus || 'offline';
     badge.className = 'badge';
   }
 }
 
 function applyAccent() {
   document.documentElement.style.setProperty('--accent', accentColor);
-  document.documentElement.style.setProperty('--accent-glow', accentColor + '22');
 }
 
 // ===== STATUS / COLOR =====
@@ -663,7 +698,7 @@ function setStatus(s, el) {
   el.classList.add('active');
   document.getElementById('nav-status-label').textContent = s;
   const dot = document.querySelector('.nav-status .dot');
-  dot.style.background = s === 'online' ? '#3ba55c' : s === 'dnd' ? '#ed4245' : s === 'idle' ? '#faa81a' : '#747f8d';
+  dot.style.background = s === 'online' ? '#44ff88' : s === 'dnd' ? '#ff4444' : s === 'idle' ? '#ffaa00' : '#666';
 }
 
 function selectColor(el) {
@@ -706,8 +741,10 @@ async function saveProfile() {
   flashMsg('profile-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
-    if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
+    if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Profile saved', 'ok');
+  } else {
+    toast('Error saving profile', 'err');
   }
 }
 
@@ -730,8 +767,10 @@ async function saveSocials() {
   flashMsg('socials-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
-    if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
+    if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Socials saved', 'ok');
+  } else {
+    toast('Error saving socials', 'err');
   }
 }
 
@@ -745,8 +784,10 @@ async function saveAppearance() {
   flashMsg('appear-msg', r.ok ? '✓ Saved' : 'Error');
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
-    if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
+    if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
     toast('Appearance saved', 'ok');
+  } else {
+    toast('Error saving appearance', 'err');
   }
 }
 
@@ -761,15 +802,15 @@ function setTarget() {
 }
 
 function executeNuke() {
-  const count = document.getElementById('nuke-count').value || 80;
+  const count = parseInt(document.getElementById('nuke-count').value) || 80;
   const name = document.getElementById('nuke-name').value || 'rekt';
   const text = document.getElementById('nuke-text').value || '@everyone DESTROYED';
   const target = localStorage.getItem('nuke_target');
   if (!target) return toast('Set target first', 'err');
   
-  addLog(target, 'nuke', `${count} ch, "${name}"`, parseInt(count));
-  toast(`🔥 Nuke launched on ${target}`, 'ok');
-  updateStats(1, parseInt(count), parseInt(count) * 50, 1);
+  addLog(target, 'nuke', `${count} ch, "${name}"`, count);
+  toast('Nuke launched on ' + target, 'ok');
+  updateStats(1, count, count * 50, 1);
 }
 
 function spamChannels() {
@@ -796,7 +837,7 @@ function stopSpam() {
 function webhookSpam() {
   const target = localStorage.getItem('nuke_target');
   if (!target) return toast('Set target', 'err');
-  const ch = document.getElementById('webhook-channel')?.value || prompt('Channel ID:');
+  const ch = prompt('Channel ID:');
   if (!ch) return;
   addLog(target, 'webhook_spam', `Channel ${ch}`);
   toast('Webhook flood launched', 'ok');
@@ -822,7 +863,7 @@ function addLog(server, action, details, channels = 0) {
 function renderLogs() {
   const tbody = document.getElementById('log-body');
   if (!logs.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No logs</td></tr>';
     return;
   }
   tbody.innerHTML = logs.slice(0, 50).map(l => `
@@ -862,7 +903,7 @@ async function updateStats(nukes, channels, messages, servers) {
   });
   if (r.ok) {
     const upd = await supaFetch(`/rest/v1/profiles?id=eq.${id}&select=*`);
-    if (upd.data?.length) { PROFILE = upd.data[0]; populateFields(); }
+    if (upd.data && upd.data.length) { PROFILE = upd.data[0]; populateFields(); }
   }
 }
 
@@ -878,7 +919,7 @@ async function loadLeaderboard() {
     <div class="leaderboard-item">
       <span class="rank">${i + 1}.</span>
       <span class="user">${u.username}</span>
-      <span class="count">${u.total_nukes || 0} nukes</span>
+      <span class="count">${u.total_nukes || 0}</span>
     </div>
   `).join('');
 }
@@ -903,7 +944,7 @@ function logout() {
   if (saved && saved.length > 10) {
     USER = { id: saved };
     const r = await supaFetch(`/rest/v1/profiles?id=eq.${saved}&select=*`);
-    if (r.data?.length) {
+    if (r.data && r.data.length) {
       PROFILE = r.data[0];
       showApp();
       return;
