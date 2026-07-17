@@ -1,0 +1,83 @@
+return {
+	["anim_105204102167548"] = {
+		-- Keyframe 1: Standing, crouching to start the dive
+		{Time = 0.000, Data = {
+			["Head"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1),
+			["HumanoidRootPart"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1),
+			["LeftLowerArm"] = CFrame.Angles(math.rad(-30), 0, 0),
+			["LeftLowerLeg"] = CFrame.Angles(math.rad(-20), 0, 0),
+			["LeftUpperArm"] = CFrame.Angles(math.rad(-60), 0, math.rad(10)),
+			["LeftUpperLeg"] = CFrame.Angles(math.rad(30), 0, 0),
+			["LowerTorso"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1) * CFrame.Angles(math.rad(20), 0, 0),
+			["RightLowerArm"] = CFrame.Angles(math.rad(-30), 0, 0),
+			["RightLowerLeg"] = CFrame.Angles(math.rad(-20), 0, 0),
+			["RightUpperArm"] = CFrame.Angles(math.rad(-60), 0, math.rad(-10)),
+			["RightUpperLeg"] = CFrame.Angles(math.rad(30), 0, 0),
+			["UpperTorso"] = CFrame.Angles(math.rad(20), 0, 0),
+		}},
+
+		-- Keyframe 2: Diving forward, hands reaching to ground, body ~45° pitched
+		{Time = 0.250, Data = {
+			["Head"] = CFrame.Angles(math.rad(30), 0, 0),
+			["HumanoidRootPart"] = CFrame.new(0, -0.3, -0.4, 1,0,0, 0,1,0, 0,0,1) * CFrame.Angles(math.rad(45), 0, 0),
+			["LeftLowerArm"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["LeftLowerLeg"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["LeftUpperArm"] = CFrame.Angles(math.rad(-90), 0, math.rad(15)),
+			["LeftUpperLeg"] = CFrame.Angles(math.rad(10), 0, 0),
+			["LowerTorso"] = CFrame.Angles(math.rad(60), 0, 0),
+			["RightLowerArm"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["RightLowerLeg"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["RightUpperArm"] = CFrame.Angles(math.rad(-90), 0, math.rad(-15)),
+			["RightUpperLeg"] = CFrame.Angles(math.rad(10), 0, 0),
+			["UpperTorso"] = CFrame.Angles(math.rad(60), 0, 0),
+		}},
+
+		-- Keyframe 3: Mid-roll, fully tucked, root pitched ~180° (upside down/inverted through the roll)
+		{Time = 0.500, Data = {
+			["Head"] = CFrame.Angles(math.rad(90), 0, 0),
+			["HumanoidRootPart"] = CFrame.new(0, -0.4, -0.8, 1,0,0, 0,1,0, 0,0,1) * CFrame.Angles(math.rad(180), 0, 0),
+			["LeftLowerArm"] = CFrame.Angles(math.rad(-110), 0, 0),
+			["LeftLowerLeg"] = CFrame.Angles(math.rad(-120), 0, 0),
+			["LeftUpperArm"] = CFrame.Angles(math.rad(-40), 0, math.rad(20)),
+			["LeftUpperLeg"] = CFrame.Angles(math.rad(110), 0, 0),
+			["LowerTorso"] = CFrame.Angles(math.rad(90), 0, 0),
+			["RightLowerArm"] = CFrame.Angles(math.rad(-110), 0, 0),
+			["RightLowerLeg"] = CFrame.Angles(math.rad(-120), 0, 0),
+			["RightUpperArm"] = CFrame.Angles(math.rad(-40), 0, math.rad(-20)),
+			["RightUpperLeg"] = CFrame.Angles(math.rad(110), 0, 0),
+			["UpperTorso"] = CFrame.Angles(math.rad(90), 0, 0),
+		}},
+
+		-- Keyframe 4: Coming out of roll, back reaching upright, ~315° pitched
+		{Time = 0.750, Data = {
+			["Head"] = CFrame.Angles(math.rad(20), 0, 0),
+			["HumanoidRootPart"] = CFrame.new(0, -0.2, -1.1, 1,0,0, 0,1,0, 0,0,1) * CFrame.Angles(math.rad(315), 0, 0),
+			["LeftLowerArm"] = CFrame.Angles(math.rad(-20), 0, 0),
+			["LeftLowerLeg"] = CFrame.Angles(math.rad(-30), 0, 0),
+			["LeftUpperArm"] = CFrame.Angles(math.rad(-30), 0, math.rad(10)),
+			["LeftUpperLeg"] = CFrame.Angles(math.rad(50), 0, 0),
+			["LowerTorso"] = CFrame.Angles(math.rad(-15), 0, 0),
+			["RightLowerArm"] = CFrame.Angles(math.rad(-20), 0, 0),
+			["RightLowerLeg"] = CFrame.Angles(math.rad(-30), 0, 0),
+			["RightUpperArm"] = CFrame.Angles(math.rad(-30), 0, math.rad(-10)),
+			["RightUpperLeg"] = CFrame.Angles(math.rad(50), 0, 0),
+			["UpperTorso"] = CFrame.Angles(math.rad(-15), 0, 0),
+		}},
+
+		-- Keyframe 5: Standing back up, roll complete, full 360°
+		{Time = 1.000, Data = {
+			["Head"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1),
+			["HumanoidRootPart"] = CFrame.new(0, 0, -1.4, 1,0,0, 0,1,0, 0,0,1) * CFrame.Angles(math.rad(360), 0, 0),
+			["LeftLowerArm"] = CFrame.Angles(math.rad(-5), 0, 0),
+			["LeftLowerLeg"] = CFrame.Angles(0, 0, 0),
+			["LeftUpperArm"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["LeftUpperLeg"] = CFrame.Angles(0, 0, 0),
+			["LowerTorso"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1),
+			["RightLowerArm"] = CFrame.Angles(math.rad(-5), 0, 0),
+			["RightLowerLeg"] = CFrame.Angles(0, 0, 0),
+			["RightUpperArm"] = CFrame.Angles(math.rad(-10), 0, 0),
+			["RightUpperLeg"] = CFrame.Angles(0, 0, 0),
+			["UpperTorso"] = CFrame.new(0, 0, 0, 1,0,0, 0,1,0, 0,0,1),
+		}},
+	},
+}
