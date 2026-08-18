@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Angel the love of my life</title>
 
-  
+  <!-- Embed / Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Angel the love of my life" />
   <meta property="og:description" content="Xen + Angel · together since 8/13/2026" />
@@ -45,7 +45,7 @@
       z-index: 0;
     }
 
-    
+    /* ── Intro screen ── */
     #intro-screen {
       position: fixed;
       inset: 0;
@@ -81,7 +81,7 @@
       }
     }
 
-    
+    /* ── Main layout ── */
     .main-wrapper {
       display: flex;
       max-width: 980px;
@@ -97,7 +97,7 @@
       opacity: 1;
     }
 
-    
+    /* Vertical sidebar */
     .sidebar {
       display: flex;
       flex-direction: column;
@@ -262,7 +262,7 @@
       z-index: 2;
     }
 
-    
+    /* Hearts canvas */
     #hearts-canvas {
       position: absolute;
       inset: 0;
@@ -273,7 +273,7 @@
       border-radius: 1.4rem;
     }
 
-    
+    /* ── Relationship ── */
     .relationship-display {
       display: flex;
       flex-direction: column;
@@ -357,7 +357,7 @@
       margin: 0.18rem 0;
     }
 
-   
+    /* ── Calendar ── */
     #section-calendar .box { min-height: 300px; }
     .calendar-weekdays {
       display: grid;
@@ -394,7 +394,7 @@
       border: 1px solid rgba(255, 160, 210, 0.28);
     }
 
-    
+    /* ── Together counter ── */
     .counter-display {
       display: flex;
       flex-direction: column;
@@ -491,17 +491,17 @@
 <body>
   <canvas id="stars-canvas"></canvas>
 
- 
+  <!-- Intro screen -->
   <div id="intro-screen">
     <div class="intro-text">angel my love</div>
   </div>
 
-  
+  <!-- Correct song URL -->
   <audio id="bgMusic" loop preload="auto">
-    <source src="https://raw.githubusercontent.com/projectZ678/synced/main/synced/last2ppl.mp3" type="audio/mpeg">
+    <source src="https://raw.githubusercontent.com/projectZ678/synced/main/last2ppl.mp3" type="audio/mpeg">
   </audio>
 
-  
+  <!-- Main -->
   <div class="main-wrapper" id="mainWrapper">
     <aside class="sidebar">
       <button class="sidebar-btn active" data-section="relationship" title="relationship">
@@ -526,7 +526,7 @@
         </h1>
       </div>
 
-      
+      <!-- Relationship -->
       <div id="section-relationship" class="section">
         <div class="box" id="relationshipBox">
           <canvas id="hearts-canvas"></canvas>
@@ -554,7 +554,7 @@
         </div>
       </div>
 
-      
+      <!-- Calendar -->
       <div id="section-calendar" class="section hidden">
         <div class="box">
           <h3>
@@ -569,7 +569,7 @@
         </div>
       </div>
 
-      
+      <!-- Together counter -->
       <div id="section-together" class="section hidden">
         <div class="box">
           <h3>
@@ -604,7 +604,7 @@
   </div>
 
   <script>
-    
+    // Global falling pink stars
     (function () {
       const canvas = document.getElementById('stars-canvas');
       const ctx = canvas.getContext('2d');
@@ -676,7 +676,7 @@
       draw();
     })();
 
-    
+    // Improved soft hearts
     (function () {
       const canvas = document.getElementById('hearts-canvas');
       if (!canvas) return;
@@ -723,11 +723,9 @@
           ctx.rotate(this.rot);
           ctx.scale(s, s);
 
-         
           ctx.shadowColor = 'rgba(255, 150, 200, 0.35)';
           ctx.shadowBlur = 8;
 
-         
           ctx.beginPath();
           ctx.moveTo(0, 3);
           ctx.bezierCurveTo(-2, -2, -9, -2, -9, 3);
@@ -760,30 +758,46 @@
       window.addEventListener('resize', resize);
     })();
 
-    
+    // Intro + robust music start
     (function () {
       const intro = document.getElementById('intro-screen');
       const main = document.getElementById('mainWrapper');
       const music = document.getElementById('bgMusic');
 
-      music.volume = 0.55;
-      const playPromise = music.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          document.body.addEventListener('click', () => music.play(), { once: true });
-        });
+      music.volume = 0.6;
+
+      function tryPlay() {
+        const p = music.play();
+        if (p !== undefined) {
+          p.catch(() => {}); // ignore rejection
+        }
       }
 
-      
+      // Try immediately
+      tryPlay();
+
+      // Also try on any user interaction (browsers require this)
+      const unlock = () => {
+        tryPlay();
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('touchstart', unlock);
+        document.removeEventListener('keydown', unlock);
+      };
+      document.addEventListener('click', unlock);
+      document.addEventListener('touchstart', unlock);
+      document.addEventListener('keydown', unlock);
+
+      // 1.5 second intro
       setTimeout(() => {
         intro.classList.add('fade-out');
         main.classList.add('visible');
         buildCalendar();
         startCounter();
+        tryPlay(); // one more attempt after intro
       }, 1500);
     })();
 
-    
+    // Calendar
     function buildCalendar() {
       const grid = document.getElementById('calendarGrid');
       const now = new Date();
@@ -809,7 +823,7 @@
       grid.innerHTML = html;
     }
 
-    
+    // Live together counter — starts August 13, 2026
     function startCounter() {
       const start = new Date(2026, 7, 13, 0, 0, 0).getTime();
 
@@ -835,7 +849,7 @@
       setInterval(update, 1000);
     }
 
-    
+    // Sidebar nav
     (function () {
       const btns = document.querySelectorAll('.sidebar-btn');
       const sections = {
